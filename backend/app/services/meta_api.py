@@ -2,12 +2,15 @@
 import os
 import facebook
 from dotenv import load_dotenv
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+import requests
 
 load_dotenv()
 
 class MetaService:
     """
     Handle interactions with Facebook Graph API for posting content.
+    Includes retry logic for production resilience.
     """
     def __init__(self):
         self.access_token = os.getenv("FACEBOOK_ACCESS_TOKEN")
@@ -20,6 +23,22 @@ class MetaService:
             self.graph = facebook.GraphAPI(access_token=self.access_token)
             self.BASE_URL = "https://graph.facebook.com/v19.0"
 
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), retry=retry_if_exception_type(requests.exceptions.RequestException))
+    def _make_request(self, method, url, params=None):
+        """
+        Resilient HTTP request handler.
+        """
+        response = requests.request(method, url, params=params, timeout=30)
+        response.raise_for_status()
+        return response.json()
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    def _safe_graph_call(self, func, *args, **kwargs):
+        """
+        Resilient SDK call handler.
+        """
+        return func(*args, **kwargs)
+
     def get_page_insights(self, page_id: str = None, period: str = "days_28"):
         """
         Fetch organic insights for a Page.
@@ -29,8 +48,6 @@ class MetaService:
         if not target_page:
             return {"error": "No Page ID provided."}
         
-        # Facebook SDK doesn't support insights very well, so we use requests for this
-        import requests
         url = f"{self.BASE_URL}/{target_page}/insights"
         params = {
             "metric": "page_impressions,page_post_engagements,page_fans",
@@ -39,11 +56,8 @@ class MetaService:
         }
         
         try:
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            # logger.error(f"Error fetching page insights: {e}")
+            return self._make_request("GET", url, params=params)
+        except Exception as e:
             return {"error": str(e)}
 
     def get_page_n_posts(self, limit: int = 10):
@@ -54,8 +68,8 @@ class MetaService:
         if not self.graph: return {"data": []}
         try:
             # We request insights metrics nested within the posts call
-            # Note: This might require specific Page permissions (read_insights)
-            return self.graph.get_connections(
+            return self._safe_graph_call(
+                self.graph.get_connections,
                 self.page_id, 
                 'posts', 
                 limit=limit,
@@ -63,14 +77,17 @@ class MetaService:
             )
         except Exception as e:
             # Fallback if insights fail (e.g. permissions)
-            print(f"Error fetching specific fields: {e}")
-            return self.graph.get_connections(self.page_id, 'posts', limit=limit)
+            print(f"Error fetching specific fields (Retrying simple fetch): {e}")
+            try:
+                 return self._safe_graph_call(self.graph.get_connections, self.page_id, 'posts', limit=limit)
+            except Exception as e2:
+                 return {"error": str(e2)}
 
     def get_post_comments(self, post_id: str):
         """Fetch comments for a specific post."""
         if not self.graph: return {"data": []}
         try:
-            return self.graph.get_connections(post_id, 'comments')
+            return self._safe_graph_call(self.graph.get_connections, post_id, 'comments')
         except Exception as e:
             return {"error": str(e)}
 
@@ -79,9 +96,11 @@ class MetaService:
         if not self.graph:
             return False
         try:
-            me = self.graph.get_object('me')
+            # Simple call, no need for heavy retry logic on verification usually, 
+            # but can use it to be safe against flakes.
+            me = self._safe_graph_call(self.graph.get_object, 'me')
             return True, me
-        except facebook.GraphAPIError as e:
+        except Exception as e:
             return False,str(e)
 
     def post_text(self, message: str):
@@ -89,6 +108,7 @@ class MetaService:
         if not self.graph:
             return {"error": "Meta Service not configured"}
         try:
+            # Write operation - NO RETRY to avoid duplicates
             response = self.graph.put_object(
                 parent_object=self.page_id,
                 connection_name='feed',
@@ -103,10 +123,11 @@ class MetaService:
         if not self.graph:
              return {"error": "Meta Service not configured"}
         try:
+            # Write operation - NO RETRY to avoid duplicates
             response = self.graph.put_photo(
                 image=image_url,
                 caption=message, 
-                album_path=f"{self.page_id}/photos" # optional album path if needed, usually defaults
+                album_path=f"{self.page_id}/photos"
             )
             return response
         except facebook.GraphAPIError as e:

@@ -45,3 +45,15 @@
     - [x] **Backend**: `FinancialService` for blended cost calculations.
     - [x] **Frontend**: Settings input for "Fixed Agency/Team Cost".
     - [x] **Frontend**: Dashboard widgets for "True CAC" and "Blended ROI".
+
+## 🛡️ Phase 6: Production Hardening (SaaS Ready)
+- [x] **API Resilience (Graph API)**
+    - [x] Implement `tenacity` for retry logic with exponential backoff on all Meta API calls.
+    - [x] Handle Rate Limiting (429) & Token Expiration errors gracefully.
+- [ ] **Multi-Tenancy & Security**
+- [ ] **Multi-Tenancy & Security**
+    - [ ] Enforce `organization_id` filtering on all DB queries (Row-Level Security).
+    - [ ] Verify JWT token scope for every request.
+- [ ] **Frontend State Management**
+    - [ ] Refactor data fetching to use `React Query` (TanStack Query) or `SWR`.
+    - [ ] Implement optimistic updates for cleaner UX (no flickering).

@@ -2,12 +2,14 @@
 import os
 import requests
 import logging
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 logger = logging.getLogger(__name__)
 
 class MetaAdsService:
     """
     Service for interacting with Meta Marketing API (Ads Manager).
+    Includes retry logic for production resilience.
     """
     BASE_URL = "https://graph.facebook.com/v19.0"
 
@@ -22,10 +24,18 @@ class MetaAdsService:
             "Content-Type": "application/json"
         }
 
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), retry=retry_if_exception_type(requests.exceptions.RequestException))
+    def _make_request(self, method, url, params=None, json=None):
+        """
+        Centralized request handler with Retry logic.
+        """
+        response = requests.request(method, url, headers=self._get_headers(), params=params, json=json, timeout=30)
+        response.raise_for_status()
+        return response.json()
+
     def list_ad_accounts(self):
         """
         List all Ad Accounts the user has access to.
-        Important for selecting which account to manage.
         """
         if not self.access_token:
             return {"error": "Missing Access Token"}
@@ -37,17 +47,14 @@ class MetaAdsService:
         }
         
         try:
-            response = requests.get(url, headers=self._get_headers(), params=params)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
+            return self._make_request("GET", url, params=params)
+        except Exception as e:
             logger.error(f"Error fetching ad accounts: {e}")
-            return {"error": str(e), "details": response.text if response else "No response"}
+            return {"error": str(e)}
 
     def get_campaigns(self, account_id: str = None):
         """
         Get all campaigns for a specific ad account.
-        Includes basic metrics like status, objective, and spend.
         """
         target_account = account_id or self.ad_account_id
         if not target_account:
@@ -70,17 +77,14 @@ class MetaAdsService:
         }
 
         try:
-            response = requests.get(url, headers=self._get_headers(), params=params)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
+            return self._make_request("GET", url, params=params)
+        except Exception as e:
             logger.error(f"Error fetching campaigns for {target_account}: {e}")
             return {"error": str(e)}
 
     def toggle_campaign_status(self, campaign_id: str, new_status: str):
         """
         Enable/Disable a campaign.
-        new_status: 'ACTIVE' or 'PAUSED'
         """
         if new_status not in ['ACTIVE', 'PAUSED']:
              return {"error": "Invalid status. Use ACTIVE or PAUSED"}
@@ -91,17 +95,14 @@ class MetaAdsService:
         }
         
         try:
-            response = requests.post(url, headers=self._get_headers(), json=payload)
-            response.raise_for_status()
-            return {"success": True, "campaign_id": campaign_id, "new_status": new_status}
-        except requests.exceptions.RequestException as e:
+            return self._make_request("POST", url, json=payload)
+        except Exception as e:
             logger.error(f"Error updating campaign {campaign_id}: {e}")
             return {"error": str(e)}
 
     def get_historical_insights(self, ad_account_id: str = None, days: int = 365):
         """
         Fetch aggregate insights for the entire account over a period.
-        Used for historical auditing.
         """
         target_account = ad_account_id or self.ad_account_id
         if not target_account:
@@ -121,21 +122,18 @@ class MetaAdsService:
         }
 
         try:
-            response = requests.get(url, headers=self._get_headers(), params=params)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
+            return self._make_request("GET", url, params=params)
+        except Exception as e:
             logger.error(f"Error fetching historical insights for {target_account}: {e}")
             return {"error": str(e)}
 
     def get_active_ad_posts(self, account_id: str = None):
         """
         Fetch all active ads and return their 'effective_object_story_id' (Post ID).
-        This allows us to track comments on ads (Dark Posts).
         """
         target_account = account_id or self.ad_account_id
         if not target_account:
-            return {"data": []} # Fail silently for inbox polling
+            return {"data": []}
 
         if not target_account.startswith("act_"):
             target_account = f"act_{target_account}"
@@ -148,11 +146,11 @@ class MetaAdsService:
         }
         
         try:
-            response = requests.get(url, headers=self._get_headers(), params=params)
-            response.raise_for_status()
+            # We call _make_request but we need to process the result to return a list
+            data = self._make_request("GET", url, params=params)
             
             # Extract just the Post IDs
-            ads = response.json().get("data", [])
+            ads = data.get("data", [])
             post_ids = []
             for ad in ads:
                 story_id = ad.get("creative", {}).get("effective_object_story_id")
@@ -161,7 +159,7 @@ class MetaAdsService:
             
             return list(set(post_ids)) # Deduplicate
             
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             logger.error(f"Error fetching ad posts: {e}")
             return []
 
@@ -179,18 +177,16 @@ class MetaAdsService:
         url = f"{self.BASE_URL}/{target_account}/insights"
         params = {
             "level": "ad",
-            "date_preset": "last_3d", # Variable days not supported in preset, using 3d as standard
-            "time_increment": "1", # Daily breakdown
+            "date_preset": "last_3d", 
+            "time_increment": "1", 
             "fields": "ad_id,ad_name,spend,cpc,ctr,frequency,reach,impressions",
             "filtering": "[{'field':'ad.delivery_info','operator':'IN','value':['active', 'limited']}]",
             "limit": 100
         }
         
         try:
-            response = requests.get(url, headers=self._get_headers(), params=params)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
+            return self._make_request("GET", url, params=params)
+        except Exception as e:
             logger.error(f"Error fetching ad insights: {e}")
             return {"error": str(e)}
 
