@@ -173,19 +173,27 @@ class StrategistAgent:
         insights = meta_ads_service.get_historical_insights(days=30)
         
         total_spend = 0.0
-        total_conversions = 0 # Approximated by clicks for now if no purchase event
+        total_conversions = 0 
+        total_revenue = 0.0
         
         for month in insights.get("data", []):
             total_spend += float(month.get("spend", 0))
-            # Fallback: using Clicks as proxy for conversion if purchase data missing in this scope
-            # In production, we'd query 'actions' field for 'purchase'
-            total_conversions += int(month.get("clicks", 0)) 
+            total_conversions += int(month.get("clicks", 0)) # Still using clicks as proxy for volume if purchase missing
+            
+            # Calculate Revenue from 'action_values'
+            action_values = month.get("action_values", [])
+            for av in action_values:
+                # Sum up all conversion values (purchase, custom events, etc)
+                # Usually 'purchase' is the key, but we can sum everything for 'Blended Revenue' if desired
+                if av.get("action_type") == "purchase":
+                    total_revenue += float(av.get("value", 0))
 
         # Calculate Blended Metrics
         metrics = financial_service.calculate_blended_metrics(
             ad_spend=total_spend,
             fixed_costs=fixed_costs,
-            conversions=total_conversions
+            conversions=total_conversions,
+            revenue=total_revenue
         )
         
         return metrics

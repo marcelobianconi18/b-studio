@@ -42,3 +42,13 @@ class HistoricalAudit(Base):
     summary_text = Column(String)
     period_days = Column(Integer)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class SystemSettings(Base):
+    __tablename__ = "system_settings"
+    id = Column(Integer, primary_key=True, index=True)
+    meta_access_token = Column(String, nullable=True)
+    meta_ad_account_id = Column(String, nullable=True)
+    meta_app_id = Column(String, nullable=True)
+    meta_app_secret = Column(String, nullable=True)
+    openai_api_key = Column(String, nullable=True)
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())

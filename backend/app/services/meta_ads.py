@@ -14,9 +14,16 @@ class MetaAdsService:
     BASE_URL = "https://graph.facebook.com/v19.0"
 
     def __init__(self):
-        self.access_token = os.getenv("FACEBOOK_ACCESS_TOKEN")
-        # Optional: You can hardcode an Ad Account ID or fetch the first one available
-        self.ad_account_id = os.getenv("FACEBOOK_AD_ACCOUNT_ID") 
+        from app.services.config import config_service
+        self.config = config_service
+
+    @property
+    def access_token(self):
+        return self.config.get_setting("FACEBOOK_ACCESS_TOKEN")
+
+    @property
+    def ad_account_id(self):
+        return self.config.get_setting("FACEBOOK_AD_ACCOUNT_ID") 
 
     def _get_headers(self):
         return {
@@ -116,7 +123,7 @@ class MetaAdsService:
         # We fetch month by month or as a pre-set range
         params = {
             "date_preset": "maximum" if days > 900 else ("last_year" if days > 90 else "last_90d"),
-            "fields": "spend,cpc,ctr,impressions,clicks,reach,objective",
+            "fields": "spend,cpc,ctr,impressions,clicks,reach,objective,actions,action_values",
             "time_increment": "30", # Monthly buckets for the LLM to process easily
             "limit": 50
         }

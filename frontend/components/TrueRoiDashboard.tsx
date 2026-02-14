@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,12 +5,14 @@ import {
     BanknotesIcon,
     CalculatorIcon,
     ArrowTrendingUpIcon,
-    ExclamationTriangleIcon
+    ExclamationTriangleIcon,
+    CurrencyDollarIcon,
+    ChartBarIcon
 } from "@heroicons/react/24/outline";
 
 export default function TrueRoiDashboard() {
     const [metrics, setMetrics] = useState<any>(null);
-    const [fixedCost, setFixedCost] = useState(2000);
+    const [fixedCost, setFixedCost] = useState(2000); // Default fixed cost
     const [loading, setLoading] = useState(false);
 
     const fetchFinancials = async () => {
@@ -29,75 +30,107 @@ export default function TrueRoiDashboard() {
 
     useEffect(() => {
         fetchFinancials();
-    }, []); // Initial load
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
-        <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl p-8 mb-8">
-            <header className="flex justify-between items-end mb-8">
+        <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 h-full flex flex-col backdrop-blur-md">
+            <header className="flex justify-between items-start mb-6">
                 <div>
-                    <h2 className="text-2xl font-black italic tracking-tighter flex items-center gap-2">
-                        <BanknotesIcon className="w-6 h-6 text-emerald-500" />
-                        DASHBOARD ROI REAL
+                    <h2 className="text-xl font-black italic tracking-tighter flex items-center gap-2 text-white">
+                        <BanknotesIcon className="w-5 h-5 text-emerald-500" />
+                        FINANCIAL WAR ROOM
                     </h2>
-                    <p className="text-zinc-500 text-xs">Checagem de Realidade Financeira (Custos Mistos)</p>
+                    <p className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest mt-1">
+                        Verdade Financeira (Ads + Custos Fixos)
+                    </p>
                 </div>
 
-                <div className="flex items-end gap-2">
+                <div className="flex items-end gap-2 bg-black/40 p-1.5 rounded-xl border border-zinc-800">
                     <div>
-                        <label className="text-[10px] uppercase font-bold text-zinc-600 block mb-1">Custos Fixos Mensais (R$)</label>
+                        <label className="text-[9px] uppercase font-bold text-zinc-600 block pl-1 mb-0.5">Custos Fixos (R$)</label>
                         <input
                             type="number"
                             value={fixedCost}
                             onChange={(e) => setFixedCost(Number(e.target.value))}
-                            className="bg-black border border-zinc-800 rounded-lg px-3 py-2 text-sm w-32 focus:border-emerald-500 outline-none transition-colors"
+                            className="bg-transparent text-white text-xs font-bold w-20 px-2 py-1 outline-none text-right"
                         />
                     </div>
                     <button
                         onClick={fetchFinancials}
                         disabled={loading}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg transition-colors"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white p-1.5 rounded-lg transition-colors"
                     >
-                        <CalculatorIcon className="w-5 h-5" />
+                        <CalculatorIcon className="w-4 h-4" />
                     </button>
                 </div>
             </header>
 
             {!metrics ? (
-                <div className="text-center py-10 text-zinc-600 animate-pulse">Calculando Finanças...</div>
+                <div className="flex-1 flex flex-col items-center justify-center text-zinc-600 animate-pulse gap-2">
+                    <CurrencyDollarIcon className="w-8 h-8 opacity-20" />
+                    <span className="text-xs font-mono">CALCULATING_PROFIT_MARGINS...</span>
+                </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-4 flex-1">
 
-                    {/* Card 1: Total Investment */}
-                    <div className="bg-black/40 p-6 rounded-2xl border border-zinc-800">
-                        <p className="text-xs text-zinc-500 uppercase font-bold mb-1">Investimento Total</p>
-                        <p className="text-2xl font-bold text-white">R$ {metrics.total_investment?.toLocaleString()}</p>
-                        <p className="text-[10px] text-zinc-600 mt-1">Anúncios (R$ {metrics.ad_spend}) + Fixos (R$ {metrics.fixed_costs})</p>
+                    {/* BIG NUMBER 1: Blended ROAS */}
+                    <div className="col-span-1 bg-gradient-to-br from-emerald-900/40 to-black p-5 rounded-2xl border border-emerald-500/30 flex flex-col justify-between relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-3 opacity-30 group-hover:opacity-100 transition-opacity">
+                            <ArrowTrendingUpIcon className="w-12 h-12 text-emerald-500 transform rotate-12 translate-x-4 -translate-y-4" />
+                        </div>
+
+                        <p className="text-[10px] text-emerald-400 uppercase font-bold tracking-widest">Blended ROAS</p>
+
+                        <div>
+                            <p className="text-4xl font-black text-white tracking-tight">{metrics.blended_roas}x</p>
+                            <p className="text-[10px] text-emerald-500/60 mt-1 font-medium">Retorno Real sobre Investimento Total</p>
+                        </div>
                     </div>
 
-                    {/* Card 2: Platform CAC (Fake) */}
-                    <div className="bg-black/40 p-6 rounded-2xl border border-zinc-800 relative overflow-hidden group">
-                        <p className="text-xs text-zinc-500 uppercase font-bold mb-1">CAC da Plataforma</p>
-                        <p className="text-2xl font-bold text-zinc-400">R$ {metrics.platform_cac}</p>
-                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-zinc-800 text-[9px] text-zinc-500 rounded uppercase">Métrica de Vaidade</div>
+                    {/* BIG NUMBER 2: Net Profit */}
+                    <div className="col-span-1 bg-zinc-900/50 p-5 rounded-2xl border border-zinc-700/50 flex flex-col justify-between relative overflow-hidden">
+                        <div className={`absolute top-0 left-0 w-1 h-full ${metrics.profit > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                        <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-widest pl-2">Lucro Líquido</p>
+
+                        <div>
+                            <p className={`text-3xl font-black tracking-tight ${metrics.profit > 0 ? 'text-white' : 'text-red-400'}`}>
+                                R$ {metrics.profit?.toLocaleString()}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${metrics.profit_margin > 15 ? 'bg-emerald-900/50 text-emerald-400' : 'bg-yellow-900/50 text-yellow-400'}`}>
+                                    {metrics.profit_margin}% Margem
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Card 3: TRUE CAC (Real) */}
-                    <div className="bg-gradient-to-br from-emerald-900/20 to-black p-6 rounded-2xl border border-emerald-500/30 relative overflow-hidden">
-                        <div className="absolute -right-4 -top-4 w-16 h-16 bg-emerald-500 blur-2xl opacity-20" />
-                        <p className="text-xs text-emerald-500 uppercase font-bold mb-1 flex items-center gap-1">
-                            <ArrowTrendingUpIcon className="w-3 h-3" /> CAC Real
-                        </p>
-                        <p className="text-3xl font-black text-white">R$ {metrics.true_cac}</p>
-                        <p className="text-[10px] text-emerald-400/60 mt-1">O custo real por venda</p>
+                    {/* Card 3: Investment Breakdown */}
+                    <div className="col-span-1 bg-black/40 p-5 rounded-2xl border border-zinc-800 flex flex-col justify-between">
+                        <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">Investimento Total</p>
+                        <div>
+                            <p className="text-2xl font-bold text-zinc-200">R$ {metrics.total_investment?.toLocaleString()}</p>
+                            <div className="w-full bg-zinc-800 h-1 mt-3 rounded-full overflow-hidden flex">
+                                <div className="bg-blue-500 h-full" style={{ width: `${(metrics.ad_spend / metrics.total_investment) * 100}%` }} />
+                                <div className="bg-zinc-600 h-full flex-1" />
+                            </div>
+                            <div className="flex justify-between mt-1 text-[9px] text-zinc-500">
+                                <span>Ads: {(metrics.ad_spend / metrics.total_investment * 100).toFixed(0)}%</span>
+                                <span>Fixo: {(metrics.fixed_costs / metrics.total_investment * 100).toFixed(0)}%</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Card 4: Hidden Cost */}
-                    <div className="bg-red-900/10 p-6 rounded-2xl border border-red-500/20">
-                        <p className="text-xs text-red-500 uppercase font-bold mb-1 flex items-center gap-1">
+                    {/* Card 4: Hidden Cost / Reality Check */}
+                    <div className="col-span-1 bg-red-900/10 p-5 rounded-2xl border border-red-500/20 flex flex-col justify-between">
+                        <p className="text-[10px] text-red-500 uppercase font-bold tracking-widest flex items-center gap-1">
                             <ExclamationTriangleIcon className="w-3 h-3" /> Custo Oculto
                         </p>
-                        <p className="text-2xl font-bold text-red-400">+{metrics.hidden_cost_percentage}%</p>
-                        <p className="text-[10px] text-red-400/60 mt-1">vs Métricas da Plataforma</p>
+                        <div>
+                            <p className="text-3xl font-black text-red-400">+{metrics.hidden_cost_percentage}%</p>
+                            <p className="text-[10px] text-red-400/60 mt-1 font-medium">True CAC vs Platform CAC</p>
+                            <p className="text-[10px] text-zinc-500 mt-2">R$ {metrics.true_cac} real vs R$ {metrics.platform_cac} painel</p>
+                        </div>
                     </div>
 
                 </div>

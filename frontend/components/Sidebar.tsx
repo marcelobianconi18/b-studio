@@ -13,7 +13,12 @@ interface SidebarProps {
     onNavigate: (tab: string) => void;
 }
 
+import { useState } from "react";
+import CredentialsModal from "./CredentialsModal";
+
 export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     return (
         <aside className="fixed left-0 top-0 h-full w-64 bg-[#050505] border-r border-zinc-800 flex flex-col z-50">
             {/* Logo Area */}
@@ -69,9 +74,9 @@ export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
             <div className="p-4 mt-auto border-t border-zinc-900">
                 <NavItem
                     icon={<Cog6ToothIcon className="w-5 h-5" />}
-                    label="Configurações"
+                    label="Configurações (API)"
                     isActive={activeTab === "settings"}
-                    onClick={() => onNavigate("settings")}
+                    onClick={() => setIsModalOpen(true)}
                 />
 
                 {/* System Status */}
@@ -92,6 +97,8 @@ export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
                     </div>
                 </div>
             </div>
+
+            <CredentialsModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </aside>
     );
 }

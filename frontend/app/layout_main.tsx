@@ -15,8 +15,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             {/* Main Content Area */}
             <main className="flex-1 ml-64 min-h-screen bg-[#050505]">
-                {activeTab === "home" && <CommandCenter onNavigate={setActiveTab} />}
-                {activeTab === "ads" && <Dashboard />}
+                {activeTab === "home" && <Dashboard />}
+                {activeTab === "ads" && <div className="p-20 text-center text-zinc-500">Gestor Detalhado em Breve (Use a Home)</div>}
                 {activeTab === "social" && <SocialStudio />}
                 {activeTab === "inbox" && <UnifiedInbox />}
                 {activeTab === "settings" && <div className="p-20 text-center text-zinc-500">Módulo de Configurações em Breve</div>}
