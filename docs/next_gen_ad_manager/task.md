@@ -57,3 +57,26 @@
 - [ ] **Frontend State Management**
     - [ ] Refactor data fetching to use `React Query` (TanStack Query) or `SWR`.
     - [ ] Implement optimistic updates for cleaner UX (no flickering).
+    - [ ] Implement optimistic updates for cleaner UX (no flickering).
+
+## 🦜 Phase 7: LangChain Intelligence (The "Brain" Upgrade)
+- [x] **Sales Desk AI (Intent Classification)**
+    - [x] Install `langchain`, `langchain-community`.
+    - [x] Create `interactions_ai.py` with `CommentAnalysis` chain (**Strictly using Qwen2.5/Ollama**).
+    - [x] Integrate into `InteractionsManager` to replace regex logic.
+- [x] **Intelligence Hub (Data Analysis)**
+    - [x] Create agents for correlation analysis (e.g. CPC vs Frequency).
+    - [x] Refactor `intelligence.py` to use LangChain + Qwen2.5.
+- [x] **Creative Search (Vector Store)**
+    - [x] Implement ChromaDB for semantic search of assets.
+    - [x] Create `creative_search.py` service.
+    - [x] Create `creative_search.py` service.
+
+## 🖥️ Phase 8: B-Studio Interface (The "Cockpit")
+- [x] **Global Layout**
+    - [x] Create `Sidebar.tsx` with "Social" vs "Traffic" navigation.
+    - [x] Update `layout.tsx` to include Sidebar and dark theme.
+- [x] **Command Center (Home)**
+    - [x] Redesign `page.tsx` as the main dashboard (Conceptually moved to `layout_main` Command Center).
+    - [x] Implement "Traffic Traffic" Widget (Spend, ROAS).
+    - [x] Implement "Social Studio" Widget (Engagement, Inbox).

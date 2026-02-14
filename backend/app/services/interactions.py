@@ -1,8 +1,8 @@
-
 import logging
-from app.services.meta_api import meta_service
-from app.services.intelligence import intelligence_service
+import asyncio
 from typing import List, Dict
+from app.services.meta_api import meta_service
+from app.services.interactions_ai import interactions_ai_service
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ class InteractionsManager:
     Manages fetching and classifying social interactions (Comments & DMs).
     """
 
-    def get_latest_interactions(self, page_id: str = None) -> Dict:
+    async def get_latest_interactions(self, page_id: str = None) -> Dict:
         """
         Fetches latest comments and classifies them using AI.
         NOTE: Since we don't have webhooks on localhost, we pool the latest posts.
@@ -43,28 +43,38 @@ class InteractionsManager:
             for post in all_posts:
                 post_id = post.get("id")
                 is_paid_source = post.get("is_paid", False)
+                post_message = post.get("message", "No Context")
                 
                 # Fetch comments for this post
                 post_comments = meta_service.get_post_comments(post_id)
                 
                 for comment in post_comments.get("data", []):
-                    # Classify sentiment/intent
-                    intent = self._classify_intent(comment.get("message", ""))
+                    # Classify sentiment/intent using LangChain AI
+                    comment_text = comment.get("message", "")
+                    
+                    # Call AI Service (Async)
+                    ai_analysis = await interactions_ai_service.analyze_interaction(comment_text, post_message)
+                    
+                    # Extract fields with defaults
+                    intent = ai_analysis.get("intent", "other")
+                    priority = ai_analysis.get("priority_score", 0)
+                    
+                    # Tagging Logic
+                    sentiment_tag = intent.upper()
                     
                     # Force "PAID" sentiment if intent is HOT/WARM and source is Paid
-                    # We prioritize Paid interactions that have business value
-                    if is_paid_source: 
-                        sentiment_tag = "PAID" # Special tag for inbox sorting
-                    else:
-                        sentiment_tag = intent
-
+                    if is_paid_source and priority > 5: 
+                         sentiment_tag = f"PAID {intent.upper()}"
+                    
                     comments.append({
                         "id": comment.get("id"),
                         "message": comment.get("message"),
                         "from_name": comment.get("from", {}).get("name", "Unknown"),
                         "created_time": comment.get("created_time"),
                         "sentiment": sentiment_tag,
-                        "source": "paid" if is_paid_source else "organic"
+                        "source": "paid" if is_paid_source else "organic",
+                        "ai_reply": ai_analysis.get("suggested_reply"),
+                        "priority": priority
                     })
             
             return {"comments": comments, "messages": []} # DMs require stricter permissions
@@ -73,7 +83,7 @@ class InteractionsManager:
             logger.error(f"Error fetching interactions: {e}")
             return {"error": str(e)}
 
-    def _classify_intent(self, text: str) -> str:
+    def _classify_intent_legacy(self, text: str) -> str:
         """
         Uses simple heuristic or AI to classify intent.
         Categories: HOT (Sale), WARM (Question), COLD (Generic), SPAM

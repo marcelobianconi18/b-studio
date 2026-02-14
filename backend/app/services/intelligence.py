@@ -1,25 +1,57 @@
-
 import os
-import requests
 import json
-from typing import List, Dict, Any
+import logging
+from typing import List, Dict, Any, Optional
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_community.chat_models import ChatOllama
+from pydantic import BaseModel, Field
+
 from app.services.meta_ads import meta_ads_service
 from app.services.financial import financial_service
 from app.models.agent import AgentMode, Recommendation, AutonomousAction
 from app.core.database import SessionLocal
-import logging
 
 logger = logging.getLogger(__name__)
+
+# --- Pydantic Models for Structured Output ---
+
+class StrategicAction(BaseModel):
+    campaign_id: str = Field(description="The ID of the campaign to act upon")
+    action: str = Field(description="Action to take: PAUSE, SCALE_UP, or NOTHING")
+    reason: str = Field(description="Short explanation for the decision in Portuguese")
+    impact: int = Field(description="Predicted impact score (1-10)")
+
+class StrategicReport(BaseModel):
+    actions: List[StrategicAction] = Field(description="List of recommended actions for campaigns")
+
+class HistoricalAuditResult(BaseModel):
+    summary: str = Field(description="Executive summary of the historical performance in Portuguese")
+    trend_analysis: str = Field(description="Analysis of CPC/CPM trends")
+    key_recommendations: List[str] = Field(description="Top 3 strategic recommendations for the future")
+
+class GrowthAnalysisResult(BaseModel):
+    blended_reach: int = Field(description="Total reach (Organic + Paid)")
+    organic_growth_rate: str = Field(description="Growth rate percentage (e.g., '+15%')")
+    insight: str = Field(description="Key insight on Organic vs Paid interaction")
+    suggestion: str = Field(description="Content suggestion to boost results")
+
+# ---------------------------------------------
 
 class StrategistAgent:
     """
     The brain of B-Studio. Analyzes data and decides on actions or recommendations.
+    Powered by LangChain and Qwen2.5 (Local).
     """
     def __init__(self):
-        self.provider_url = os.getenv("BIA_AI_URL", "http://localhost:11434/api/generate") # Default to Ollama
-        self.model = os.getenv("BIA_AI_MODEL", "qwen2.5-coder:7b")
+        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        self.model_name = os.getenv("BIA_AI_MODEL", "qwen2.5-coder:7b")
+        
+        logger.info(f"Initializing StrategistAgent with Local Ollama ({self.model_name})...")
+        self.llm = ChatOllama(model=self.model_name, base_url=self.ollama_base_url, temperature=0.1)
 
-    def analyze_performance(self, mode: str):
+    async def analyze_performance(self, mode: str):
         """
         Main loop for performance analysis.
         """
@@ -34,8 +66,8 @@ class StrategistAgent:
         # 2. Build Context for IA
         context = self._prepare_context(campaigns)
         
-        # 3. Ask the Strategist
-        decision = self._ask_llm(context)
+        # 3. Ask the Strategist (LangChain)
+        decision = await self._ask_strategist(context)
         
         if not decision:
             return
@@ -60,76 +92,72 @@ class StrategistAgent:
         
         return json.dumps(data_summary, indent=2)
 
-    def _ask_llm(self, context: str):
-        """Call the local LLM to get strategic insights."""
-        prompt = f"""
-        Você é o Strategist Agent do B-Studio. Sua missão é analisar as campanhas de Meta Ads abaixo e decidir o que fazer.
-        
-        REGRAS:
-        - Se o CTR for menor que 0.5% e o Spend > 50, considere o desempenho RUIM e sugira PAUSAR.
-        - Se o CPC for menor que 0.20 e o CTR > 2%, considere o desempenho EXCELENTE e sugira ESCALAR (aumentar orçamento).
-        
-        CONTEXTO DAS CAMPANHAS:
-        {context}
-        
-        RESPONDA APENAS EM JSON no seguinte formato:
-        {{
-            "actions": [
-                {{
-                    "campaign_id": "ID",
-                    "action": "PAUSE" | "SCALE_UP" | "NOTHING",
-                    "reason": "Explicação curta em português",
-                    "impact": 1-10
-                }}
-            ]
-        }}
-        """
-        
-        try:
-            response = requests.post(self.provider_url, json={
-                "model": self.model,
-                "prompt": prompt,
-                "stream": False,
-                "format": "json"
-            }, timeout=60)
+    async def _ask_strategist(self, context: str) -> Optional[Dict]:
+        """Use LangChain to analyze campaign data."""
+        parser = JsonOutputParser(pydantic_object=StrategicReport)
+
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "Você é o Strategist Agent do B-Studio. Analise as campanhas de Meta Ads. Responda APENAS em JSON."),
+            ("user", """
+            REGRAS:
+            - Se o CTR for menor que 0.5% e o Spend > 50, considere RUIM -> PAUSAR.
+            - Se o CPC for menor que 0.20 e o CTR > 2%, considere EXCELENTE -> ESCALAR.
             
-            if response.status_code == 200:
-                result = response.json()
-                return json.loads(result.get("response", "{}"))
-            return None
+            CONTEXTO DAS CAMPANHAS:
+            {context}
+            
+            {format_instructions}
+            """)
+        ])
+
+        chain = prompt | self.llm | parser
+
+        try:
+            result = await chain.ainvoke({
+                "context": context,
+                "format_instructions": parser.get_format_instructions()
+            })
+            return result
         except Exception as e:
-            logger.error(f"Error calling LLM: {e}")
+            logger.error(f"Error in Strategist analysis: {e}")
             return None
 
     def _execute_decision(self, decision: Dict, mode: str):
         db = SessionLocal()
         try:
-            for action in decision.get("actions", []):
-                if action["action"] == "NOTHING":
+            actions = decision.get("actions", [])
+            for action in actions:
+                # Handle dictionary input if Pydantic model dump/dict conversion happened or raw dict
+                act_type = action.get("action") if isinstance(action, dict) else action.action
+                camp_id = action.get("campaign_id") if isinstance(action, dict) else action.campaign_id
+                reason = action.get("reason") if isinstance(action, dict) else action.reason
+                impact = action.get("impact", 5) if isinstance(action, dict) else action.impact
+
+                if act_type == "NOTHING":
                     continue
 
                 if mode == AgentMode.AUTOMATIC.value:
                     # Execute directly on Meta
-                    logger.info(f"AUTONOMOUS ACTION: {action['action']} on {action['campaign_id']}")
-                    if action["action"] == "PAUSE":
-                        meta_ads_service.toggle_campaign_status(action["campaign_id"], "PAUSED")
+                    logger.info(f"AUTONOMOUS ACTION: {act_type} on {camp_id}")
+                    if act_type == "PAUSE":
+                        meta_ads_service.toggle_campaign_status(camp_id, "PAUSED")
                     
                     # Log action
                     log = AutonomousAction(
-                        action_type=action["action"],
-                        campaign_id=action["campaign_id"],
-                        reason=action["reason"]
+                        action_type=act_type,
+                        campaign_id=camp_id,
+                        reason=reason
                     )
                     db.add(log)
                 
                 elif mode == AgentMode.HYBRID.value:
                     # Create recommendation for Dashboard
-                    logger.info(f"NEW RECOMMENDATION for {action['campaign_id']}")
+                    logger.info(f"NEW RECOMMENDATION for {camp_id}")
                     rec = Recommendation(
-                        title=f"Sugestão para {action['campaign_id']}",
-                        content=action["reason"],
-                        campaign_id=action["campaign_id"],
-                        impact_score=action.get("impact", 5)
+                        title=f"Sugestão para {camp_id}",
+                        content=reason,
+                        campaign_id=camp_id,
+                        impact_score=impact
                     )
                     db.add(rec)
             
@@ -162,9 +190,9 @@ class StrategistAgent:
         
         return metrics
 
-    def generate_historical_audit(self, days: int = 365):
+    async def generate_historical_audit(self, days: int = 365):
         """
-        Analyzes historical data to create a deep strategic retrospective.
+        Analyzes historical data to create a deep strategic retrospective using LangChain.
         """
         logger.info(f"Starting Historical Audit for the last {days} days...")
         
@@ -175,55 +203,59 @@ class StrategistAgent:
 
         insights_data = data.get("data", [])
         
-        # 2. Build Prompt
-        prompt = f"""
-        Você é o Chief Strategy Officer do B-Studio. Analise o histórico de performance de Meta Ads dos últimos {days} dias apresentado abaixo.
-        O histórico está agrupado em períodos de 30 dias.
+        # 2. Build LangChain Chain
+        parser = JsonOutputParser(pydantic_object=HistoricalAuditResult)
         
-        HISTÓRICO:
-        {json.dumps(insights_data, indent=2)}
-        
-        Sua tarefa é gerar um relatório executivo:
-        1. Identifique a tendência de custo (CPC/CPM).
-        2. Identifique quais meses foram picos de performance e por que (se houver dados).
-        3. Dê 3 conselhos estratégicos baseados NO PASSADO para NÃO serem repetidos ou para serem ESCALADOS no futuro.
-        
-        ESCREVA EM PORTUGUÊS DE FORMA PROFISSIONAL E EXECUTIVA.
-        """
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "Você é o Chief Strategy Officer do B-Studio. Analise o histórico. Responda em JSON."),
+            ("user", """
+            HISTÓRICO (Últimos {days} dias):
+            {history}
+            
+            TAREFA:
+            1. Identifique tendência de custo (CPC/CPM).
+            2. Identifique picos de performance.
+            3. Dê 3 conselhos estratégicos.
+            
+            {format_instructions}
+            """)
+        ])
+
+        chain = prompt | self.llm | parser
 
         try:
-            response = requests.post(self.provider_url, json={
-                "model": self.model,
-                "prompt": prompt,
-                "stream": False
-            }, timeout=90)
+            result = await chain.ainvoke({
+                "days": days,
+                "history": json.dumps(insights_data, indent=2),
+                "format_instructions": parser.get_format_instructions()
+            })
             
-            if response.status_code == 200:
-                result = response.json()
-                summary = result.get("response", "Erro ao gerar sumário.")
-                
-                # Save to DB
-                from app.models.agent import HistoricalAudit
-                db = SessionLocal()
-                audit = HistoricalAudit(
-                    report_json=insights_data,
-                    summary_text=summary,
-                    period_days=days
-                )
-                db.add(audit)
-                db.commit()
-                db.refresh(audit)
-                db.close()
-                
-                return {"id": audit.id, "summary": summary}
-            return {"error": "LLM failed to respond."}
+            summary_text = result.get("summary", "")
+            if not summary_text:
+                summary_text = result.get("trend_analysis", "Análise indisponível")
+
+            # Save to DB
+            from app.models.agent import HistoricalAudit
+            db = SessionLocal()
+            audit = HistoricalAudit(
+                report_json=insights_data,
+                summary_text=str(result), # Store full structured result as string representation for now
+                period_days=days
+            )
+            db.add(audit)
+            db.commit()
+            db.refresh(audit)
+            db.close()
+            
+            return {"id": audit.id, "summary": result}
+            
         except Exception as e:
             logger.error(f"Error generating audit: {e}")
             return {"error": str(e)}
 
-    def analyze_social_growth(self):
+    async def analyze_social_growth(self):
         """
-        Analyzes organic growth and compares with paid efforts.
+        Analyzes organic growth and compares with paid efforts using LangChain.
         """
         from app.services.meta_api import meta_service
         
@@ -241,38 +273,31 @@ class StrategistAgent:
             "paid": paid_data.get("data", [])
         }
         
-        prompt = f"""
-        Você é o Estrategista de Crescimento do B-Studio.
-        Analise os dados de crescimento ORGÂNICO vs PAGO dos últimos 28 dias.
+        parser = JsonOutputParser(pydantic_object=GrowthAnalysisResult)
         
-        DADOS:
-        {json.dumps(context, indent=2)}
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "Você é o Estrategista de Crescimento do B-Studio. Analise Orgânico vs Pago. Responda em JSON."),
+            ("user", """
+            DADOS:
+            {data}
+            
+            MISSÃO:
+            1. Calcule 'Blended Reach'.
+            2. Analise canibalização vs impulso.
+            3. Sugira conteúdo orgânico para impulsionar.
+            
+            {format_instructions}
+            """)
+        ])
         
-        Sua missão:
-        1. Calcule o "Blended Reach" (Alcance Total = Orgânico + Pago).
-        2. Identifique se o tráfego pago está canibalizando ou impulsionando o orgânico.
-        3. Dê uma sugestão de conteúdo orgânico que poderia ser impulsionado para baixar o custo por resultado.
-        
-        Responda em JSON:
-        {{
-            "blended_reach": 0,
-            "organic_growth_rate": "0%",
-            "insight": "Texto curto",
-            "suggestion": "Texto curto"
-        }}
-        """
+        chain = prompt | self.llm | parser
         
         try:
-            response = requests.post(self.provider_url, json={
-                "model": self.model,
-                "prompt": prompt,
-                "stream": False,
-                "format": "json"
-            }, timeout=60)
-            
-            if response.status_code == 200:
-                return json.loads(response.json().get("response", "{}"))
-            return None
+            result = await chain.ainvoke({
+                "data": json.dumps(context, indent=2),
+                "format_instructions": parser.get_format_instructions()
+            })
+            return result
         except Exception as e:
             logger.error(f"Error analyzing social growth: {e}")
             return None

@@ -1,32 +1,41 @@
 # Next-Gen AdManager Implementation Plan
 
 ## Goal Description
-Upgrade the "Ads Manager" to a production-ready SaaS level by implementing robust error handling and API resilience.
+Build the **B-Studio Interface** (Frontend).
+Transform the current MVP pages into a cohesive, professional SaaS platform with distinct areas for "Traffic Management" (Paid) and "Social Studio" (Organic).
 
 ## User Review Required
 > [!IMPORTANT]
-> **Production Hardening**: We are entering a stabilization phase. New features are paused in favor of reliability.
+> **Design**: I will use a dark-themed, premium aesthetic with "Glassmorphism" touches, as requested in your design guidelines.
 
 ## Proposed Changes
 
-### Backend Infrastructure
+### Frontend Architecture
 
-#### [MODIFY] [requirements.txt](file:///Volumes/SSD%20Externo/reposit%C3%B3rios/b-studio/backend/requirements.txt)
-- Added `tenacity` library for advanced retry logic.
+#### [NEW] [Dashboard Structure]
+- **Entry Point (`app/page.tsx`)**: A high-level "Command Center" dashboard that shows a summary of both worlds (Orgânico vs Pago) and allows quick navigation.
+- **Split Views**:
+    1.  **Traffic Manager (Gestor de Tráfego)**:
+        -   *Sub-functions*: Campilhas (Active), ROI Monitor, Creative Fatigue, Scaling Opportunities.
+    2.  **Social Studio (Social Media)**:
+        -   *Sub-functions*: Content Calendar, Inbox (Sales Desk), Viral Alerts, Creative Search.
 
-#### [MODIFY] [meta_api.py](file:///Volumes/SSD%20Externo/reposit%C3%B3rios/b-studio/backend/app/services/meta_api.py)
-- **Retry Logic**:
-    - Decorate API methods with `@retry`.
-    - implementation: `stop=stop_after_attempt(3)`, `wait=wait_exponential(multiplier=1, min=4, max=10)`.
-    - Retry on `requests.exceptions.RequestException` and 5xx errors.
+#### [MODIFY] [frontend/app/page.tsx](file:///Volumes/SSD%20Externo/reposit%C3%B3rios/b-studio/frontend/app/page.tsx)
+- Redesign to use a Grid Layout with 2 main columns:
+    - **Left**: Social Media Performance (Organic Reach, Engagement, Latest Inbox Leads).
+    - **Right**: Paid Traffic Performance (Spend, ROAS, Active Campaigns status).
 
-#### [MODIFY] [meta_ads.py](file:///Volumes/SSD%20Externo/reposit%C3%B3rios/b-studio/backend/app/services/meta_ads.py)
-- **Retry Logic**:
-    - Apply similar `@retry` decorators to `get_campaigns`, `get_insights`, etc.
-    - Handle `OAuthException` explicitly (Trigger alert for token refresh).
+#### [NEW] [frontend/components/Sidebar.tsx](file:///Volumes/SSD%20Externo/reposit%C3%B3rios/b-studio/frontend/components/Sidebar.tsx)
+- Navigation bar with:
+    - **Home** (Command Center)
+    - **Traffic Manager** (Dropdown: Campaigns, Audiences, Finance)
+    - **Social Studio** (Dropdown: Calendar, Inbox, Search)
+    - **Settings**
 
 ## Verification Plan
 
-### Automated Logic Tests
-- **Simulate Failure**: Temporarily break the API URL or disconnect network to verify retries occur 3 times before failing.
-- **Rate Limit Simulation**: Mock a 429 response and verify exponential backoff wait time.
+### Manual Verification
+- **Visual Check**:
+    - Verify "Traffic" and "Social" sections are visually distinct.
+    - Check responsiveness (Sidebar collapsing).
+    - ensure navigation links work.

@@ -13,3 +13,7 @@ sqlalchemy>=2.0.25
 psycopg2-binary>=2.9.9
 facebook-sdk>=3.1.0  # For basic graph API interaction
 tenacity>=8.2.3 # For retry logic
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-community>=0.0.10
+chromadb>=0.4.22
