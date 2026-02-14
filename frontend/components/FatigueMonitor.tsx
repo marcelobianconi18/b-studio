@@ -31,7 +31,7 @@ export default function FatigueMonitor() {
 
     if (loading) return (
         <div className="p-6 bg-zinc-900/30 border border-zinc-800 rounded-3xl animate-pulse h-64 flex items-center justify-center">
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Scanning Ad Performance...</p>
+            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Escaneando Performance de Anúncios...</p>
         </div>
     );
 
@@ -39,7 +39,7 @@ export default function FatigueMonitor() {
         <div className="p-6 bg-gradient-to-br from-zinc-900 to-black border border-zinc-800 rounded-3xl h-full">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-sm font-bold uppercase text-zinc-500 tracking-widest flex items-center gap-2">
-                    <ChartBarIcon className="w-4 h-4" /> Asset Liquidity Hub
+                    <ChartBarIcon className="w-4 h-4" /> Central de Liquidez de Ativos
                 </h2>
                 <button onClick={checkFatigue} className="text-zinc-600 hover:text-white transition-colors">
                     <ArrowPathIcon className="w-4 h-4" />
@@ -49,8 +49,8 @@ export default function FatigueMonitor() {
                 <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3">
                     <CheckBadgeIcon className="w-6 h-6 text-emerald-500" />
                 </div>
-                <h3 className="text-zinc-300 font-bold">All Creatives Healthy</h3>
-                <p className="text-zinc-500 text-xs mt-1">Scanned {data?.checked_count || 0} active ads. No fatigue detected.</p>
+                <h3 className="text-zinc-300 font-bold">Todos os Criativos Saudáveis</h3>
+                <p className="text-zinc-500 text-xs mt-1">Escaneados {data?.checked_count || 0} anúncios ativos. Nenhuma fadiga detectada.</p>
             </div>
         </div>
     );
@@ -59,10 +59,10 @@ export default function FatigueMonitor() {
         <div className="p-6 bg-gradient-to-br from-red-900/10 to-black border border-red-500/20 rounded-3xl h-full">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-sm font-bold uppercase text-red-500 tracking-widest flex items-center gap-2">
-                    <ExclamationTriangleIcon className="w-4 h-4" /> Creative Fatigue Alert
+                    <ExclamationTriangleIcon className="w-4 h-4" /> Alerta de Fadiga Criativa
                 </h2>
                 <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
-                    {data.fatigued_ads.length} Ads Dying
+                    {data.fatigued_ads.length} Anúncios Morrendo
                 </span>
             </div>
 
@@ -71,7 +71,7 @@ export default function FatigueMonitor() {
                     <div key={ad.ad_id} className="bg-black/50 border border-red-500/30 p-4 rounded-xl">
                         <div className="flex justify-between items-start mb-2">
                             <h3 className="font-bold text-zinc-200 text-sm truncate w-2/3">{ad.ad_name}</h3>
-                            <span className="text-[10px] text-red-400 font-mono">{ad.severity} RISK</span>
+                            <span className="text-[10px] text-red-400 font-mono">{ad.severity} RISCO</span>
                         </div>
                         <p className="text-xs text-zinc-500 mb-2">{ad.reason}</p>
                         <div className="bg-red-500/10 rounded px-2 py-1 text-[10px] font-mono text-red-300 inline-block mb-3">
@@ -82,7 +82,7 @@ export default function FatigueMonitor() {
                         {data.replacements && data.replacements.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-zinc-800/50">
                                 <p className="text-[10px] text-zinc-500 uppercase font-bold mb-2 flex items-center gap-1">
-                                    <ArrowPathIcon className="w-3 h-3" /> Suggested Replacement
+                                    <ArrowPathIcon className="w-3 h-3" /> Substituição Sugerida
                                 </p>
                                 <div className="flex items-center gap-3 bg-zinc-900 p-2 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer group">
                                     <div className="w-8 h-8 bg-zinc-700 rounded overflow-hidden shrink-0">
@@ -96,7 +96,7 @@ export default function FatigueMonitor() {
                                         <p className="text-[10px] text-zinc-300 truncate">{data.replacements[0].message}</p>
                                     </div>
                                     <button className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded hover:bg-zinc-200 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        USE
+                                        USAR
                                     </button>
                                 </div>
                             </div>

@@ -71,8 +71,8 @@ export default function Dashboard() {
         <div className="p-8">
             <header className="flex justify-between items-end mb-8">
                 <div>
-                    <h1 className="text-4xl font-black italic tracking-tighter mb-2">WAR ROOM</h1>
-                    <p className="text-zinc-500 text-sm">Real-time Ads Command Center</p>
+                    <h1 className="text-4xl font-black italic tracking-tighter mb-2">SALA DE GUERRA</h1>
+                    <p className="text-zinc-500 text-sm">Centro de Comando de Anúncios em Tempo Real</p>
                 </div>
 
                 <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
@@ -106,12 +106,12 @@ export default function Dashboard() {
                     <section>
                         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                             <BoltIcon className="w-5 h-5 text-yellow-500" />
-                            Agent Recommendations
+                            Recomendações do Agente
                         </h2>
                         <div className="grid gap-4">
                             {recommendations.length === 0 ? (
                                 <div className="p-8 border border-dashed border-zinc-800 rounded-xl text-center text-zinc-600">
-                                    No active recommendations. The agent is analyzing...
+                                    Nenhuma recomendação ativa. O agente está analisando...
                                 </div>
                             ) : (
                                 recommendations.map((rec: any) => (
@@ -119,16 +119,16 @@ export default function Dashboard() {
                                         <div className="flex justify-between items-start mb-2">
                                             <h3 className="font-bold text-lg text-zinc-200">{rec.title}</h3>
                                             <span className="bg-yellow-500/10 text-yellow-500 text-xs px-2 py-1 rounded font-bold">
-                                                Impact: {rec.impact_score}/10
+                                                Impacto: {rec.impact_score}/10
                                             </span>
                                         </div>
                                         <p className="text-sm text-zinc-400 mb-4">{rec.content}</p>
                                         <div className="flex gap-3">
                                             <button className="flex-1 py-2 bg-white text-black font-bold rounded-lg text-xs hover:bg-zinc-200">
-                                                Approve Action
+                                                Aprovar Ação
                                             </button>
                                             <button className="px-4 py-2 border border-zinc-700 rounded-lg text-xs font-bold hover:bg-zinc-800">
-                                                Dismiss
+                                                Dispensar
                                             </button>
                                         </div>
                                     </div>
@@ -142,10 +142,10 @@ export default function Dashboard() {
                 <div className="space-y-8">
                     {/* Bot Activity Log */}
                     <section className="bg-zinc-900/30 border border-zinc-800 p-6 rounded-3xl h-[400px] overflow-y-auto">
-                        <h2 className="text-sm font-bold uppercase text-zinc-500 mb-4 tracking-widest">Live Activity Log</h2>
+                        <h2 className="text-sm font-bold uppercase text-zinc-500 mb-4 tracking-widest">Log de Atividade em Tempo Real</h2>
                         <div className="space-y-4">
                             {history.length === 0 ? (
-                                <p className="text-xs text-zinc-600 italic">Agent haven't taken any action yet.</p>
+                                <p className="text-xs text-zinc-600 italic">O agente ainda não tomou nenhuma ação.</p>
                             ) : (
                                 history.map((action: any) => (
                                     <div key={action.id} className="flex gap-3 text-xs border-b border-zinc-800/50 pb-3 last:border-0">
@@ -171,20 +171,20 @@ export default function Dashboard() {
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-sm font-bold uppercase text-indigo-400 tracking-widest flex items-center gap-2">
                                 <ClockIcon className="w-4 h-4" />
-                                Strategic Audit
+                                Auditoria Estratégica
                             </h2>
                             <button
                                 onClick={triggerAudit}
                                 disabled={isAuditing}
                                 className="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded-full font-bold transition-all disabled:opacity-50"
                             >
-                                {isAuditing ? "Analyzing..." : "Generate New Audit"}
+                                {isAuditing ? "Analisando..." : "Gerar Nova Auditoria"}
                             </button>
                         </div>
 
                         <div className="space-y-3">
                             {audits.length === 0 ? (
-                                <p className="text-xs text-zinc-500 italic">No historical audits generated yet.</p>
+                                <p className="text-xs text-zinc-500 italic">Nenhuma auditoria histórica gerada ainda.</p>
                             ) : (
                                 audits.slice(0, 3).map((audit: any) => (
                                     <div key={audit.id} className="bg-black/50 p-4 rounded-xl border border-zinc-800/50">

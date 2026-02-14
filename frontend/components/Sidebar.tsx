@@ -33,33 +33,33 @@ export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
             <nav className="flex-1 px-4 space-y-2">
                 <NavItem
                     icon={<HomeIcon className="w-5 h-5" />}
-                    label="Command Center"
+                    label="Centro de Comando"
                     isActive={activeTab === "home"}
                     onClick={() => onNavigate("home")}
                 />
 
                 <div className="pt-6 pb-2 px-4">
-                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Traffic Management</p>
+                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Gestão de Tráfego</p>
                 </div>
                 <NavItem
                     icon={<ChartBarIcon className="w-5 h-5" />}
-                    label="Ads Manager"
+                    label="Gestor de Anúncios"
                     isActive={activeTab === "ads"}
                     onClick={() => onNavigate("ads")}
                 />
 
                 <div className="pt-6 pb-2 px-4">
-                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Social Studio</p>
+                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Estúdio Social</p>
                 </div>
                 <NavItem
                     icon={<HashtagIcon className="w-5 h-5" />}
-                    label="Organic Growth"
+                    label="Crescimento Orgânico"
                     isActive={activeTab === "social"}
                     onClick={() => onNavigate("social")}
                 />
                 <NavItem
                     icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />}
-                    label="Unified Inbox"
+                    label="Inbox Unificado"
                     isActive={activeTab === "inbox"}
                     onClick={() => onNavigate("inbox")}
                 />
@@ -69,7 +69,7 @@ export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
             <div className="p-4 mt-auto border-t border-zinc-900">
                 <NavItem
                     icon={<Cog6ToothIcon className="w-5 h-5" />}
-                    label="Settings"
+                    label="Configurações"
                     isActive={activeTab === "settings"}
                     onClick={() => onNavigate("settings")}
                 />
@@ -78,12 +78,12 @@ export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
                 <div className="mt-6 bg-zinc-900/50 rounded-xl p-4 border border-zinc-800">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-xs font-bold text-zinc-400">System Online</span>
+                        <span className="text-xs font-bold text-zinc-400">Sistema Online</span>
                     </div>
                     <div className="space-y-1">
                         <div className="flex justify-between text-[10px] text-zinc-600 font-mono">
                             <span>META API</span>
-                            <span className="text-emerald-500">Connected</span>
+                            <span className="text-emerald-500">Conectado</span>
                         </div>
                         <div className="flex justify-between text-[10px] text-zinc-600 font-mono">
                             <span>AI MODEL</span>
@@ -100,8 +100,8 @@ const NavItem = ({ icon, label, isActive, onClick }: any) => (
     <button
         onClick={onClick}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive
-                ? "bg-white text-black shadow-lg shadow-white/5 font-bold"
-                : "text-zinc-500 hover:bg-zinc-900 hover:text-white font-medium"
+            ? "bg-white text-black shadow-lg shadow-white/5 font-bold"
+            : "text-zinc-500 hover:bg-zinc-900 hover:text-white font-medium"
             }`}
     >
         {icon}

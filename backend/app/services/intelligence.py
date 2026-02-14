@@ -340,9 +340,9 @@ class StrategistAgent:
                 fatigued_ads.append({
                     "ad_id": ad_id,
                     "ad_name": ad_name,
-                    "reason": "CTR Drop > 20%",
-                    "metrics": f"CTR: {first_day_ctr:.2%} -> {last_day_ctr:.2%}",
-                    "severity": "HIGH"
+                    "reason": "Queda de CTR > 20%",
+                    "metrics": f"CTR: {first_day_ctr:.2%} para {last_day_ctr:.2%}",
+                    "severity": "ALTA"
                 })
             
             # Pattern 2: High Frequency Saturation
@@ -350,9 +350,9 @@ class StrategistAgent:
                 fatigued_ads.append({
                     "ad_id": ad_id,
                     "ad_name": ad_name,
-                    "reason": "Audience Saturation (Freq > 2.5)",
-                    "metrics": f"Freq: {last_day_freq} | CTR Drop",
-                    "severity": "MEDIUM"
+                    "reason": "Saturação de Público (Freq > 2.5)",
+                    "metrics": f"Freq: {last_day_freq} | Queda de CTR",
+                    "severity": "MÉDIA"
                 })
                 
         # 3. Find Replacements (Bench)
@@ -365,7 +365,7 @@ class StrategistAgent:
             for post in organic.get("data", []):
                 replacements.append({
                     "id": post.get("id"),
-                    "message": post.get("message", "No text"),
+                    "message": post.get("message", "Sem texto"),
                     "thumbnail": post.get("full_picture") # If available
                 })
                 
@@ -450,7 +450,7 @@ class StrategistAgent:
                 lift = (p["metrics"]["er"] / avg_er) if avg_er > 0 else 0
                 viral_candidates.append({
                     **p,
-                    "reason": f"Viral Alert! ER is {lift:.1f}x higher than avg.",
+                    "reason": f"Alerta Viral! Engajamento é {lift:.1f}x maior que a média.",
                     "lift": lift
                 })
         

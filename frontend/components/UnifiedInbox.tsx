@@ -56,27 +56,27 @@ export default function UnifiedInbox() {
         <div className="p-8 h-screen flex flex-col">
             <header className="mb-8 flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-black italic tracking-tighter mb-2">SALES DESK</h1>
-                    <p className="text-zinc-500 text-sm">Priority Inbox: Money First, Noise Later</p>
+                    <h1 className="text-3xl font-black italic tracking-tighter mb-2">MESA DE VENDAS</h1>
+                    <p className="text-zinc-500 text-sm">Inbox Prioritário: Dinheiro Primeiro, Ruído Depois</p>
                 </div>
                 <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
                     <button
                         onClick={() => setFilter("all")}
                         className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${filter === "all" ? "bg-white text-black" : "text-zinc-500 hover:text-white"}`}
                     >
-                        ALL
+                        TODOS
                     </button>
                     <button
                         onClick={() => setFilter("paid")}
                         className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1 transition-all ${filter === "paid" ? "bg-emerald-500 text-white" : "text-emerald-600 hover:text-emerald-400"}`}
                     >
-                        <BanknotesIcon className="w-3 h-3" /> PAID ONLY
+                        <BanknotesIcon className="w-3 h-3" /> SÓ PAGOS
                     </button>
                     <button
                         onClick={() => setFilter("hot")}
                         className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1 transition-all ${filter === "hot" ? "bg-red-500 text-white" : "text-red-500 hover:text-red-400"}`}
                     >
-                        <FireIcon className="w-3 h-3" /> HOT LEADS
+                        <FireIcon className="w-3 h-3" /> LEADS QUENTES
                     </button>
                 </div>
             </header>
@@ -84,17 +84,17 @@ export default function UnifiedInbox() {
             <div className="flex-1 bg-zinc-900/30 border border-zinc-800 rounded-3xl overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/50 flex justify-between text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                    <span>From</span>
-                    <span>Message</span>
-                    <span>Priority Tag</span>
+                    <span>De</span>
+                    <span>Mensagem</span>
+                    <span>Tag de Prioridade</span>
                 </div>
 
                 {/* List */}
                 <div className="flex-1 overflow-y-auto">
                     {loading ? (
-                        <div className="p-10 text-center text-zinc-500 italic">Scanning Active Ads & Organic Posts...</div>
+                        <div className="p-10 text-center text-zinc-500 italic">Escaneando Anúncios Ativos & Posts Orgânicos...</div>
                     ) : sortedComments?.length === 0 ? (
-                        <div className="p-10 text-center text-zinc-500 italic">No interactions found for this filter.</div>
+                        <div className="p-10 text-center text-zinc-500 italic">Nenhuma interação encontrada para este filtro.</div>
                     ) : (
                         sortedComments?.map((item: any) => (
                             <div key={item.id} className={`px-6 py-4 border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors flex items-center justify-between group
@@ -116,7 +116,7 @@ export default function UnifiedInbox() {
                                     <p className="text-sm text-zinc-400 group-hover:text-white transition-colors line-clamp-2">{item.message}</p>
                                     <span className="text-[10px] text-zinc-600 block mt-1 flex items-center gap-2">
                                         {new Date(item.created_time).toLocaleString()}
-                                        {item.source === 'paid' && <span className="text-emerald-500 font-bold uppercase tracking-widest text-[8px]">Via Active Ad</span>}
+                                        {item.source === 'paid' && <span className="text-emerald-500 font-bold uppercase tracking-widest text-[8px]">Via Anúncio Ativo</span>}
                                     </span>
                                 </div>
 
@@ -138,7 +138,7 @@ export default function UnifiedInbox() {
 
                 {/* Reply Area (Placeholder for now) */}
                 <div className="p-4 bg-black border-t border-zinc-800">
-                    <input type="text" placeholder="Select a message to reply..." disabled className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none cursor-not-allowed opacity-50" />
+                    <input type="text" placeholder="Selecione uma mensagem para responder..." disabled className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm focus:outline-none cursor-not-allowed opacity-50" />
                 </div>
             </div>
         </div>

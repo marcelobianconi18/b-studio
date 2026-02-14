@@ -52,13 +52,13 @@ async def trigger_analysis(db: Session = Depends(get_db)):
     if mode == "manual":
         return {"status": "skipped", "message": "Agent is in Manual mode."}
     
-    intelligence_service.analyze_performance(mode)
+    await intelligence_service.analyze_performance(mode)
     return {"status": "analysis_triggered"}
 
 @router.post("/generate-audit")
 async def generate_audit(days: int = 365):
     """Triggers the long-term historical audit."""
-    return intelligence_service.generate_historical_audit(days)
+    return await intelligence_service.generate_historical_audit(days)
 
 @router.get("/audits")
 def get_audits(db: Session = Depends(get_db)):
@@ -68,7 +68,7 @@ def get_audits(db: Session = Depends(get_db)):
 @router.get("/social-analysis")
 async def get_social_analysis():
     """Get the latest social growth analysis."""
-    return intelligence_service.analyze_social_growth()
+    return await intelligence_service.analyze_social_growth()
 
 @router.get("/financial-health")
 async def get_financial_health(fixed_costs: float = 2000.0):

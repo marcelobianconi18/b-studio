@@ -42,7 +42,7 @@ export default function InstagramPreview({ image, caption, username = "b_studio_
                     <img src={image} alt="Post preview" className="w-full h-full object-cover" />
                 ) : (
                     <div className="flex items-center justify-center h-full text-zinc-400 text-xs">
-                        No Image Selected
+                        Nenhuma Imagem Selecionada
                     </div>
                 )}
             </div>
@@ -59,12 +59,12 @@ export default function InstagramPreview({ image, caption, username = "b_studio_
                 </div>
 
                 <div className="space-y-1">
-                    <p className="text-xs font-bold">1,234 likes</p>
+                    <p className="text-xs font-bold">1,234 curtidas</p>
                     <p className="text-xs leading-snug">
                         <span className="font-bold mr-2 lowercase">{username}</span>
-                        {caption || <span className="text-zinc-400 italic">Write a caption...</span>}
+                        {caption || <span className="text-zinc-400 italic">Escreva uma legenda...</span>}
                     </p>
-                    <p className="text-[10px] text-zinc-500 uppercase mt-2">2 hours ago</p>
+                    <p className="text-[10px] text-zinc-500 uppercase mt-2">2 horas atrás</p>
                 </div>
             </div>
         </div>

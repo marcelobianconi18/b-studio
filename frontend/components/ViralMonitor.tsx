@@ -31,7 +31,7 @@ export default function ViralMonitor() {
 
     if (loading) return (
         <div className="p-6 bg-zinc-900/30 border border-zinc-800 rounded-3xl animate-pulse h-64 flex items-center justify-center">
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Hunting for Viral Posts...</p>
+            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Caçando Posts Virais...</p>
         </div>
     );
 
@@ -49,10 +49,10 @@ export default function ViralMonitor() {
                 <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-3">
                     <MegaphoneIcon className="w-6 h-6 text-zinc-500" />
                 </div>
-                <h3 className="text-zinc-300 font-bold">Quiet on the Front</h3>
+                <h3 className="text-zinc-300 font-bold">Sem Novidades no Front</h3>
                 <p className="text-zinc-500 text-xs mt-1">
-                    Avg Engagement Rate: <span className="text-white font-mono">{(data?.avg_er * 100).toFixed(2)}%</span>
-                    <br />No anomalies detected today.
+                    Taxa de Engajamento Média: <span className="text-white font-mono">{(data?.avg_er * 100).toFixed(2)}%</span>
+                    <br />Nenhuma anomalia detectada hoje.
                 </p>
             </div>
         </div>
@@ -67,16 +67,16 @@ export default function ViralMonitor() {
 
             <div className="flex justify-between items-center mb-4 relative z-10">
                 <h2 className="text-sm font-bold uppercase text-indigo-400 tracking-widest flex items-center gap-2">
-                    <RocketLaunchIcon className="w-4 h-4" /> Viral Alert
+                    <RocketLaunchIcon className="w-4 h-4" /> Alerta Viral
                 </h2>
                 <span className="bg-indigo-500 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
-                    {data.candidates.length} Opportunities
+                    {data.candidates.length} Oportunidades
                 </span>
             </div>
 
             <div className="relative z-10">
                 <p className="text-xs text-zinc-400 mb-3">
-                    This post is performing <span className="text-white font-bold">{topCandidate.lift.toFixed(1)}x</span> better than your average.
+                    Este post está performando <span className="text-white font-bold">{topCandidate.lift.toFixed(1)}x</span> melhor que sua média.
                 </p>
 
                 <div className="bg-zinc-900/80 border border-indigo-500/30 p-3 rounded-xl flex gap-3 mb-3">
@@ -104,7 +104,7 @@ export default function ViralMonitor() {
 
                 <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all flex items-center justify-center gap-2">
                     <RocketLaunchIcon className="w-3 h-3" />
-                    BOOST NOW (One-Click)
+                    IMPULSIONAR AGORA (Um Clique)
                 </button>
             </div>
         </div>
