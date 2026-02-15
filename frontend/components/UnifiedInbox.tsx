@@ -8,6 +8,7 @@ import {
     QuestionMarkCircleIcon,
     BanknotesIcon
 } from "@heroicons/react/24/outline";
+import { apiUrl } from "@/lib/api";
 
 export default function UnifiedInbox() {
     const [interactions, setInteractions] = useState<any>({ comments: [], messages: [] });
@@ -17,7 +18,7 @@ export default function UnifiedInbox() {
     useEffect(() => {
         const fetchInbox = async () => {
             try {
-                const res = await fetch("http://localhost:8001/api/social/inbox");
+                const res = await fetch(apiUrl("/api/social/inbox"));
                 setInteractions(await res.json());
             } catch (e) {
                 console.error("Failed to fetch inbox", e);
@@ -33,10 +34,10 @@ export default function UnifiedInbox() {
     }, []);
 
     const getSentimentIcon = (sentiment: string) => {
+        if (sentiment.startsWith("PAID")) return <BanknotesIcon className="w-4 h-4 text-emerald-500" />;
         switch (sentiment) {
             case "HOT": return <FireIcon className="w-4 h-4 text-red-500" />;
             case "WARM": return <QuestionMarkCircleIcon className="w-4 h-4 text-yellow-500" />;
-            case "PAID": return <BanknotesIcon className="w-4 h-4 text-emerald-500" />;
             default: return <InboxArrowDownIcon className="w-4 h-4 text-zinc-500" />;
         }
     };
@@ -44,21 +45,19 @@ export default function UnifiedInbox() {
     const sortedComments = interactions.comments?.sort((a: any, b: any) => {
         // Priority: PAID > HOT > WARM > OTHERS
         const priority = { "PAID": 4, "HOT": 3, "WARM": 2, "COLD": 1, "NEUTRAL": 0 };
+        const sentimentA = typeof a.sentiment === "string" && a.sentiment.startsWith("PAID") ? "PAID" : a.sentiment;
+        const sentimentB = typeof b.sentiment === "string" && b.sentiment.startsWith("PAID") ? "PAID" : b.sentiment;
         // @ts-ignore
-        return (priority[b.sentiment] || 0) - (priority[a.sentiment] || 0);
+        return (priority[sentimentB] || 0) - (priority[sentimentA] || 0);
     }).filter((c: any) => {
-        if (filter === "paid") return c.sentiment === "PAID";
-        if (filter === "hot") return c.sentiment === "HOT";
+        if (filter === "paid") return typeof c.sentiment === "string" && c.sentiment.startsWith("PAID");
+        if (filter === "hot") return typeof c.sentiment === "string" && c.sentiment.includes("HOT");
         return true;
     });
 
     return (
         <div className="p-8 h-screen flex flex-col">
-            <header className="mb-8 flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-black italic tracking-tighter mb-2">MESA DE VENDAS</h1>
-                    <p className="text-zinc-500 text-sm">Inbox Prioritário: Dinheiro Primeiro, Ruído Depois</p>
-                </div>
+            <div className="mb-8 flex justify-end items-center">
                 <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
                     <button
                         onClick={() => setFilter("all")}
@@ -79,7 +78,7 @@ export default function UnifiedInbox() {
                         <FireIcon className="w-3 h-3" /> LEADS QUENTES
                     </button>
                 </div>
-            </header>
+            </div>
 
             <div className="flex-1 bg-zinc-900/30 border border-zinc-800 rounded-3xl overflow-hidden flex flex-col">
                 {/* Header */}
@@ -98,7 +97,7 @@ export default function UnifiedInbox() {
                     ) : (
                         sortedComments?.map((item: any) => (
                             <div key={item.id} className={`px-6 py-4 border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors flex items-center justify-between group
-                                ${item.sentiment === 'PAID' ? 'bg-emerald-900/10' : ''}
+                                ${typeof item.sentiment === 'string' && item.sentiment.startsWith('PAID') ? 'bg-emerald-900/10' : ''}
                             `}>
                                 <div className="flex items-center gap-3 w-1/4">
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-600 flex items-center justify-center font-bold text-xs relative">
@@ -122,7 +121,7 @@ export default function UnifiedInbox() {
 
                                 <div className="w-24 flex justify-end">
                                     <div className={`px-3 py-1 rounded-full border flex items-center gap-2 text-[10px] font-bold uppercase
-                                        ${item.sentiment === 'PAID' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
+                                        ${typeof item.sentiment === 'string' && item.sentiment.startsWith('PAID') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' :
                                             item.sentiment === 'HOT' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
                                                 item.sentiment === 'WARM' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500' :
                                                     'bg-zinc-800 border-zinc-700 text-zinc-500'}

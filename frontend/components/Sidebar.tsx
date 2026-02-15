@@ -5,11 +5,10 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon,
     Cog6ToothIcon,
-    HomeIcon,
     MegaphoneIcon,
     MoonIcon,
     SunIcon,
-    UserCircleIcon
+    PresentationChartLineIcon
 } from "@heroicons/react/24/outline";
 
 interface SidebarProps {
@@ -21,12 +20,23 @@ interface SidebarProps {
     onThemeChange: (theme: "light" | "dark") => void;
 }
 
+
+function DashboardIcon(props: React.ComponentProps<"svg">) {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+            <rect x="3.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+            <rect x="13" y="3" width="8" height="8" rx="2.5" fill="currentColor" stroke="none" />
+            <rect x="3" y="13" width="8" height="8" rx="2.5" fill="currentColor" stroke="none" />
+            <rect x="13.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+        </svg>
+    );
+}
+
 const NAV_ITEMS = [
-    { id: "home", label: "Dashboard", icon: HomeIcon },
-    { id: "social", label: "Analises", icon: ChartBarSquareIcon },
-    { id: "ads", label: "Trafego Pago", icon: MegaphoneIcon },
-    { id: "settings", label: "Configuracoes", icon: Cog6ToothIcon },
-    { id: "profile", label: "Perfil", icon: UserCircleIcon },
+    { id: "home", label: "Dashboard", icon: DashboardIcon },
+    { id: "social", label: "Métrica Social", icon: ChartBarSquareIcon },
+    { id: "ads_metrics", label: "Métrica Ads", icon: PresentationChartLineIcon },
+    { id: "ads", label: "Tráfego Pago", icon: MegaphoneIcon },
 ];
 
 export default function Sidebar({
@@ -38,29 +48,12 @@ export default function Sidebar({
     onThemeChange
 }: SidebarProps) {
     return (
-        <aside className={`fixed left-0 top-0 h-full z-50 flex flex-col bg-transparent transition-all duration-300 ${collapsed ? "w-[88px]" : "w-64"}`}>
-            <div className="px-4 pt-5 pb-4">
-                <button
-                    type="button"
-                    onClick={() => onNavigate("home")}
-                    className="flex items-center gap-3"
-                    title="B-Studio"
-                >
-                    <span
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg"
-                        style={{ backgroundColor: "var(--ink)", boxShadow: "0 2px 6px rgba(12,17,27,0.12)" }}
-                    >
-                        B
-                    </span>
-                    {!collapsed && <span className="text-lg font-bold" style={{ color: "var(--foreground)" }}>bstudio</span>}
-                </button>
-            </div>
-
-            <nav className="px-4 flex-1 flex flex-col gap-3">
+        <aside className={`fixed left-0 top-24 h-[calc(100vh-96px)] z-50 flex flex-col bg-transparent transition-all duration-300 items-center ${collapsed ? "w-16" : "w-60"}`}>
+            <nav className="pt-5 flex-1 flex flex-col items-center gap-3 w-full">
                 <button
                     type="button"
                     onClick={onToggleCollapse}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${collapsed ? "self-center" : ""}`}
+                    className="w-12 h-12 rounded-full flex items-center justify-center transition-colors"
                     style={{
                         backgroundColor: "var(--shell-side-btn)",
                         color: "var(--foreground)",
@@ -79,20 +72,30 @@ export default function Sidebar({
                         <button
                             key={item.id}
                             onClick={() => onNavigate(item.id)}
-                            className={`flex items-center text-left transition-all duration-200 ${collapsed
-                                ? "w-12 h-12 rounded-full justify-center self-center"
-                                : "w-full h-12 rounded-xl justify-start px-4 gap-3"
+                            className={`flex items-center transition-all duration-200 
+                                ${collapsed
+                                    ? "w-12 h-12 rounded-full justify-center"
+                                    : "w-52 h-12 rounded-xl justify-start px-4 gap-3"
                                 }`}
                             title={item.label}
                             style={{
-                                backgroundColor: isActive ? "var(--ink)" : "var(--shell-side-btn)",
-                                color: isActive ? "#ffffff" : "var(--foreground)",
-                                boxShadow: "0 1px 4px rgba(12,17,27,0.08)"
+                                backgroundColor: isActive
+                                    ? (theme === "dark" ? "#ffffff" : "var(--ink)")
+                                    : "var(--shell-side-btn)",
+                                color: isActive
+                                    ? (theme === "dark" ? "#000000" : "#ffffff")
+                                    : "var(--foreground)",
+                                border: theme === "dark"
+                                    ? "1px solid rgba(255,255,255,0.12)"
+                                    : "1px solid rgba(0,0,0,0.05)",
+                                boxShadow: theme === "dark"
+                                    ? "0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
+                                    : "0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5)"
                             }}
                         >
                             <Icon className="w-5 h-5 shrink-0" />
                             {!collapsed && (
-                                <span className="text-sm font-semibold">
+                                <span className="text-xs font-bold uppercase tracking-widest whitespace-nowrap">
                                     {item.label}
                                 </span>
                             )}
@@ -101,41 +104,51 @@ export default function Sidebar({
                 })}
             </nav>
 
-            <div className="px-4 pb-5 flex flex-col gap-3">
+            <div className="pb-5 flex flex-col items-center gap-3 w-full">
                 <button
                     onClick={() => onThemeChange("dark")}
-                    className="flex items-center gap-3"
+                    className={`flex items-center transition-all duration-200 
+                        ${collapsed
+                            ? "w-12 h-12 rounded-full justify-center"
+                            : "w-52 h-12 rounded-xl justify-start px-4 gap-3"
+                        }`}
                     title="Modo escuro"
+                    style={{
+                        backgroundColor: theme === "dark" ? "#ffffff" : "var(--shell-side-btn)",
+                        color: theme === "dark" ? "#000000" : "var(--foreground)",
+                        border: theme === "dark"
+                            ? "1px solid rgba(255,255,255,0.12)"
+                            : "1px solid rgba(0,0,0,0.05)",
+                        boxShadow: theme === "dark"
+                            ? "0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
+                            : "0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5)"
+                    }}
                 >
-                    <span
-                        className="w-12 h-12 rounded-full flex items-center justify-center"
-                        style={{
-                            backgroundColor: theme === "dark" ? "var(--ink)" : "var(--shell-side-btn)",
-                            color: theme === "dark" ? "#ffffff" : "var(--foreground)",
-                            boxShadow: "0 1px 4px rgba(12,17,27,0.08)"
-                        }}
-                    >
-                        <MoonIcon className="w-5 h-5" />
-                    </span>
-                    {!collapsed && <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Dark</span>}
+                    <MoonIcon className="w-5 h-5" />
+                    {!collapsed && <span className="text-xs font-bold uppercase tracking-widest">Dark Mode</span>}
                 </button>
 
                 <button
                     onClick={() => onThemeChange("light")}
-                    className="flex items-center gap-3"
+                    className={`flex items-center transition-all duration-200 
+                        ${collapsed
+                            ? "w-12 h-12 rounded-full justify-center"
+                            : "w-52 h-12 rounded-xl justify-start px-4 gap-3"
+                        }`}
                     title="Modo claro"
+                    style={{
+                        backgroundColor: theme === "light" ? "var(--ink)" : "var(--shell-side-btn)",
+                        color: theme === "light" ? "#ffffff" : "var(--foreground)",
+                        border: theme === "dark"
+                            ? "1px solid rgba(255,255,255,0.12)"
+                            : "1px solid rgba(0,0,0,0.05)",
+                        boxShadow: theme === "dark"
+                            ? "0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
+                            : "0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5)"
+                    }}
                 >
-                    <span
-                        className="w-12 h-12 rounded-full flex items-center justify-center"
-                        style={{
-                            backgroundColor: theme === "light" ? "var(--ink)" : "var(--shell-side-btn)",
-                            color: theme === "light" ? "#ffffff" : "var(--foreground)",
-                            boxShadow: "0 1px 4px rgba(12,17,27,0.08)"
-                        }}
-                    >
-                        <SunIcon className="w-5 h-5" />
-                    </span>
-                    {!collapsed && <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Day Light</span>}
+                    <SunIcon className="w-5 h-5" />
+                    {!collapsed && <span className="text-xs font-bold uppercase tracking-widest">Day Light</span>}
                 </button>
             </div>
         </aside>

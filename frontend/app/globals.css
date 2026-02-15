@@ -1,39 +1,55 @@
 @import "tailwindcss";
 
 :root {
-  --background: #d9dde3;
-  --foreground: #111827;
-  --shell-surface: #eceef2;
-  --shell-border: #d3d8e2;
-  --shell-side: #dbe1eb;
-  --shell-side-btn: #edf1f7;
-  --shell-top: #f2f4f8;
-  --ink: #0c111b;
-  --muted: #6b7280;
+  /* Light Mode Palette - Inspired by Anexo 3/4 */
+  --background: #E4E4E4;
+  --foreground: #10141A;
+
+  /* Surface colors for cards/panels on light mode */
+  --shell-surface: #FFFFFF;
+  --shell-border: rgba(0, 0, 0, 0.08);
+  /* macOS-like subtle border */
+  --shell-side: #F4F4F4;
+  --shell-side-btn: #F5F5F5;
+  --shell-top: #F0F0F0;
+
+  /* Accents */
+  --ink: #10141A;
+  --muted: #6B7280;
+  --accent-blue: #83A2DB;
+  --accent-red: #CE6969;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sf), sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
 [data-theme="dark"] {
-  --background: #0a0b0f;
-  --foreground: #f1f5f9;
-  --shell-surface: #141b27;
-  --shell-border: #232936;
-  --shell-side: #171d29;
-  --shell-side-btn: #1f2839;
-  --shell-top: #121722;
-  --ink: #0f172a;
-  --muted: #a8b3c7;
+  /* Dark Mode Palette - Inspired by Anexo 3/4 */
+  --background: #10141A;
+  --foreground: #FFFFFF;
+
+  /* Surface colors for cards/panels on dark mode */
+  --shell-surface: #1A2029;
+  /* macOS-like subtle highlight for dark backgrounds */
+  --shell-border: rgba(255, 255, 255, 0.14);
+  --shell-side: #151B24;
+  --shell-side-btn: #232A36;
+  --shell-top: #13181F;
+
+  /* Accents */
+  --ink: #10141A;
+  --muted: #9CA3AF;
+  --accent-blue: #83A2DB;
+  --accent-red: #CE6969;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
 }

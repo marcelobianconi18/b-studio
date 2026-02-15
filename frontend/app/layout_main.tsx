@@ -9,6 +9,7 @@ import {
 import Dashboard from "./page";
 import UnifiedInbox from "@/components/UnifiedInbox";
 import Sidebar from "@/components/Sidebar";
+import LiquidShell from "@/components/LiquidShell";
 
 const TOP_MENU_ITEMS = [
     "Institucional",
@@ -29,7 +30,59 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }, [theme]);
 
     return (
-        <div className="min-h-screen" style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}>
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}>
+            <header
+                className="fixed top-0 left-0 w-full h-20 px-5 md:px-8 flex items-center justify-between z-[60] pointer-events-none"
+                style={{
+                    backgroundColor: "transparent",
+                    border: "none"
+                }}
+            >
+                <div className="flex items-center gap-4 min-w-[240px] pointer-events-auto">
+                    <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-lg shadow-lg"
+                        style={{ backgroundColor: "var(--ink)" }}
+                    >
+                        B
+                    </div>
+                    <div className="flex flex-col">
+                        <p className="text-sm font-black italic tracking-tighter" style={{ color: "var(--foreground)" }}>B-Studio</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>Enterprise</p>
+                    </div>
+                </div>
+
+                <nav className="hidden md:flex items-center justify-center gap-12 absolute left-1/2 -translate-x-1/2 pointer-events-auto w-full max-w-5xl">
+                    {TOP_MENU_ITEMS.map((item, idx) => (
+                        <button
+                            key={item}
+                            className="px-5 py-2 rounded-full text-[13px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border border-transparent hover:border-white/10"
+                            style={{
+                                backgroundColor: idx === 0
+                                    ? (theme === "dark" ? "#ffffff" : "var(--ink)")
+                                    : "transparent",
+                                color: idx === 0
+                                    ? (theme === "dark" ? "#000000" : "#ffffff")
+                                    : "var(--muted)"
+                            }}
+                        >
+                            {item}
+                        </button>
+                    ))}
+                </nav>
+
+                <div className="flex items-center gap-2 md:gap-3 ml-auto pointer-events-auto">
+                    <TopCircleButton label="Mensagens do sistema" badge>
+                        <EnvelopeIcon className="w-5 h-5" />
+                    </TopCircleButton>
+                    <TopCircleButton label="Avisos do sistema" badge>
+                        <BellAlertIcon className="w-5 h-5" />
+                    </TopCircleButton>
+                    <TopCircleButton label="Perfil do usuario" onClick={() => setActiveTab("profile")}>
+                        <UserCircleIcon className="w-5 h-5" />
+                    </TopCircleButton>
+                </div>
+            </header>
+
             <Sidebar
                 activeTab={activeTab}
                 onNavigate={setActiveTab}
@@ -39,53 +92,40 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 onThemeChange={setTheme}
             />
 
-            <div className={`min-h-screen transition-all duration-300 ${collapsed ? "ml-[88px]" : "ml-64"}`}>
-                <header
-                    className="h-24 border-b px-5 md:px-8 flex items-center justify-between relative"
-                    style={{
-                        backgroundColor: "var(--shell-top)",
-                        borderColor: "var(--shell-border)"
-                    }}
-                >
-                    <div className="hidden md:flex items-center gap-6 min-w-0">
-                        <p className="text-sm font-semibold" style={{ color: "var(--muted)" }}>B-Studio Enterprise</p>
-                    </div>
-
-                    <nav className="hidden md:flex items-center gap-2 overflow-x-auto absolute left-1/2 -translate-x-1/2">
-                        {TOP_MENU_ITEMS.map((item, idx) => (
-                            <button
-                                key={item}
-                                className="px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors"
-                                style={{
-                                    backgroundColor: idx === 0 ? "var(--ink)" : "var(--shell-surface)",
-                                    color: idx === 0 ? "#ffffff" : "var(--foreground)"
-                                }}
-                            >
-                                {item}
-                            </button>
-                        ))}
-                    </nav>
-
-                    <div className="flex items-center gap-2 md:gap-3 ml-auto">
-                        <TopCircleButton label="Mensagens do sistema" badge>
-                            <EnvelopeIcon className="w-5 h-5" />
-                        </TopCircleButton>
-                        <TopCircleButton label="Avisos do sistema" badge>
-                            <BellAlertIcon className="w-5 h-5" />
-                        </TopCircleButton>
-                        <TopCircleButton label="Perfil do usuario">
-                            <UserCircleIcon className="w-5 h-5" />
-                        </TopCircleButton>
-                    </div>
-                </header>
-
-                <main className="p-4 md:p-6 min-h-[calc(100vh-96px)]">
+            <div className={`flex-1 transition-all duration-300 pt-24 ${collapsed ? "ml-16" : "ml-60"}`}>
+                <main className="p-1 md:p-2 min-h-[calc(100vh-96px)] flex flex-col">
                     {activeTab === "home" && <Dashboard />}
-                    {activeTab === "ads" && <div className="p-20 text-center" style={{ color: "var(--muted)" }}>Modulo de Trafego Pago em breve.</div>}
-                    {activeTab === "social" && <SocialStudio />}
-                    {activeTab === "inbox" && <UnifiedInbox />}
-                    {activeTab === "settings" && <div className="p-20 text-center" style={{ color: "var(--muted)" }}>Modulo de Configuracoes em breve.</div>}
-                    {activeTab === "profile" && <div className="p-20 text-center" style={{ color: "var(--muted)" }}>Modulo de Perfil em breve.</div>}
+                    {activeTab === "ads_metrics" && (
+                        <LiquidShell title="MÉTRICA ADS" subtitle="ANÁLISE DE PERFORMANCE">
+                            <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
+                                Módulo de Métrica Ads em breve.
+                            </div>
+                        </LiquidShell>
+                    )}
+                    {activeTab === "ads" && (
+                        <LiquidShell title="TRÁFEGO PAGO" subtitle="GESTÃO DE CAMPANHAS E ROI">
+                            <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
+                                Módulo de Tráfego Pago em breve.
+                            </div>
+                        </LiquidShell>
+                    )}
+                    {activeTab === "social" && (
+                        <LiquidShell title="MÉTRICA SOCIAL" subtitle="CRESCIMENTO ORGÂNICO E ANÁLISE">
+                            <SocialStudio />
+                        </LiquidShell>
+                    )}
+                    {activeTab === "inbox" && (
+                        <LiquidShell title="MESA DE VENDAS" subtitle="INBOX PRIORITÁRIO">
+                            <UnifiedInbox />
+                        </LiquidShell>
+                    )}
+                    {activeTab === "profile" && (
+                        <LiquidShell title="PERFIL" subtitle="GERENCIAMENTO DE CONTA">
+                            <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
+                                Módulo de Perfil em breve.
+                            </div>
+                        </LiquidShell>
+                    )}
                     {!(["home", "ads", "social", "inbox", "settings", "profile"] as string[]).includes(activeTab) && children}
                 </main>
             </div>
@@ -96,15 +136,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 function TopCircleButton({
     children,
     label,
-    badge = false
+    badge = false,
+    onClick
 }: {
     children: React.ReactNode;
     label: string;
     badge?: boolean;
+    onClick?: () => void;
 }) {
     return (
         <button
             title={label}
+            onClick={onClick}
             className="w-11 h-11 rounded-full flex items-center justify-center relative transition-colors"
             style={{
                 backgroundColor: "var(--shell-surface)",
@@ -138,10 +181,6 @@ function SocialStudio() {
 
     return (
         <div className="p-8">
-            <header className="mb-12">
-                <h1 className="text-3xl font-black italic tracking-tighter mb-2">ESTUDIO SOCIAL</h1>
-                <p className="text-zinc-500 text-sm">Crescimento Organico e Analise "The Bridge"</p>
-            </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                 <div className="bg-zinc-900/30 border border-zinc-800 p-8 rounded-3xl flex flex-col items-center justify-center text-center space-y-4 relative overflow-hidden group hover:border-blue-500/50 transition-all">
