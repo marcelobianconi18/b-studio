@@ -1,120 +1,143 @@
 "use client";
 
 import {
+    ChartBarSquareIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    Cog6ToothIcon,
     HomeIcon,
-    ChartBarIcon,
-    HashtagIcon,
-    ChatBubbleLeftRightIcon,
-    Cog6ToothIcon
-} from "@heroicons/react/24/solid";
+    MegaphoneIcon,
+    MoonIcon,
+    SunIcon,
+    UserCircleIcon
+} from "@heroicons/react/24/outline";
 
 interface SidebarProps {
     activeTab: string;
     onNavigate: (tab: string) => void;
+    collapsed: boolean;
+    onToggleCollapse: () => void;
+    theme: "light" | "dark";
+    onThemeChange: (theme: "light" | "dark") => void;
 }
 
-import { useState } from "react";
-import CredentialsModal from "./CredentialsModal";
+const NAV_ITEMS = [
+    { id: "home", label: "Dashboard", icon: HomeIcon },
+    { id: "social", label: "Analises", icon: ChartBarSquareIcon },
+    { id: "ads", label: "Trafego Pago", icon: MegaphoneIcon },
+    { id: "settings", label: "Configuracoes", icon: Cog6ToothIcon },
+    { id: "profile", label: "Perfil", icon: UserCircleIcon },
+];
 
-export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
+export default function Sidebar({
+    activeTab,
+    onNavigate,
+    collapsed,
+    onToggleCollapse,
+    theme,
+    onThemeChange
+}: SidebarProps) {
     return (
-        <aside className="fixed left-0 top-0 h-full w-64 bg-[#050505] border-r border-zinc-800 flex flex-col z-50">
-            {/* Logo Area */}
-            <div className="p-6 mb-8">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                        <span className="font-black text-white text-xl italic tracking-tighter">B</span>
-                    </div>
-                    <div>
-                        <h1 className="font-bold text-white tracking-tight">B-Studio</h1>
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Enterprise</p>
-                    </div>
-                </div>
+        <aside className={`fixed left-0 top-0 h-full z-50 flex flex-col bg-transparent transition-all duration-300 ${collapsed ? "w-[88px]" : "w-64"}`}>
+            <div className="px-4 pt-5 pb-4">
+                <button
+                    type="button"
+                    onClick={() => onNavigate("home")}
+                    className="flex items-center gap-3"
+                    title="B-Studio"
+                >
+                    <span
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-lg"
+                        style={{ backgroundColor: "var(--ink)", boxShadow: "0 2px 6px rgba(12,17,27,0.12)" }}
+                    >
+                        B
+                    </span>
+                    {!collapsed && <span className="text-lg font-bold" style={{ color: "var(--foreground)" }}>bstudio</span>}
+                </button>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 px-4 space-y-2">
-                <NavItem
-                    icon={<HomeIcon className="w-5 h-5" />}
-                    label="Centro de Comando"
-                    isActive={activeTab === "home"}
-                    onClick={() => onNavigate("home")}
-                />
+            <nav className="px-4 flex-1 flex flex-col gap-3">
+                <button
+                    type="button"
+                    onClick={onToggleCollapse}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${collapsed ? "self-center" : ""}`}
+                    style={{
+                        backgroundColor: "var(--shell-side-btn)",
+                        color: "var(--foreground)",
+                        boxShadow: "0 1px 4px rgba(12,17,27,0.08)"
+                    }}
+                    title={collapsed ? "Abrir menu" : "Recolher menu"}
+                >
+                    {collapsed ? <ChevronRightIcon className="w-5 h-5" /> : <ChevronLeftIcon className="w-5 h-5" />}
+                </button>
 
-                <div className="pt-6 pb-2 px-4">
-                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Gestão de Tráfego</p>
-                </div>
-                <NavItem
-                    icon={<ChartBarIcon className="w-5 h-5" />}
-                    label="Gestor de Anúncios"
-                    isActive={activeTab === "ads"}
-                    onClick={() => onNavigate("ads")}
-                />
+                {NAV_ITEMS.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
 
-                <div className="pt-6 pb-2 px-4">
-                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Estúdio Social</p>
-                </div>
-                <NavItem
-                    icon={<HashtagIcon className="w-5 h-5" />}
-                    label="Crescimento Orgânico"
-                    isActive={activeTab === "social"}
-                    onClick={() => onNavigate("social")}
-                />
-                <NavItem
-                    icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />}
-                    label="Inbox Unificado"
-                    isActive={activeTab === "inbox"}
-                    onClick={() => onNavigate("inbox")}
-                />
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => onNavigate(item.id)}
+                            className={`flex items-center text-left transition-all duration-200 ${collapsed
+                                ? "w-12 h-12 rounded-full justify-center self-center"
+                                : "w-full h-12 rounded-xl justify-start px-4 gap-3"
+                                }`}
+                            title={item.label}
+                            style={{
+                                backgroundColor: isActive ? "var(--ink)" : "var(--shell-side-btn)",
+                                color: isActive ? "#ffffff" : "var(--foreground)",
+                                boxShadow: "0 1px 4px rgba(12,17,27,0.08)"
+                            }}
+                        >
+                            <Icon className="w-5 h-5 shrink-0" />
+                            {!collapsed && (
+                                <span className="text-sm font-semibold">
+                                    {item.label}
+                                </span>
+                            )}
+                        </button>
+                    );
+                })}
             </nav>
 
-            {/* Footer / Settings */}
-            <div className="p-4 mt-auto border-t border-zinc-900">
-                <NavItem
-                    icon={<Cog6ToothIcon className="w-5 h-5" />}
-                    label="Configurações (API)"
-                    isActive={activeTab === "settings"}
-                    onClick={() => setIsModalOpen(true)}
-                />
+            <div className="px-4 pb-5 flex flex-col gap-3">
+                <button
+                    onClick={() => onThemeChange("dark")}
+                    className="flex items-center gap-3"
+                    title="Modo escuro"
+                >
+                    <span
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{
+                            backgroundColor: theme === "dark" ? "var(--ink)" : "var(--shell-side-btn)",
+                            color: theme === "dark" ? "#ffffff" : "var(--foreground)",
+                            boxShadow: "0 1px 4px rgba(12,17,27,0.08)"
+                        }}
+                    >
+                        <MoonIcon className="w-5 h-5" />
+                    </span>
+                    {!collapsed && <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Dark</span>}
+                </button>
 
-                {/* System Status */}
-                <div className="mt-6 bg-zinc-900/50 rounded-xl p-4 border border-zinc-800">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-xs font-bold text-zinc-400">Sistema Online</span>
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-[10px] text-zinc-600 font-mono">
-                            <span>META API</span>
-                            <span className="text-emerald-500">Conectado</span>
-                        </div>
-                        <div className="flex justify-between text-[10px] text-zinc-600 font-mono">
-                            <span>AI MODEL</span>
-                            <span className="text-blue-500">Qwen2.5</span>
-                        </div>
-                    </div>
-                </div>
+                <button
+                    onClick={() => onThemeChange("light")}
+                    className="flex items-center gap-3"
+                    title="Modo claro"
+                >
+                    <span
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{
+                            backgroundColor: theme === "light" ? "var(--ink)" : "var(--shell-side-btn)",
+                            color: theme === "light" ? "#ffffff" : "var(--foreground)",
+                            boxShadow: "0 1px 4px rgba(12,17,27,0.08)"
+                        }}
+                    >
+                        <SunIcon className="w-5 h-5" />
+                    </span>
+                    {!collapsed && <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Day Light</span>}
+                </button>
             </div>
-
-            <CredentialsModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </aside>
     );
 }
-
-const NavItem = ({ icon, label, isActive, onClick }: any) => (
-    <button
-        onClick={onClick}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive
-            ? "bg-white text-black shadow-lg shadow-white/5 font-bold"
-            : "text-zinc-500 hover:bg-zinc-900 hover:text-white font-medium"
-            }`}
-    >
-        {icon}
-        <span className="text-xs">{label}</span>
-        {isActive && (
-            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600" />
-        )}
-    </button>
-);
