@@ -7,6 +7,7 @@ import {
     RocketLaunchIcon,
     MegaphoneIcon
 } from "@heroicons/react/24/solid";
+import { apiUrl } from "@/lib/api";
 
 export default function ViralMonitor() {
     const [data, setData] = useState<any>(null);
@@ -15,7 +16,7 @@ export default function ViralMonitor() {
     const checkViral = async () => {
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:8001/api/intelligence/viral-monitor");
+            const res = await fetch(apiUrl("/api/intelligence/viral-monitor"));
             const json = await res.json();
             setData(json);
         } catch (e) {

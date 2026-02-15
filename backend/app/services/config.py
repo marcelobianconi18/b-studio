@@ -1,62 +1,94 @@
-
 import os
-from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.models.agent import SystemSettings
 
-class ConfigService:
-    def __init__(self):
-        self._db_session = None
+FIELD_BY_KEY = {
+    "FACEBOOK_ACCESS_TOKEN": "meta_access_token",
+    "meta_access_token": "meta_access_token",
+    "FACEBOOK_AD_ACCOUNT_ID": "meta_ad_account_id",
+    "meta_ad_account_id": "meta_ad_account_id",
+    "FACEBOOK_APP_ID": "meta_app_id",
+    "meta_app_id": "meta_app_id",
+    "FACEBOOK_APP_SECRET": "meta_app_secret",
+    "meta_app_secret": "meta_app_secret",
+    "OPENAI_API_KEY": "openai_api_key",
+    "openai_api_key": "openai_api_key",
+}
 
-    def get_db(self):
-        if not self._db_session:
-            self._db_session = SessionLocal()
-        return self._db_session
-    
+ENV_BY_KEY = {
+    "meta_access_token": "FACEBOOK_ACCESS_TOKEN",
+    "meta_ad_account_id": "FACEBOOK_AD_ACCOUNT_ID",
+    "meta_app_id": "FACEBOOK_APP_ID",
+    "meta_app_secret": "FACEBOOK_APP_SECRET",
+    "openai_api_key": "OPENAI_API_KEY",
+}
+
+
+class ConfigService:
+    def _get_singleton_settings(self, db, create: bool = False, cleanup_duplicates: bool = False):
+        settings_list = db.query(SystemSettings).order_by(SystemSettings.id.asc()).all()
+        if not settings_list:
+            if not create:
+                return None
+            settings = SystemSettings()
+            db.add(settings)
+            db.flush()
+            return settings
+
+        primary = settings_list[0]
+        if cleanup_duplicates and len(settings_list) > 1:
+            for extra in settings_list[1:]:
+                db.delete(extra)
+        return primary
+
     def get_setting(self, key: str, default: str = None) -> str:
         """
         Retrieves a setting with priority: Database > Environment Variable > Default.
         """
-        db = self.get_db()
+        key_name = key.strip()
+        field_name = FIELD_BY_KEY.get(key_name)
+
+        db = SessionLocal()
         try:
-            settings = db.query(SystemSettings).first()
-            if settings:
-                if key == "FACEBOOK_ACCESS_TOKEN" and settings.meta_access_token:
-                    return settings.meta_access_token
-                if key == "FACEBOOK_AD_ACCOUNT_ID" and settings.meta_ad_account_id:
-                     return settings.meta_ad_account_id
-                if key == "FACEBOOK_APP_ID" and settings.meta_app_id:
-                     return settings.meta_app_id
-                if key == "FACEBOOK_APP_SECRET" and settings.meta_app_secret:
-                     return settings.meta_app_secret
-                if key == "OPENAI_API_KEY" and settings.openai_api_key:
-                     return settings.openai_api_key
+            settings = self._get_singleton_settings(db)
+            if settings and field_name:
+                value = getattr(settings, field_name, None)
+                if value:
+                    return value
         except Exception as e:
             print(f"ConfigService Error: {e}")
         finally:
             db.close()
-            self._db_session = None
 
         # Fallback to Env
-        return os.getenv(key, default)
+        env_key = ENV_BY_KEY.get(key_name, key_name)
+        return os.getenv(env_key, default)
 
     def set_settings(self, data: dict):
         """
         Saves settings to the database.
         """
-        db = self.get_db()
+        db = SessionLocal()
         try:
-            settings = db.query(SystemSettings).first()
-            if not settings:
-                settings = SystemSettings()
-                db.add(settings)
-            
-            if "meta_access_token" in data: settings.meta_access_token = data["meta_access_token"]
-            if "meta_ad_account_id" in data: settings.meta_ad_account_id = data["meta_ad_account_id"]
-            if "meta_app_id" in data: settings.meta_app_id = data["meta_app_id"]
-            if "meta_app_secret" in data: settings.meta_app_secret = data["meta_app_secret"]
-            if "openai_api_key" in data: settings.openai_api_key = data["openai_api_key"]
-            
+            settings = self._get_singleton_settings(db, create=True, cleanup_duplicates=True)
+
+            normalized = {}
+            for key, value in data.items():
+                field_name = FIELD_BY_KEY.get(key)
+                if field_name:
+                    normalized[field_name] = value
+
+            if "meta_access_token" in normalized:
+                settings.meta_access_token = normalized["meta_access_token"]
+            if "meta_ad_account_id" in normalized:
+                settings.meta_ad_account_id = normalized["meta_ad_account_id"]
+            if "meta_app_id" in normalized:
+                settings.meta_app_id = normalized["meta_app_id"]
+            if "meta_app_secret" in normalized:
+                settings.meta_app_secret = normalized["meta_app_secret"]
+            if "openai_api_key" in normalized:
+                settings.openai_api_key = normalized["openai_api_key"]
+
             db.commit()
             return True
         except Exception as e:
@@ -64,7 +96,6 @@ class ConfigService:
             db.rollback()
             return False
         finally:
-             db.close()
-             self._db_session = None
+            db.close()
 
 config_service = ConfigService()

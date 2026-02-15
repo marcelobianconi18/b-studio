@@ -1,4 +1,3 @@
-
 import os
 import facebook
 from dotenv import load_dotenv
@@ -13,21 +12,33 @@ class MetaService:
     Includes retry logic for production resilience.
     """
     def __init__(self):
-        self.access_token = os.getenv("FACEBOOK_ACCESS_TOKEN")
-        self.page_id = os.getenv("FACEBOOK_PAGE_ID")
-        if not self.access_token or not self.page_id:
-            # warn or error, but let's allow instantiation for now
-            print("WARNING: FACEBOOK_ACCESS_TOKEN or FACEBOOK_PAGE_ID not set.")
-            self.graph = None
-        else:
-            self.graph = facebook.GraphAPI(access_token=self.access_token)
-            self.BASE_URL = "https://graph.facebook.com/v19.0"
+        from app.services.config import config_service
+
+        self.config = config_service
+        self.BASE_URL = "https://graph.facebook.com/v19.0"
+
+    def _get_access_token(self):
+        return self.config.get_setting("FACEBOOK_ACCESS_TOKEN")
+
+    def _get_page_id(self, page_id: str = None):
+        return page_id or self.config.get_setting("FACEBOOK_PAGE_ID") or os.getenv("FACEBOOK_PAGE_ID")
+
+    def _get_graph(self):
+        token = self._get_access_token()
+        if not token:
+            return None
+        return facebook.GraphAPI(access_token=token)
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10), retry=retry_if_exception_type(requests.exceptions.RequestException))
     def _make_request(self, method, url, params=None):
         """
         Resilient HTTP request handler.
         """
+        params = params or {}
+        if "access_token" not in params:
+            token = self._get_access_token()
+            if token:
+                params["access_token"] = token
         response = requests.request(method, url, params=params, timeout=30)
         response.raise_for_status()
         return response.json()
@@ -44,15 +55,18 @@ class MetaService:
         Fetch organic insights for a Page.
         Metrics: page_impressions, page_post_engagements, page_fans
         """
-        target_page = page_id or self.page_id
+        target_page = self._get_page_id(page_id)
+        access_token = self._get_access_token()
         if not target_page:
             return {"error": "No Page ID provided."}
-        
+        if not access_token:
+            return {"error": "No Access Token configured."}
+
         url = f"{self.BASE_URL}/{target_page}/insights"
         params = {
             "metric": "page_impressions,page_post_engagements,page_fans",
             "period": period,
-            "access_token": self.access_token
+            "access_token": access_token,
         }
         
         try:
@@ -65,13 +79,16 @@ class MetaService:
         Fetch latest posts from page with performance metrics.
         Fields: id, message, full_picture (thumbnail), created_time, insights
         """
-        if not self.graph: return {"data": []}
+        graph = self._get_graph()
+        page_id = self._get_page_id()
+        if not graph or not page_id:
+            return {"data": []}
         try:
             # We request insights metrics nested within the posts call
             return self._safe_graph_call(
-                self.graph.get_connections,
-                self.page_id, 
-                'posts', 
+                graph.get_connections,
+                page_id,
+                "posts",
                 limit=limit,
                 fields="id,message,created_time,full_picture,shares,likes.summary(true),comments.summary(true),insights.metric(post_impressions_unique,post_engaged_users)"
             )
@@ -79,39 +96,44 @@ class MetaService:
             # Fallback if insights fail (e.g. permissions)
             print(f"Error fetching specific fields (Retrying simple fetch): {e}")
             try:
-                 return self._safe_graph_call(self.graph.get_connections, self.page_id, 'posts', limit=limit)
+                 return self._safe_graph_call(graph.get_connections, page_id, "posts", limit=limit)
             except Exception as e2:
                  return {"error": str(e2)}
 
     def get_post_comments(self, post_id: str):
         """Fetch comments for a specific post."""
-        if not self.graph: return {"data": []}
+        graph = self._get_graph()
+        if not graph:
+            return {"data": []}
         try:
-            return self._safe_graph_call(self.graph.get_connections, post_id, 'comments')
+            return self._safe_graph_call(graph.get_connections, post_id, "comments")
         except Exception as e:
             return {"error": str(e)}
 
     def verify_token(self):
         """Check if the token is valid."""
-        if not self.graph:
-            return False
+        graph = self._get_graph()
+        if not graph:
+            return False, "Meta Service not configured"
         try:
             # Simple call, no need for heavy retry logic on verification usually, 
             # but can use it to be safe against flakes.
-            me = self._safe_graph_call(self.graph.get_object, 'me')
+            me = self._safe_graph_call(graph.get_object, "me")
             return True, me
         except Exception as e:
-            return False,str(e)
+            return False, str(e)
 
     def post_text(self, message: str):
         """Post a simple text status update to the page."""
-        if not self.graph:
+        graph = self._get_graph()
+        page_id = self._get_page_id()
+        if not graph or not page_id:
             return {"error": "Meta Service not configured"}
         try:
             # Write operation - NO RETRY to avoid duplicates
-            response = self.graph.put_object(
-                parent_object=self.page_id,
-                connection_name='feed',
+            response = graph.put_object(
+                parent_object=page_id,
+                connection_name="feed",
                 message=message
             )
             return response
@@ -120,14 +142,16 @@ class MetaService:
 
     def post_image(self, image_url: str, message: str = ""):
         """Post an image to the page feed."""
-        if not self.graph:
-             return {"error": "Meta Service not configured"}
+        graph = self._get_graph()
+        page_id = self._get_page_id()
+        if not graph or not page_id:
+            return {"error": "Meta Service not configured"}
         try:
             # Write operation - NO RETRY to avoid duplicates
-            response = self.graph.put_photo(
+            response = graph.put_photo(
                 image=image_url,
-                caption=message, 
-                album_path=f"{self.page_id}/photos"
+                caption=message,
+                album_path=f"{page_id}/photos"
             )
             return response
         except facebook.GraphAPIError as e:

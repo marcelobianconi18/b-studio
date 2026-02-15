@@ -4,12 +4,14 @@
 import { useState } from "react";
 import InstagramPreview from "@/components/InstagramPreview";
 import { PhotoIcon, CalendarIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
+import { apiUrl } from "@/lib/api";
 
 export default function SmartPublisher() {
     const [caption, setCaption] = useState("");
     const [image, setImage] = useState<string | null>(null);
     const [scheduledDate, setScheduledDate] = useState("");
     const [isPosting, setIsPosting] = useState(false);
+    const [resultMessage, setResultMessage] = useState("");
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -23,14 +25,45 @@ export default function SmartPublisher() {
     };
 
     const handleSchedule = async () => {
-        if (!image) return alert("Please select an image");
+        const trimmedCaption = caption.trim();
+        if (!trimmedCaption && !image) {
+            alert("Escreva uma legenda ou selecione uma imagem.");
+            return;
+        }
 
+        const payload: Record<string, string> = {
+            message: trimmedCaption || "Post agendado via B-Studio",
+        };
+        if (scheduledDate) {
+            payload.scheduled_time = new Date(scheduledDate).toISOString();
+        }
+        if (image && (image.startsWith("http://") || image.startsWith("https://"))) {
+            payload.image_url = image;
+        }
+
+        setResultMessage("");
         setIsPosting(true);
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const res = await fetch(apiUrl("/api/posts/schedule"), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.detail || "Falha ao agendar post.");
+            }
+
+            if (image && image.startsWith("data:")) {
+                setResultMessage(`${data.message} (imagem local usada apenas para pré-visualização).`);
+            } else {
+                setResultMessage(data.message || "Post agendado com sucesso.");
+            }
+        } catch (error: any) {
+            setResultMessage(error.message || "Falha ao agendar post.");
+        } finally {
             setIsPosting(false);
-            alert("Post scheduled successfully! (Simulated)");
-        }, 2000);
+        }
     };
 
     return (
@@ -101,6 +134,9 @@ export default function SmartPublisher() {
                             </>
                         )}
                     </button>
+                    {resultMessage && (
+                        <p className="text-xs text-zinc-400">{resultMessage}</p>
+                    )}
 
                 </div>
             </div>

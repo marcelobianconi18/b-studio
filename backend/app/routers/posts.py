@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from app.models.schemas import PostCreate, PostResponse
 from app.worker import publish_post_task
 from app.services.meta_api import meta_service
@@ -18,7 +18,6 @@ async def schedule_post(post: PostCreate):
     # Simple logic: if scheduled_time is provided and in future --> use celery eta
     # else --> run immediately in celery
     
-    delay = 0
     if post.scheduled_time:
          # Ensure scheduled_time is UTC-aware or handle timezone logic
          now_utc = datetime.now(timezone.utc)
@@ -40,6 +39,7 @@ async def schedule_post(post: PostCreate):
 @router.get("/status")
 def get_service_status():
     """Check connection with Meta and Redis."""
-    meta_status = "ok" if meta_service.verify_token()[0] else "error: invalid token"
+    is_valid, detail = meta_service.verify_token()
+    meta_status = "ok" if is_valid else f"error: {detail}"
     # Could check celery/redis status here too
     return {"meta_api": meta_status}

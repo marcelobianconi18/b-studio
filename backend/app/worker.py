@@ -1,4 +1,4 @@
-
+import asyncio
 from app.core.celery_app import celery_app
 from app.services.meta_api import meta_service
 import logging
@@ -31,7 +31,13 @@ def periodic_intelligence_check():
 
     db = SessionLocal()
     try:
-        config = db.query(AgentSettings).first()
+        configs = db.query(AgentSettings).order_by(AgentSettings.id.asc()).all()
+        config = configs[0] if configs else None
+        if len(configs) > 1:
+            for duplicate in configs[1:]:
+                db.delete(duplicate)
+            db.commit()
+
         mode = config.mode if config else "manual"
         
         if mode == "manual":
@@ -39,6 +45,13 @@ def periodic_intelligence_check():
             return
         
         logger.info(f"Starting periodic strategic analysis (Mode: {mode})")
-        intelligence_service.analyze_performance(mode)
+        try:
+            asyncio.run(intelligence_service.analyze_performance(mode))
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            try:
+                loop.run_until_complete(intelligence_service.analyze_performance(mode))
+            finally:
+                loop.close()
     finally:
         db.close()

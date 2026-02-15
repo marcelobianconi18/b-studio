@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { KeyIcon, EyeIcon, EyeSlashIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { apiUrl } from "@/lib/api";
 
 interface CredentialsModalProps {
     isOpen: boolean;
@@ -18,10 +19,11 @@ export default function CredentialsModal({ isOpen, onClose }: CredentialsModalPr
     });
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (isOpen) {
-            fetch("http://localhost:8001/api/system/credentials")
+            fetch(apiUrl("/api/system/credentials"))
                 .then(res => res.json())
                 .then(data => setFormData({
                     meta_access_token: data.meta_access_token || "",
@@ -36,28 +38,41 @@ export default function CredentialsModal({ isOpen, onClose }: CredentialsModalPr
 
     if (!isOpen) return null;
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const persistCredentials = async () => {
         setLoading(true);
+        setError("");
         try {
-            const res = await fetch("http://localhost:8001/api/system/credentials", {
+            const res = await fetch(apiUrl("/api/system/credentials"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData)
             });
-            if (res.ok) {
-                setSuccess(true);
-                setTimeout(() => {
-                    setSuccess(false);
-                    onClose();
-                    window.location.reload(); // Refresh to update status
-                }, 1500);
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data?.detail || data?.message || "Falha ao salvar credenciais.");
             }
+
+            return true;
         } catch (error) {
             console.error(error);
+            setError(error instanceof Error ? error.message : "Falha ao salvar credenciais.");
+            return false;
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const ok = await persistCredentials();
+        if (!ok) return;
+
+        setSuccess(true);
+        setTimeout(() => {
+            setSuccess(false);
+            onClose();
+            window.location.reload();
+        }, 1500);
     };
 
     return (
@@ -103,10 +118,9 @@ export default function CredentialsModal({ isOpen, onClose }: CredentialsModalPr
                         <button
                             type="button"
                             onClick={async () => {
-                                // Save App ID/Secret first
-                                await handleSubmit({ preventDefault: () => { } } as any);
-                                // Then redirect
-                                window.location.href = "http://localhost:8001/api/auth/facebook/login";
+                                const ok = await persistCredentials();
+                                if (!ok) return;
+                                window.location.href = apiUrl("/api/auth/facebook/login");
                             }}
                             disabled={!formData.meta_app_id || !formData.meta_app_secret}
                             className="w-full py-2 bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold rounded-lg text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -178,6 +192,9 @@ export default function CredentialsModal({ isOpen, onClose }: CredentialsModalPr
                             ) : "Salvar Configurações"}
                         </button>
                     </div>
+                    {error && (
+                        <p className="text-xs text-red-400 pt-1">{error}</p>
+                    )}
                 </form>
             </div>
         </div>

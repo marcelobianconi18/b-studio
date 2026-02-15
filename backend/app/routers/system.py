@@ -4,8 +4,25 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.core.database import get_db
 import requests
+from typing import Optional
 
 router = APIRouter(tags=["System"])
+
+def _is_placeholder(value: Optional[str]) -> bool:
+    if not value:
+        return True
+
+    normalized = value.strip().lower()
+    placeholder_values = {
+        "your_app_id_here",
+        "your_app_secret_here",
+        "your_facebook_app_id",
+        "your_facebook_app_secret",
+        "change_me",
+        "changeme",
+        "replace_me",
+    }
+    return normalized in placeholder_values or normalized.startswith("your_") or "placeholder" in normalized
 
 @router.get("/status")
 def get_system_status(db: Session = Depends(get_db)):
@@ -34,7 +51,7 @@ def get_system_status(db: Session = Depends(get_db)):
     app_id = config_service.get_setting("FACEBOOK_APP_ID")
     app_secret = config_service.get_setting("FACEBOOK_APP_SECRET")
     
-    if access_token and app_id and app_secret:
+    if access_token and not _is_placeholder(app_id) and not _is_placeholder(app_secret):
         try:
             # Debug Token Endpoint to check expiry
             url = f"https://graph.facebook.com/debug_token?input_token={access_token}&access_token={app_id}|{app_secret}"
@@ -111,10 +128,14 @@ def get_credentials(db: Session = Depends(get_db)):
     """
     from app.services.config import config_service
     
+    app_id = config_service.get_setting("FACEBOOK_APP_ID")
+    app_secret = config_service.get_setting("FACEBOOK_APP_SECRET")
+    meta_access_token = config_service.get_setting("FACEBOOK_ACCESS_TOKEN")
+
     return {
-        "meta_access_token": "********" if config_service.get_setting("FACEBOOK_ACCESS_TOKEN") else None,
+        "meta_access_token": "********" if meta_access_token else None,
         "meta_ad_account_id": config_service.get_setting("FACEBOOK_AD_ACCOUNT_ID"),
-        "meta_app_id": config_service.get_setting("FACEBOOK_APP_ID"),
-        "meta_app_secret": "********" if config_service.get_setting("FACEBOOK_APP_SECRET") else None,
+        "meta_app_id": None if _is_placeholder(app_id) else app_id,
+        "meta_app_secret": "********" if (app_secret and not _is_placeholder(app_secret)) else None,
         "openai_api_key": "********" if config_service.get_setting("OPENAI_API_KEY") else None,
     }
