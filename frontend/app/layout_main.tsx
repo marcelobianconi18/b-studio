@@ -10,6 +10,8 @@ import Dashboard from "./page";
 import UnifiedInbox from "@/components/UnifiedInbox";
 import Sidebar from "@/components/Sidebar";
 import LiquidShell from "@/components/LiquidShell";
+import SocialInsights from "@/components/social/SocialInsights";
+import ProfileSelector from "@/components/ProfileSelector";
 
 const TOP_MENU_ITEMS = [
     "Institucional",
@@ -110,8 +112,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         </LiquidShell>
                     )}
                     {activeTab === "social" && (
-                        <LiquidShell title="MÉTRICA SOCIAL" subtitle="CRESCIMENTO ORGÂNICO E ANÁLISE">
-                            <SocialStudio />
+                        <LiquidShell title="MÉTRICA SOCIAL" subtitle="Facebook Insights & Crescimento" action={<ProfileSelector />}>
+                            <SocialInsights />
                         </LiquidShell>
                     )}
                     {activeTab === "inbox" && (

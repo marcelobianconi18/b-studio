@@ -4,9 +4,10 @@ interface LiquidShellProps {
     title: string;
     subtitle: string;
     children: React.ReactNode;
+    action?: React.ReactNode;
 }
 
-export default function LiquidShell({ title, subtitle, children }: LiquidShellProps) {
+export default function LiquidShell({ title, subtitle, children, action }: LiquidShellProps) {
     return (
         <div className="flex-1 flex flex-col bg-transparent overflow-hidden px-1 pb-5">
             <div className="flex-1 mt-12 flex flex-col min-h-0 relative">
@@ -71,7 +72,7 @@ export default function LiquidShell({ title, subtitle, children }: LiquidShellPr
                             borderBottom: "none"
                         }}
                     >
-                        {/* Action Buttons Removed */}
+                        {action}
                     </div>
                 </div>
 

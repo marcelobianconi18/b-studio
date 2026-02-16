@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
-from app.routers import posts, ads, auth, intelligence, social, system, dashboard
+from app.routers import posts, ads, auth, intelligence, social, system, dashboard, insights
 from app.core.database import engine, Base
 
 # Create database tables
@@ -32,6 +32,7 @@ app.include_router(ads.router, prefix="/api/ads", tags=["ads"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(intelligence.router, prefix="/api/intelligence", tags=["intelligence"])
 app.include_router(social.router, prefix="/api/social", tags=["social"])
+app.include_router(insights.router, prefix="/api/social", tags=["social-insights"])
 app.include_router(system.router, prefix="/api/system", tags=["system"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 

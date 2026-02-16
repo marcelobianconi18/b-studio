@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import PeriodSelector from "@/components/PeriodSelector";
 import {
     ArrowTrendingUpIcon,
@@ -133,6 +133,86 @@ const PopulationPyramid = ({ data }: { data: Array<{ range: string; male: number
     )
 }
 
+const getPostType = (post: any) => {
+    // Deterministic type assignment based on ID chars sum
+    const sum = post.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+    const types = ['video', 'photo', 'album'];
+    return types[sum % 3];
+};
+
+const SpeedometerChart = ({ title, data }: { title: string, data: { label: string, value: number, color: string }[] }) => {
+    const total = data.reduce((acc, d) => acc + d.value, 0) || 1;
+    const radius = 60;
+    const center = 70;
+    const stroke = 12;
+
+    const pol2cart = (x: number, y: number, r: number, deg: number) => {
+        const rad = (deg * Math.PI) / 180.0;
+        return { x: x + r * Math.cos(rad), y: y + r * Math.sin(rad) };
+    };
+
+    let currentAngle = 180;
+
+    const segments = data.map(d => {
+        const percent = d.value / total;
+        const deg = percent * 180;
+        const start = currentAngle;
+        const end = currentAngle + deg;
+        currentAngle += deg;
+        return { ...d, start, end, percent };
+    });
+
+    const winner = segments.reduce((p, c) => (p.value > c.value ? p : c));
+    const needleAngle = winner.start + (winner.end - winner.start) / 2;
+
+    return (
+        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 flex flex-col items-center justify-between h-full relative overflow-hidden group hover:border-blue-500/20 transition-all">
+            <h5 className="text-[10px] uppercase font-bold text-zinc-500 mb-4 text-center tracking-wider">{title}</h5>
+
+            <div className="relative h-[70px] w-[140px] flex justify-center mb-2">
+                <svg width="140" height="70" className="overflow-visible">
+                    <path d={`M ${pol2cart(center, center, radius, 180).x} ${pol2cart(center, center, radius, 180).y} A ${radius} ${radius} 0 0 1 ${pol2cart(center, center, radius, 360).x} ${pol2cart(center, center, radius, 360).y}`} fill="none" stroke="var(--shell-border)" strokeWidth={stroke} opacity={0.3} />
+
+                    {segments.map((s, i) => {
+                        const startPt = pol2cart(center, center, radius, s.start);
+                        const endPt = pol2cart(center, center, radius, s.end);
+                        const largeArc = s.end - s.start <= 180 ? 0 : 1;
+                        return (
+                            <path
+                                key={i}
+                                d={`M ${startPt.x} ${startPt.y} A ${radius} ${radius} 0 ${largeArc} 1 ${endPt.x} ${endPt.y}`}
+                                fill="none"
+                                stroke={s.color}
+                                strokeWidth={stroke}
+                                className="transition-all duration-500 hover:opacity-80"
+                            />
+                        );
+                    })}
+
+                    <g transform={`translate(${center}, ${center}) rotate(${needleAngle})`} className="transition-transform duration-1000 ease-out">
+                        <line x1="0" y1="0" x2="0" y2={-(radius + 5)} stroke="var(--foreground)" strokeWidth="2" strokeLinecap="round" />
+                        <circle cx="0" cy="0" r="3" fill="var(--foreground)" />
+                    </g>
+                </svg>
+            </div>
+
+            <div className="flex flex-col items-center mt-auto">
+                <div className="text-[9px] text-zinc-500 uppercase font-medium">Dominante</div>
+                <div className="text-sm font-black mt-0.5 flex items-center gap-1.5" style={{ color: winner.color }}>
+                    {winner.label}
+                    <span className="text-[10px] bg-zinc-800 px-1 rounded opacity-80 text-white">{(winner.percent * 100).toFixed(0)}%</span>
+                </div>
+            </div>
+
+            <div className="flex gap-2 mt-3 pt-3 border-t border-[var(--shell-border)] w-full justify-center">
+                {data.map((d, i) => (
+                    <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: d.color }} title={d.label}></div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 const TAB_ITEMS = [
     { id: "geral", label: "Geral" },
     { id: "publicacoes", label: "Publicações" },
@@ -141,6 +221,47 @@ const TAB_ITEMS = [
 
 export default function SocialInsights() {
     const [data, setData] = useState<InsightsData | null>(null);
+
+    const speedData = useMemo(() => {
+        if (!data || !data.top_posts) return null;
+
+        const stats: any = {
+            video: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'Vídeo', color: '#facc15' },
+            photo: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'Foto', color: '#ef4444' },
+            album: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'Álbum', color: '#22c55e' }
+        };
+
+        data.top_posts.forEach((p: any) => {
+            const type = getPostType(p) as 'video' | 'photo' | 'album';
+            const s = stats[type];
+            if (s) {
+                s.count++;
+                s.reach += p.reach;
+                s.engagement += (p.reactions + p.comments + p.shares);
+                s.clicks += p.link_clicks || 0;
+            }
+        });
+
+        const getAvg = (s: any) => s.count ? s.reach / s.count : 0;
+
+        return {
+            reach: [
+                { label: 'Vídeo', value: getAvg(stats.video), color: stats.video.color },
+                { label: 'Foto', value: getAvg(stats.photo), color: stats.photo.color },
+                { label: 'Álbum', value: getAvg(stats.album), color: stats.album.color }
+            ],
+            engagement: [
+                { label: 'Vídeo', value: stats.video.engagement, color: stats.video.color },
+                { label: 'Foto', value: stats.photo.engagement, color: stats.photo.color },
+                { label: 'Álbum', value: stats.album.engagement, color: stats.album.color }
+            ],
+            clicks: [
+                { label: 'Vídeo', value: stats.video.clicks, color: stats.video.color },
+                { label: 'Foto', value: stats.photo.clicks, color: stats.photo.color },
+                { label: 'Álbum', value: stats.album.clicks, color: stats.album.color }
+            ]
+        };
+    }, [data]);
     const [activeTab, setActiveTab] = useState("geral");
     const [reactionsPage, setReactionsPage] = useState(0);
     const [performancePage, setPerformancePage] = useState(0);
@@ -646,20 +767,20 @@ export default function SocialInsights() {
                                                                                 <strong className="text-white">{formatNumber(interactions)}</strong>
                                                                             </div>
                                                                             <div className="grid grid-cols-4 gap-2 pt-2 text-[9px] text-center">
-                                                                                <div className="bg-zinc-800 rounded p-1">
-                                                                                    <div>👍</div>
+                                                                                <div className="bg-zinc-800 rounded p-1 flex flex-col items-center">
+                                                                                    <div className="w-2 h-2 rounded-full bg-emerald-400 mb-1"></div>
                                                                                     <div className="font-bold text-white mt-0.5">{formatNumber(post.reactions)}</div>
                                                                                 </div>
-                                                                                <div className="bg-zinc-800 rounded p-1">
-                                                                                    <div>💬</div>
+                                                                                <div className="bg-zinc-800 rounded p-1 flex flex-col items-center">
+                                                                                    <div className="w-2 h-2 rounded-full bg-purple-400 mb-1"></div>
                                                                                     <div className="font-bold text-white mt-0.5">{formatNumber(post.comments)}</div>
                                                                                 </div>
-                                                                                <div className="bg-zinc-800 rounded p-1">
-                                                                                    <div>🔗</div>
+                                                                                <div className="bg-zinc-800 rounded p-1 flex flex-col items-center">
+                                                                                    <div className="w-2 h-2 rounded-full bg-amber-400 mb-1"></div>
                                                                                     <div className="font-bold text-white mt-0.5">{formatNumber(post.shares)}</div>
                                                                                 </div>
-                                                                                <div className="bg-zinc-800 rounded p-1">
-                                                                                    <div>👆</div>
+                                                                                <div className="bg-zinc-800 rounded p-1 flex flex-col items-center">
+                                                                                    <div className="w-2 h-2 rounded-full bg-cyan-400 mb-1"></div>
                                                                                     <div className="font-bold text-white mt-0.5">{post.link_clicks}</div>
                                                                                 </div>
                                                                             </div>
@@ -673,7 +794,7 @@ export default function SocialInsights() {
                                             </div>
 
                                             {/* X-Axis Custom Timeline Labels */}
-                                            <div className="absolute bottom-0 left-8 right-0 h-20 flex justify-between items-end px-0 pointer-events-none">
+                                            <div className="absolute bottom-0 left-8 right-8 h-20 px-0 pointer-events-none">
                                                 {sortedPosts.filter((_, i) => i % Math.max(1, Math.floor(sortedPosts.length / 8)) === 0).map((p, idx) => {
                                                     const date = new Date(p.timestamp);
                                                     const month = date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
@@ -681,18 +802,23 @@ export default function SocialInsights() {
                                                     const hour = date.getHours();
 
                                                     return (
-                                                        <div key={p.id} className="relative flex flex-col items-center justify-end h-full">
-                                                            {/* Vertical Separator Line */}
-                                                            <div className="absolute top-0 bottom-0 -right-[50%] w-px bg-[var(--shell-border)] opacity-50"></div>
+                                                        <div key={p.id} className="absolute bottom-0 flex flex-col items-center justify-end group z-20 hover:z-50 pointer-events-auto" style={{ left: `${getX(p.timestamp)}%`, transform: 'translateX(-50%)', height: '100%' }}>
+                                                            {/* Image Preview Tooltip */}
+                                                            <div className="absolute bottom-[70px] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none w-32 h-32 bg-zinc-900 rounded-lg shadow-2xl overflow-hidden border-2 border-zinc-700 z-50 transform translate-y-2 group-hover:translate-y-0">
+                                                                <img src={p.image} alt={p.message} className="w-full h-full object-cover" />
+                                                            </div>
+
+                                                            {/* Vertical Dashed Line */}
+                                                            <div className="absolute bottom-14 w-px border-l border-dashed border-zinc-400/30 h-[320px]"></div>
 
                                                             {/* Icon */}
-                                                            <ChatBubbleLeftEllipsisIcon className="w-4 h-4 text-[var(--foreground)] mb-1" />
+                                                            <EyeIcon className="w-4 h-4 text-[var(--foreground)] mb-1 bg-[var(--shell-side)] relative z-10 rounded-full cursor-pointer hover:text-blue-500 transition-colors" />
 
                                                             {/* Time */}
-                                                            <span className="text-[10px] font-mono font-bold text-zinc-500 mb-2">{hour}h</span>
+                                                            <span className="text-[10px] font-mono font-bold text-zinc-500 mb-2 bg-[var(--shell-side)] relative z-10 px-1 rounded">{hour}h</span>
 
                                                             {/* Date Badge */}
-                                                            <div className="flex flex-col border border-zinc-200/20 rounded overflow-hidden w-8 text-center shadow-sm">
+                                                            <div className="flex flex-col border border-zinc-200/20 rounded overflow-hidden w-8 text-center shadow-sm relative z-10">
                                                                 <div className="bg-red-600 text-white text-[8px] font-black uppercase py-0.5">{month}</div>
                                                                 <div className="bg-white text-zinc-900 text-xs font-black py-0.5">{day}</div>
                                                             </div>
@@ -704,6 +830,21 @@ export default function SocialInsights() {
                                     )
                                 })()}
                             </div>
+
+                            {/* Speedometer Charts */}
+                            {speedData && (
+                                <div className="mt-8 pt-8 border-t border-[var(--shell-border)]">
+                                    <h4 className="text-sm font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
+                                        <ArrowTrendingUpIcon className="w-4 h-4 text-emerald-500" />
+                                        Performance por Tipo de Mídia
+                                    </h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 h-48">
+                                        <SpeedometerChart title="Alcance Médio" data={speedData.reach} />
+                                        <SpeedometerChart title="Engajamento Total" data={speedData.engagement} />
+                                        <SpeedometerChart title="Cliques (Tráfego)" data={speedData.clicks} />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div >
 
@@ -713,7 +854,7 @@ export default function SocialInsights() {
                         <h3 className="text-lg font-black italic tracking-tight mb-4 text-emerald-500">Detalhamento de Reações</h3>
 
                         {/* HEADER: ANALYTICS WIDGETS */}
-                        <div className="mb-8 space-y-6">
+                        <div className="mb-6 space-y-6">
                             {/* 1. Best Post Card */}
                             {/* 1. Best Post Card + Total Interactions Stats */}
                             {(() => {
@@ -761,7 +902,6 @@ export default function SocialInsights() {
 
 
                         </div>
-
 
                         <div className="overflow-x-auto flex-1">
                             <table className="w-full text-left text-sm whitespace-nowrap">
@@ -830,24 +970,38 @@ export default function SocialInsights() {
                         </div>
 
                         {/* Chart: Reaction Performance */}
-                        <div className="mb-0 mt-6 pt-6 border-t border-[var(--shell-border)]">
+                        <div className="mb-8 mt-8">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                 <h4 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
                                     <ArrowTrendingUpIcon className="w-4 h-4 text-emerald-500" />
                                     Desempenho de Reações
                                 </h4>
                                 <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-zinc-500">
-                                    <button onClick={() => setVisibleReactions(p => ({ ...p, total: !p.total }))} className={`px-2 py-1 rounded bg-zinc-800/50 hover:bg-zinc-800 transition-all ${visibleReactions.total ? 'opacity-100 text-white' : 'opacity-40 grayscale'}`}>Total</button>
-                                    <button onClick={() => setVisibleReactions(p => ({ ...p, like: !p.like }))} className={`px-2 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 transition-all ${visibleReactions.like ? 'opacity-100 text-blue-400' : 'opacity-40 grayscale'}`}>👍</button>
-                                    <button onClick={() => setVisibleReactions(p => ({ ...p, love: !p.love }))} className={`px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 transition-all ${visibleReactions.love ? 'opacity-100 text-rose-400' : 'opacity-40 grayscale'}`}>❤️</button>
-                                    <button onClick={() => setVisibleReactions(p => ({ ...p, haha: !p.haha }))} className={`px-2 py-1 rounded bg-yellow-500/10 hover:bg-yellow-500/20 transition-all ${visibleReactions.haha ? 'opacity-100 text-yellow-400' : 'opacity-40 grayscale'}`}>😂</button>
-                                    <button onClick={() => setVisibleReactions(p => ({ ...p, wow: !p.wow }))} className={`px-2 py-1 rounded bg-orange-500/10 hover:bg-orange-500/20 transition-all ${visibleReactions.wow ? 'opacity-100 text-orange-400' : 'opacity-40 grayscale'}`}>😮</button>
-                                    <button onClick={() => setVisibleReactions(p => ({ ...p, sad: !p.sad }))} className={`px-2 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 transition-all ${visibleReactions.sad ? 'opacity-100 text-cyan-400' : 'opacity-40 grayscale'}`}>😢</button>
-                                    <button onClick={() => setVisibleReactions(p => ({ ...p, angry: !p.angry }))} className={`px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-all ${visibleReactions.angry ? 'opacity-100 text-red-500' : 'opacity-40 grayscale'}`}>😡</button>
+                                    <button onClick={() => setVisibleReactions(p => ({ ...p, total: !p.total }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800/50 hover:bg-zinc-800 transition-all ${visibleReactions.total ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                        <span className="w-2 h-2 rounded-full bg-white border border-zinc-500"></span><span className="text-white">Total</span>
+                                    </button>
+                                    <button onClick={() => setVisibleReactions(p => ({ ...p, like: !p.like }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 transition-all ${visibleReactions.like ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                        <span className="w-2 h-2 rounded-full bg-blue-400"></span><span className="text-blue-400">Like</span>
+                                    </button>
+                                    <button onClick={() => setVisibleReactions(p => ({ ...p, love: !p.love }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 transition-all ${visibleReactions.love ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                        <span className="w-2 h-2 rounded-full bg-rose-400"></span><span className="text-rose-400">Love</span>
+                                    </button>
+                                    <button onClick={() => setVisibleReactions(p => ({ ...p, haha: !p.haha }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-yellow-500/10 hover:bg-yellow-500/20 transition-all ${visibleReactions.haha ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                        <span className="w-2 h-2 rounded-full bg-yellow-400"></span><span className="text-yellow-400">Haha</span>
+                                    </button>
+                                    <button onClick={() => setVisibleReactions(p => ({ ...p, wow: !p.wow }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-orange-500/10 hover:bg-orange-500/20 transition-all ${visibleReactions.wow ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                        <span className="w-2 h-2 rounded-full bg-orange-400"></span><span className="text-orange-400">Wow</span>
+                                    </button>
+                                    <button onClick={() => setVisibleReactions(p => ({ ...p, sad: !p.sad }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 transition-all ${visibleReactions.sad ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                        <span className="w-2 h-2 rounded-full bg-cyan-400"></span><span className="text-cyan-400">Sad</span>
+                                    </button>
+                                    <button onClick={() => setVisibleReactions(p => ({ ...p, angry: !p.angry }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-all ${visibleReactions.angry ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                        <span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-red-500">Angry</span>
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="bg-[var(--shell-side)] rounded-xl p-4 border border-[var(--shell-border)] relative h-[250px]">
+                            <div className="bg-[var(--shell-side)] rounded-xl p-4 border border-[var(--shell-border)] relative h-[380px]">
                                 {(() => {
                                     // Use same slice logic as the list
                                     const sortedPosts = [...data.top_posts].sort((a, b) => a.timestamp - b.timestamp).slice(-20);
@@ -876,7 +1030,7 @@ export default function SocialInsights() {
                                             </div>
 
                                             {/* Chart Area */}
-                                            <div className="absolute top-0 left-8 right-2 bottom-6">
+                                            <div className="absolute top-0 left-8 right-8 bottom-24">
                                                 {/* Layer 1: SVG Lines */}
                                                 <svg className="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
                                                     {visibleReactions.total && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reactions)}`).join(" ")} fill="none" stroke="white" strokeWidth="0.5" vectorEffect="non-scaling-stroke" strokeDasharray="4 4" className="opacity-30" />}
@@ -906,19 +1060,92 @@ export default function SocialInsights() {
                                                                     {visibleReactions.sad && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.sad || 0)}%`, left: '50%' }} />}
                                                                     {visibleReactions.angry && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.angry || 0)}%`, left: '50%' }} />}
                                                                 </div>
+
+                                                                {/* Tooltip */}
+                                                                <div className="absolute left-1/2 top-0 -translate-x-1/2 transform transition-all duration-200 opacity-0 group-hover:opacity-100 group-hover:translate-y-2 z-50 pointer-events-none w-0 flex justify-center">
+                                                                    <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700 text-white text-[10px] rounded-lg p-3 shadow-2xl whitespace-nowrap min-w-[180px]">
+                                                                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-zinc-700">
+                                                                            <span className="font-bold text-emerald-400">
+                                                                                {new Date(p.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} <span className="text-zinc-500 mx-1">•</span> {new Date(p.timestamp).getHours()}h
+                                                                            </span>
+                                                                            <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[9px] font-bold">Total: {formatNumber(total)}</span>
+                                                                        </div>
+                                                                        <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px] italic">"{p.message}"</div>
+                                                                        <div className="grid grid-cols-6 gap-1 pt-2 text-[9px] text-center">
+                                                                            <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.like ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div>👍</div>
+                                                                                <div className="font-bold text-blue-400 mt-0.5">{formatNumber(p.reaction_breakdown?.like || 0)}</div>
+                                                                            </div>
+                                                                            <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.love ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div>❤️</div>
+                                                                                <div className="font-bold text-rose-400 mt-0.5">{formatNumber(p.reaction_breakdown?.love || 0)}</div>
+                                                                            </div>
+                                                                            <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.haha ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div>😂</div>
+                                                                                <div className="font-bold text-yellow-400 mt-0.5">{formatNumber(p.reaction_breakdown?.haha || 0)}</div>
+                                                                            </div>
+                                                                            <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.wow ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div>😮</div>
+                                                                                <div className="font-bold text-orange-400 mt-0.5">{formatNumber(p.reaction_breakdown?.wow || 0)}</div>
+                                                                            </div>
+                                                                            <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.sad ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div>😢</div>
+                                                                                <div className="font-bold text-cyan-400 mt-0.5">{formatNumber(p.reaction_breakdown?.sad || 0)}</div>
+                                                                            </div>
+                                                                            <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.angry ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div>😡</div>
+                                                                                <div className="font-bold text-red-500 mt-0.5">{formatNumber(p.reaction_breakdown?.angry || 0)}</div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         );
                                                     })}
                                                 </div>
+                                            </div>
+
+                                            {/* X-Axis Custom Timeline Labels */}
+                                            <div className="absolute bottom-0 left-8 right-8 h-20 px-0 pointer-events-none">
+                                                {sortedPosts.filter((_, i) => i % Math.max(1, Math.floor(sortedPosts.length / 8)) === 0).map((p, idx) => {
+                                                    const date = new Date(p.timestamp);
+                                                    const month = date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
+                                                    const day = date.getDate().toString().padStart(2, '0');
+                                                    const hour = date.getHours();
+
+                                                    return (
+                                                        <div key={p.id} className="absolute bottom-0 flex flex-col items-center justify-end group z-20 hover:z-50 pointer-events-auto" style={{ left: `${getX(p.timestamp)}%`, transform: 'translateX(-50%)', height: '100%' }}>
+                                                            {/* Image Preview Tooltip */}
+                                                            <div className="absolute bottom-[70px] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none w-32 h-32 bg-zinc-900 rounded-lg shadow-2xl overflow-hidden border-2 border-zinc-700 z-50 transform translate-y-2 group-hover:translate-y-0">
+                                                                <img src={p.image} alt={p.message} className="w-full h-full object-cover" />
+                                                            </div>
+
+                                                            {/* Vertical Dashed Line */}
+                                                            <div className="absolute bottom-14 w-px border-l border-dashed border-zinc-400/30 h-[320px]"></div>
+
+                                                            {/* Icon */}
+                                                            <EyeIcon className="w-4 h-4 text-[var(--foreground)] mb-1 bg-[var(--shell-side)] relative z-10 rounded-full cursor-pointer hover:text-blue-500 transition-colors" />
+
+                                                            {/* Time */}
+                                                            <span className="text-[10px] font-mono font-bold text-zinc-500 mb-2 bg-[var(--shell-side)] relative z-10 px-1 rounded">{hour}h</span>
+
+                                                            {/* Date Badge */}
+                                                            <div className="flex flex-col border border-zinc-200/20 rounded overflow-hidden w-8 text-center shadow-sm relative z-10">
+                                                                <div className="bg-red-600 text-white text-[8px] font-black uppercase py-0.5">{month}</div>
+                                                                <div className="bg-white text-zinc-900 text-xs font-black py-0.5">{day}</div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     );
                                 })()}
                             </div>
                         </div>
-                    </div >
 
-                </div >
+                    </div>
+                </div>
             )
             }
 
