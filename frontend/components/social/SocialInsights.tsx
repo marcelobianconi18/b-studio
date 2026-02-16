@@ -2,7 +2,14 @@
 
 import { useEffect, useState, useMemo } from "react";
 import PeriodSelector from "@/components/PeriodSelector";
+import dynamic from 'next/dynamic';
+
+const BrazilFollowersMap = dynamic(() => import('./BrazilFollowersMap'), {
+    ssr: false,
+    loading: () => <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl h-full min-h-[400px] w-full animate-pulse flex items-center justify-center text-zinc-700">Carregando Mapa...</div>
+});
 import {
+    ClockIcon,
     ArrowTrendingUpIcon,
     ArrowTrendingDownIcon,
     UserGroupIcon,
@@ -10,7 +17,9 @@ import {
     ChatBubbleLeftEllipsisIcon,
     VideoCameraIcon,
     DocumentTextIcon,
-    EyeIcon
+    EyeIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon
 } from "@heroicons/react/24/solid";
 
 interface InsightsData {
@@ -49,6 +58,15 @@ interface InsightsData {
     demographics?: {
         age: Array<{ range: string; male: number; female: number }>;
         top_cities: Array<{ city: string; count: number }>;
+        top_country: string;
+        top_city: string;
+        top_language: string;
+        top_audience: string;
+        top_age_group: string;
+        countries_data: Array<{ country: string; likes: number; growth: number; percentage: number }>;
+        cities_data: Array<{ city: string; likes: number; growth: number; percentage: number }>;
+        cities_by_gender: Array<{ city: string; male: number; female: number }>;
+        cities_by_age: Array<{ age_group: string; cities: Array<{ city: string; fans: number }> }>;
     };
     reactions_by_type?: { [key: string]: number };
     actions_split_changes?: { reactions: number; comments: number; shares: number; };
@@ -82,48 +100,52 @@ const KPICard = ({ title, value, change, icon: Icon }: any) => (
 
 // Population Pyramid Component
 const PopulationPyramid = ({ data }: { data: Array<{ range: string; male: number; female: number }> }) => {
-    const maxVal = Math.max(...data.map(d => Math.max(d.male, d.female)));
+    const maxVal = Math.max(...data.map(d => Math.max(d.male, d.female))) * 1.1; // Add 10% buffer
 
     return (
         <div className="flex flex-col w-full h-full px-4 justify-center">
             {/* Legend */}
-            <div className="flex justify-center gap-6 mb-8">
+            <div className="flex justify-center gap-8 mb-8 border-b border-[var(--shell-border)] pb-4">
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500" />
-                    <span className="text-[10px] font-bold uppercase text-zinc-500">Feminino</span>
+                    <div className="w-3 h-3 rounded-sm bg-sky-500" />
+                    <span className="text-[10px] font-bold uppercase text-zinc-500">Masculino</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-500" />
-                    <span className="text-[10px] font-bold uppercase text-zinc-500">Masculino</span>
+                    <div className="w-3 h-3 rounded-sm bg-orange-400" />
+                    <span className="text-[10px] font-bold uppercase text-zinc-500">Feminino</span>
                 </div>
             </div>
 
             {/* Pyramid */}
-            <div className="space-y-4 w-full max-w-lg mx-auto">
+            <div className="w-full max-w-3xl mx-auto flex flex-col font-sans">
                 {[...data].reverse().map((item) => (
-                    <div key={item.range} className="flex items-center w-full h-8 group hover:scale-[1.02] transition-transform">
+                    <div key={item.range} className="flex items-center w-full relative h-9 border-b border-[var(--shell-border)] last:border-0 hover:bg-[var(--shell-side)] transition-colors group">
 
-                        {/* Female Side (Left) */}
-                        <div className="flex-1 flex justify-end items-center pr-4 relative">
-                            <span className="mr-3 text-xs text-zinc-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">{item.female}%</span>
+                        {/* Left Side: Male (Blue) */}
+                        <div className="flex-1 flex justify-end items-center gap-3 pr-4 h-full">
+                            <span className="text-[11px] font-black text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors w-10 text-right shrink-0">
+                                {item.male}%
+                            </span>
                             <div
-                                className="h-full bg-red-500 rounded-l-md transition-all duration-500"
-                                style={{ width: `${(item.female / maxVal) * 100}%`, minWidth: '4px' }}
+                                className="h-5 bg-sky-500 rounded-l-sm transition-all duration-500 shadow-sm relative group-hover:shadow-md group-hover:bg-sky-400"
+                                style={{ width: `${(item.male / maxVal) * 100}%`, minWidth: '4px' }}
                             />
                         </div>
 
-                        {/* Central Axis (Age Range) */}
-                        <div className="w-20 text-center text-xs font-black text-[var(--foreground)] shrink-0 z-10 bg-[var(--shell-side)] py-1 rounded-md border border-[var(--shell-border)]">
+                        {/* Central Axis: Age Range */}
+                        <div className="w-16 text-center text-[10px] font-bold text-zinc-400 shrink-0">
                             {item.range}
                         </div>
 
-                        {/* Male Side (Right) */}
-                        <div className="flex-1 flex justify-start items-center pl-4 relative">
+                        {/* Right Side: Female (Orange) */}
+                        <div className="flex-1 flex justify-start items-center gap-3 pl-4 h-full">
                             <div
-                                className="h-full bg-blue-500 rounded-r-md transition-all duration-500"
-                                style={{ width: `${(item.male / maxVal) * 100}%`, minWidth: '4px' }}
+                                className="h-5 bg-orange-400 rounded-r-sm transition-all duration-500 shadow-sm relative group-hover:shadow-md group-hover:bg-orange-300"
+                                style={{ width: `${(item.female / maxVal) * 100}%`, minWidth: '4px' }}
                             />
-                            <span className="ml-3 text-xs text-zinc-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">{item.male}%</span>
+                            <span className="text-[11px] font-black text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors w-10 text-left shrink-0">
+                                {item.female}%
+                            </span>
                         </div>
 
                     </div>
@@ -142,9 +164,9 @@ const getPostType = (post: any) => {
 
 const SpeedometerChart = ({ title, data }: { title: string, data: { label: string, value: number, color: string }[] }) => {
     const total = data.reduce((acc, d) => acc + d.value, 0) || 1;
-    const radius = 60;
-    const center = 70;
-    const stroke = 12;
+    const radius = 90; // Increased from 60
+    const center = 110; // Increased from 70
+    const stroke = 35; // Increased from 25
 
     const pol2cart = (x: number, y: number, r: number, deg: number) => {
         const rad = (deg * Math.PI) / 180.0;
@@ -169,45 +191,95 @@ const SpeedometerChart = ({ title, data }: { title: string, data: { label: strin
         <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 flex flex-col items-center justify-between h-full relative overflow-hidden group hover:border-blue-500/20 transition-all">
             <h5 className="text-[10px] uppercase font-bold text-zinc-500 mb-4 text-center tracking-wider">{title}</h5>
 
-            <div className="relative h-[70px] w-[140px] flex justify-center mb-2">
-                <svg width="140" height="70" className="overflow-visible">
+            <div className="relative h-[130px] w-[220px] flex justify-center mb-4">
+                <svg width="220" height="130" className="overflow-visible">
                     <path d={`M ${pol2cart(center, center, radius, 180).x} ${pol2cart(center, center, radius, 180).y} A ${radius} ${radius} 0 0 1 ${pol2cart(center, center, radius, 360).x} ${pol2cart(center, center, radius, 360).y}`} fill="none" stroke="var(--shell-border)" strokeWidth={stroke} opacity={0.3} />
 
                     {segments.map((s, i) => {
                         const startPt = pol2cart(center, center, radius, s.start);
                         const endPt = pol2cart(center, center, radius, s.end);
                         const largeArc = s.end - s.start <= 180 ? 0 : 1;
+
+                        const midAngle = s.start + (s.end - s.start) / 2;
+                        const textPos = pol2cart(center, center, radius, midAngle);
+
                         return (
-                            <path
-                                key={i}
-                                d={`M ${startPt.x} ${startPt.y} A ${radius} ${radius} 0 ${largeArc} 1 ${endPt.x} ${endPt.y}`}
-                                fill="none"
-                                stroke={s.color}
-                                strokeWidth={stroke}
-                                className="transition-all duration-500 hover:opacity-80"
-                            />
+                            <g key={i}>
+                                <path
+                                    d={`M ${startPt.x} ${startPt.y} A ${radius} ${radius} 0 ${largeArc} 1 ${endPt.x} ${endPt.y}`}
+                                    fill="none"
+                                    stroke={s.color}
+                                    strokeWidth={stroke}
+                                />
+                                {s.percent > 0.05 && (
+                                    <text
+                                        x={textPos.x}
+                                        y={textPos.y}
+                                        dominantBaseline="middle"
+                                        textAnchor="middle"
+                                        fill="white"
+                                        fontSize="11"
+                                        fontWeight="900"
+                                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                                        className="pointer-events-none select-none"
+                                    >
+                                        {(s.percent * 100).toFixed(0)}%
+                                    </text>
+                                )}
+                            </g>
                         );
                     })}
 
-                    <g transform={`translate(${center}, ${center}) rotate(${needleAngle})`} className="transition-transform duration-1000 ease-out">
-                        <line x1="0" y1="0" x2="0" y2={-(radius + 5)} stroke="var(--foreground)" strokeWidth="2" strokeLinecap="round" />
-                        <circle cx="0" cy="0" r="3" fill="var(--foreground)" />
+                    <g transform={`translate(${center}, ${center}) rotate(${needleAngle})`} className="transition-transform duration-1000 ease-out z-10">
+                        <line x1="0" y1="0" x2={radius - stroke / 2 + 5} y2="0" stroke="var(--foreground)" strokeWidth="3" strokeLinecap="round" />
+                        <circle cx="0" cy="0" r="4" fill="var(--foreground)" className="shadow-md" />
                     </g>
                 </svg>
             </div>
 
             <div className="flex flex-col items-center mt-auto">
-                <div className="text-[9px] text-zinc-500 uppercase font-medium">Dominante</div>
                 <div className="text-sm font-black mt-0.5 flex items-center gap-1.5" style={{ color: winner.color }}>
                     {winner.label}
-                    <span className="text-[10px] bg-zinc-800 px-1 rounded opacity-80 text-white">{(winner.percent * 100).toFixed(0)}%</span>
                 </div>
             </div>
 
-            <div className="flex gap-2 mt-3 pt-3 border-t border-[var(--shell-border)] w-full justify-center">
+            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-[var(--shell-border)] w-full justify-center">
                 {data.map((d, i) => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: d.color }} title={d.label}></div>
+                    <div key={i} className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full" style={{ background: d.color }}></div>
+                        <span className="text-[9px] font-bold text-zinc-500 uppercase">{d.label}</span>
+                    </div>
                 ))}
+            </div>
+        </div>
+    );
+};
+
+const PaginationControl = ({ currentPage, totalItems, pageSize, onPageChange }: { currentPage: number, totalItems: number, pageSize: number, onPageChange: (page: number) => void }) => {
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const startItem = (currentPage - 1) * pageSize + 1;
+    const endItem = Math.min(currentPage * pageSize, totalItems);
+
+    return (
+        <div className="flex items-center justify-end gap-4 p-4 border-t border-[var(--shell-border)] bg-[var(--shell-surface)] text-zinc-500 text-xs font-bold font-mono">
+            <span>
+                {startItem} - {endItem} / {totalItems}
+            </span>
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="p-1 hover:text-[var(--foreground)] disabled:opacity-30 disabled:hover:text-zinc-500 transition-colors"
+                >
+                    <ChevronLeftIcon className="w-4 h-4" />
+                </button>
+                <button
+                    onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-1 hover:text-[var(--foreground)] disabled:opacity-30 disabled:hover:text-zinc-500 transition-colors"
+                >
+                    <ChevronRightIcon className="w-4 h-4" />
+                </button>
             </div>
         </div>
     );
@@ -220,7 +292,19 @@ const TAB_ITEMS = [
 ];
 
 export default function SocialInsights() {
+    const [activeTab, setActiveTab] = useState("geral");
+    const [period, setPeriod] = useState("30d");
     const [data, setData] = useState<InsightsData | null>(null);
+    const [heatmapMetric, setHeatmapMetric] = useState<'interactions' | 'reach'>('interactions');
+    const [heatmapMode, setHeatmapMode] = useState<'best' | 'worst'>('best');
+    const [countryPage, setCountryPage] = useState(1);
+    const [cityPage, setCityPage] = useState(1);
+    const [citiesGenderPage, setCitiesGenderPage] = useState(1);
+    const [genderSort, setGenderSort] = useState<'female' | 'male'>('female');
+    const [activeAgeGroupIndex, setActiveAgeGroupIndex] = useState(0);
+    const [citiesAgePage, setCitiesAgePage] = useState(1);
+    const [selectedStateFilter, setSelectedStateFilter] = useState<string>('todos');
+    const PAGE_SIZE = 5;
 
     const speedData = useMemo(() => {
         if (!data || !data.top_posts) return null;
@@ -262,7 +346,32 @@ export default function SocialInsights() {
             ]
         };
     }, [data]);
-    const [activeTab, setActiveTab] = useState("geral");
+
+    const heatmapData = useMemo(() => {
+        if (!data || !data.top_posts) return null;
+
+        // 7 days x 12 intervals (2h)
+        const counts = Array.from({ length: 7 }, () => Array.from({ length: 12 }, () => ({ count: 0, reach: 0, interactions: 0 })));
+
+        data.top_posts.forEach((p: any) => {
+            const d = new Date(p.timestamp);
+            const day = d.getDay(); // 0-6 (Dom-Sab)
+            const hour = d.getHours();
+            const interval = Math.floor(hour / 2); // 0-11
+
+            const c = counts[day][interval];
+            c.count++;
+            c.reach += p.reach;
+            c.interactions += (p.reactions + p.comments + p.shares);
+        });
+
+        // Averages
+        return counts.map(dayArr => dayArr.map(cell => ({
+            reach: cell.count ? cell.reach / cell.count : 0,
+            interactions: cell.count ? cell.interactions / cell.count : 0
+        })));
+    }, [data]);
+
     const [reactionsPage, setReactionsPage] = useState(0);
     const [performancePage, setPerformancePage] = useState(0);
     const [visibleMetrics, setVisibleMetrics] = useState({
@@ -338,7 +447,175 @@ export default function SocialInsights() {
                             { range: "55-64", male: 8, female: 9 },
                             { range: "65+", male: 4, female: 6 }
                         ],
-                        top_cities: []
+                        top_country: "Brasil",
+                        top_cities: [],
+                        top_city: "São Paulo",
+                        top_language: "Português (BR)",
+                        top_audience: "Mulheres 25-34",
+                        top_age_group: "25-34",
+                        countries_data: [
+                            { country: "Brasil", likes: 28540, growth: 124, percentage: 82 },
+                            { country: "Portugal", likes: 2100, growth: 15, percentage: 6 },
+                            { country: "Estados Unidos", likes: 950, growth: 4, percentage: 3 },
+                            { country: "Angola", likes: 540, growth: 8, percentage: 2 },
+                            { country: "Espanha", likes: 320, growth: -2, percentage: 1 },
+                            { country: "Reino Unido", likes: 210, growth: 1, percentage: 1 },
+                            { country: "França", likes: 180, growth: 0, percentage: 1 },
+                            { country: "Argentina", likes: 150, growth: -5, percentage: 0.5 },
+                            { country: "Itália", likes: 120, growth: 2, percentage: 0.4 },
+                            { country: "Japão", likes: 90, growth: 1, percentage: 0.3 },
+                            { country: "Alemanha", likes: 85, growth: 3, percentage: 0.2 },
+                            { country: "Canadá", likes: 70, growth: 2, percentage: 0.2 },
+                            { country: "Austrália", likes: 65, growth: 1, percentage: 0.2 },
+                            { country: "Irlanda", likes: 60, growth: 0, percentage: 0.1 },
+                            { country: "Suíça", likes: 55, growth: 1, percentage: 0.1 }
+                        ],
+                        cities_data: [
+                            { city: "São Paulo, SP", likes: 12500, growth: 89, percentage: 36 },
+                            { city: "Rio de Janeiro, RJ", likes: 6200, growth: 42, percentage: 18 },
+                            { city: "Belo Horizonte, MG", likes: 3100, growth: 15, percentage: 9 },
+                            { city: "Salvador, BA", likes: 1800, growth: 8, percentage: 5 },
+                            { city: "Brasília, DF", likes: 1500, growth: 12, percentage: 4 },
+                            { city: "Curitiba, PR", likes: 1450, growth: 6, percentage: 4 },
+                            { city: "Fortaleza, CE", likes: 1200, growth: 9, percentage: 3 },
+                            { city: "Recife, PE", likes: 1100, growth: 5, percentage: 3 },
+                            { city: "Porto Alegre, RS", likes: 950, growth: 3, percentage: 2 },
+                            { city: "Goiânia, GO", likes: 800, growth: 4, percentage: 2 },
+                            { city: "Manaus, AM", likes: 750, growth: 5, percentage: 2 },
+                            { city: "Belém, PA", likes: 700, growth: 3, percentage: 2 },
+                            { city: "Campinas, SP", likes: 650, growth: 8, percentage: 1 },
+                            { city: "São Luís, MA", likes: 600, growth: 2, percentage: 1 },
+                            { city: "Maceió, AL", likes: 550, growth: 4, percentage: 1 }
+                        ],
+                        cities_by_gender: [
+                            { city: "São Paulo, SP", male: 45, female: 55 },
+                            { city: "Rio de Janeiro, RJ", male: 42, female: 58 },
+                            { city: "Belo Horizonte, MG", male: 40, female: 60 },
+                            { city: "Salvador, BA", male: 38, female: 62 },
+                            { city: "Brasília, DF", male: 48, female: 52 },
+                            { city: "Curitiba, PR", male: 44, female: 56 },
+                            { city: "Fortaleza, CE", male: 35, female: 65 },
+                            { city: "Recife, PE", male: 39, female: 61 },
+                            { city: "Porto Alegre, RS", male: 46, female: 54 },
+                            { city: "Manaus, AM", male: 50, female: 50 },
+                            { city: "Belém, PA", male: 41, female: 59 },
+                            { city: "Goiânia, GO", male: 43, female: 57 },
+                            { city: "Campinas, SP", male: 47, female: 53 },
+                            { city: "São Luís, MA", male: 36, female: 64 },
+                            { city: "Maceió, AL", male: 37, female: 63 },
+                            { city: "Natal, RN", male: 40, female: 60 },
+                            { city: "Campo Grande, MS", male: 49, female: 51 },
+                            { city: "Teresina, PI", male: 34, female: 66 },
+                            { city: "João Pessoa, PB", male: 38, female: 62 },
+                            { city: "Aracaju, SE", male: 39, female: 61 }
+                        ],
+                        cities_by_age: [
+                            {
+                                age_group: "13-17",
+                                cities: [
+                                    { city: "São Paulo, SP", fans: 1200 },
+                                    { city: "Rio de Janeiro, RJ", fans: 900 },
+                                    { city: "Belo Horizonte, MG", fans: 600 },
+                                    { city: "Recife, PE", fans: 550 },
+                                    { city: "Salvador, BA", fans: 500 },
+                                    { city: "Fortaleza, CE", fans: 450 },
+                                    { city: "Curitiba, PR", fans: 400 },
+                                    { city: "Manaus, AM", fans: 350 },
+                                    { city: "Belém, PA", fans: 300 },
+                                    { city: "Porto Alegre, RS", fans: 250 }
+                                ]
+                            },
+                            {
+                                age_group: "18-24",
+                                cities: [
+                                    { city: "São Paulo, SP", fans: 3500 },
+                                    { city: "Belo Horizonte, MG", fans: 1800 },
+                                    { city: "Rio de Janeiro, RJ", fans: 1600 },
+                                    { city: "Curitiba, PR", fans: 1200 },
+                                    { city: "Porto Alegre, RS", fans: 1100 },
+                                    { city: "Salvador, BA", fans: 900 },
+                                    { city: "Brasília, DF", fans: 850 },
+                                    { city: "Campinas, SP", fans: 800 },
+                                    { city: "Goiânia, GO", fans: 750 },
+                                    { city: "Florianópolis, SC", fans: 700 }
+                                ]
+                            },
+                            {
+                                age_group: "25-34",
+                                cities: [
+                                    { city: "São Paulo, SP", fans: 5600 },
+                                    { city: "Rio de Janeiro, RJ", fans: 3200 },
+                                    { city: "Brasília, DF", fans: 1800 },
+                                    { city: "Salvador, BA", fans: 1500 },
+                                    { city: "Fortaleza, CE", fans: 1400 },
+                                    { city: "Recife, PE", fans: 1300 },
+                                    { city: "Belo Horizonte, MG", fans: 1200 },
+                                    { city: "Manaus, AM", fans: 1100 },
+                                    { city: "Curitiba, PR", fans: 1000 },
+                                    { city: "Goiânia, GO", fans: 900 }
+                                ]
+                            },
+                            {
+                                age_group: "35-44",
+                                cities: [
+                                    { city: "Rio de Janeiro, RJ", fans: 2800 },
+                                    { city: "São Paulo, SP", fans: 2500 },
+                                    { city: "Porto Alegre, RS", fans: 1200 },
+                                    { city: "Campinas, SP", fans: 900 },
+                                    { city: "Santos, SP", fans: 800 },
+                                    { city: "Niterói, RJ", fans: 750 },
+                                    { city: "Vitória, ES", fans: 700 },
+                                    { city: "Florianópolis, SC", fans: 650 },
+                                    { city: "Ribeirão Preto, SP", fans: 600 },
+                                    { city: "São José dos Campos, SP", fans: 550 }
+                                ]
+                            },
+                            {
+                                age_group: "45-54",
+                                cities: [
+                                    { city: "São Paulo, SP", fans: 1500 },
+                                    { city: "Rio de Janeiro, RJ", fans: 1200 },
+                                    { city: "Belo Horizonte, MG", fans: 800 },
+                                    { city: "Porto Alegre, RS", fans: 600 },
+                                    { city: "Curitiba, PR", fans: 500 },
+                                    { city: "Brasília, DF", fans: 450 },
+                                    { city: "Salvador, BA", fans: 400 },
+                                    { city: "Recife, PE", fans: 350 },
+                                    { city: "Fortaleza, CE", fans: 300 },
+                                    { city: "Belém, PA", fans: 250 }
+                                ]
+                            },
+                            {
+                                age_group: "55-64",
+                                cities: [
+                                    { city: "Rio de Janeiro, RJ", fans: 800 },
+                                    { city: "São Paulo, SP", fans: 700 },
+                                    { city: "Santos, SP", fans: 400 },
+                                    { city: "Niterói, RJ", fans: 350 },
+                                    { city: "Porto Alegre, RS", fans: 300 },
+                                    { city: "Recife, PE", fans: 250 },
+                                    { city: "Salvador, BA", fans: 200 },
+                                    { city: "Florianópolis, SC", fans: 180 },
+                                    { city: "João Pessoa, PB", fans: 150 },
+                                    { city: "Natal, RN", fans: 120 }
+                                ]
+                            },
+                            {
+                                age_group: "65+",
+                                cities: [
+                                    { city: "São Paulo, SP", fans: 400 },
+                                    { city: "Rio de Janeiro, RJ", fans: 350 },
+                                    { city: "Belo Horizonte, MG", fans: 200 },
+                                    { city: "Porto Alegre, RS", fans: 150 },
+                                    { city: "Curitiba, PR", fans: 120 },
+                                    { city: "Brasília, DF", fans: 100 },
+                                    { city: "Recife, PE", fans: 90 },
+                                    { city: "Salvador, BA", fans: 80 },
+                                    { city: "Santos, SP", fans: 70 },
+                                    { city: "Campinas, SP", fans: 60 }
+                                ]
+                            }
+                        ]
                     },
                     reactions_by_type: { photo: 9642, album: 6086, video_inline: 4508, video: 9 }
                 });
@@ -430,7 +707,7 @@ export default function SocialInsights() {
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     {/* LEFT: DESEMPENHO (Detailed Performance Table with Pagination) */}
-                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 overflow-y-auto pr-2 flex flex-col h-full">
+                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 flex flex-col h-full">
 
                         <h3 className="text-lg font-black italic tracking-tight mb-4 text-blue-500">Desempenho da Publicação</h3>
 
@@ -441,9 +718,9 @@ export default function SocialInsights() {
                             const reachChange = 5.75;
 
                             return (
-                                <div className="flex flex-col xl:flex-row gap-4 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                     {/* Left: Best Post Card */}
-                                    <div className="flex-1 bg-blue-50 dark:bg-blue-500/5 rounded-xl p-4 border border-blue-100 dark:border-blue-500/20">
+                                    <div className="bg-blue-50 dark:bg-blue-500/5 rounded-xl p-4 border border-blue-100 dark:border-blue-500/20 flex flex-col justify-center">
                                         <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wide">
                                             <HandThumbUpIcon className="w-4 h-4" />
                                             Melhor post por alcance
@@ -465,18 +742,18 @@ export default function SocialInsights() {
                                     </div>
 
                                     {/* Right: Engagement Stats Highlights */}
-                                    <div className="w-full xl:w-1/3 bg-[var(--shell-side)] rounded-xl p-6 flex flex-col justify-center text-center border border-[var(--shell-border)]">
+                                    <div className="bg-[var(--shell-side)] rounded-xl p-6 flex flex-col justify-center text-center border border-[var(--shell-border)]">
                                         <span className="text-zinc-500 text-xs font-bold uppercase mb-1">Total Engagement</span>
                                         <div className="flex items-center justify-center gap-2 mb-3">
-                                            <span className="text-5xl font-black text-[var(--foreground)] tracking-tight">{formatNumber(data.engagements.value)}</span>
+                                            <span className="text-5xl font-black text-[var(--foreground)] tracking-tight">{Math.round(data.engagements.value).toLocaleString('pt-BR')}</span>
                                             <span className={`text-sm font-bold ${data.engagements.change > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
                                                 {data.engagements.change > 0 ? '↑' : '↓'} {Math.abs(data.engagements.change)}%
                                             </span>
                                         </div>
                                         <div className="flex justify-center gap-4 text-[11px] text-zinc-500 font-medium pt-3 border-t border-[var(--shell-border)]">
-                                            <span title="Reactions">👍 {formatNumber(data.actions_split.reactions)}</span>
-                                            <span title="Comments">💬 {formatNumber(data.actions_split.comments)}</span>
-                                            <span title="Shares">🔗 {formatNumber(data.actions_split.shares)}</span>
+                                            <span title="Reactions">👍 {data.actions_split.reactions.toLocaleString('pt-BR')}</span>
+                                            <span title="Comments">💬 {data.actions_split.comments.toLocaleString('pt-BR')}</span>
+                                            <span title="Shares">🔗 {data.actions_split.shares.toLocaleString('pt-BR')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -484,7 +761,7 @@ export default function SocialInsights() {
                         })()}
 
 
-                        <div className="overflow-x-auto flex-1">
+                        <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm whitespace-nowrap">
                                 <thead className="bg-[var(--shell-surface)] z-10">
                                     <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-zinc-500 text-xs">
@@ -513,13 +790,13 @@ export default function SocialInsights() {
                                                 <a href={post.link} className="text-[10px] text-blue-500 hover:underline block mt-0.5">Link do post</a>
                                             </td>
                                             <td className="py-3 px-2 text-xs text-zinc-500">{post.date}</td>
-                                            <td className="py-3 text-right px-2 text-zinc-400 font-mono">{formatNumber(post.impressions || post.reach * 1.2)}</td>
-                                            <td className="py-3 text-right px-2 font-mono text-[var(--foreground)] font-bold">{formatNumber(post.reach)}</td>
-                                            <td className="py-3 text-right px-2 font-mono text-zinc-400">{formatNumber(post.reactions)}</td>
-                                            <td className="py-3 text-right px-2 font-mono text-zinc-400">{formatNumber(post.comments)}</td>
-                                            <td className="py-3 text-right px-2 font-mono text-zinc-400">{formatNumber(post.shares)}</td>
-                                            <td className="py-3 text-right px-2 font-mono text-purple-500">{formatNumber(post.video_views)}</td>
-                                            <td className="py-3 text-right px-2 font-mono text-zinc-400">{post.link_clicks}</td>
+                                            <td className="py-3 text-right px-2 text-zinc-400 font-mono">{(post.impressions || Math.round(post.reach * 1.2)).toLocaleString('pt-BR')}</td>
+                                            <td className="py-3 text-right px-2 font-mono text-[var(--foreground)] font-bold">{post.reach.toLocaleString('pt-BR')}</td>
+                                            <td className="py-3 text-right px-2 font-mono text-zinc-400">{post.reactions.toLocaleString('pt-BR')}</td>
+                                            <td className="py-3 text-right px-2 font-mono text-zinc-400">{post.comments.toLocaleString('pt-BR')}</td>
+                                            <td className="py-3 text-right px-2 font-mono text-zinc-400">{post.shares.toLocaleString('pt-BR')}</td>
+                                            <td className="py-3 text-right px-2 font-mono text-purple-500">{post.video_views.toLocaleString('pt-BR')}</td>
+                                            <td className="py-3 text-right px-2 font-mono text-zinc-400">{post.link_clicks.toLocaleString('pt-BR')}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -818,9 +1095,11 @@ export default function SocialInsights() {
                                                             <span className="text-[10px] font-mono font-bold text-zinc-500 mb-2 bg-[var(--shell-side)] relative z-10 px-1 rounded">{hour}h</span>
 
                                                             {/* Date Badge */}
-                                                            <div className="flex flex-col border border-zinc-200/20 rounded overflow-hidden w-8 text-center shadow-sm relative z-10">
-                                                                <div className="bg-red-600 text-white text-[8px] font-black uppercase py-0.5">{month}</div>
-                                                                <div className="bg-white text-zinc-900 text-xs font-black py-0.5">{day}</div>
+                                                            <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20 relative z-10 transform hover:scale-110 transition-transform duration-200">
+                                                                <div className="w-[30px] h-[30px] bg-white rounded-lg flex flex-col items-center justify-center pb-0.5">
+                                                                    <span className="text-[7px] font-black text-zinc-400 uppercase leading-none mb-0.5 tracking-tighter">{month}</span>
+                                                                    <span className="text-sm font-black text-zinc-900 leading-none tracking-tight">{day}</span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     );
@@ -838,13 +1117,57 @@ export default function SocialInsights() {
                                         <ArrowTrendingUpIcon className="w-4 h-4 text-emerald-500" />
                                         Performance por Tipo de Mídia
                                     </h4>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 h-48">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 min-h-[320px]">
                                         <SpeedometerChart title="Alcance Médio" data={speedData.reach} />
                                         <SpeedometerChart title="Engajamento Total" data={speedData.engagement} />
                                         <SpeedometerChart title="Cliques (Tráfego)" data={speedData.clicks} />
                                     </div>
+
+                                    {/* INSIGHTS / TIPS SECTION */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-8 border-t border-[var(--shell-border)]/50">
+                                        {/* Tip 1: Content Advice */}
+                                        <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 flex flex-col items-start gap-3">
+                                            <div className="bg-blue-500/10 p-2 rounded-lg">
+                                                <DocumentTextIcon className="w-5 h-5 text-blue-500" />
+                                            </div>
+                                            <div>
+                                                <h5 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Dica de Postagem</h5>
+                                                <p className="text-sm text-[var(--foreground)] leading-snug">
+                                                    Vídeos curtos (Reels) estão gerando <strong>2x mais alcance</strong> que fotos estáticas. Explore esse formato para crescer.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Tip 2: Attention Point */}
+                                        <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-4 flex flex-col items-start gap-3">
+                                            <div className="bg-rose-500/10 p-2 rounded-lg">
+                                                <ArrowTrendingDownIcon className="w-5 h-5 text-rose-500" />
+                                            </div>
+                                            <div>
+                                                <h5 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-1">Ponto de Atenção</h5>
+                                                <p className="text-sm text-[var(--foreground)] leading-snug">
+                                                    O engajamento em <strong>Álbuns</strong> caiu 15% esta semana. Tente reduzir a quantidade de fotos por carrossel.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Tip 3: Success Point */}
+                                        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 flex flex-col items-start gap-3">
+                                            <div className="bg-emerald-500/10 p-2 rounded-lg">
+                                                <HandThumbUpIcon className="w-5 h-5 text-emerald-500" />
+                                            </div>
+                                            <div>
+                                                <h5 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">Ponto de Sucesso</h5>
+                                                <p className="text-sm text-[var(--foreground)] leading-snug">
+                                                    Seus posts de <strong>terça-feira às 18h</strong> têm a melhor performance. Mantenha a consistência neste horário!
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
+
+
                         </div>
                     </div >
 
@@ -852,58 +1175,60 @@ export default function SocialInsights() {
                     < div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 overflow-hidden flex flex-col h-full" >
 
                         <h3 className="text-lg font-black italic tracking-tight mb-4 text-emerald-500">Detalhamento de Reações</h3>
+                        {/* 1. Best Post Card + Total Interactions Stats */}
+                        {(() => {
+                            const bestPost = [...data.top_posts].sort((a, b) => (b.reactions + b.comments + b.shares) - (a.reactions + a.comments + a.shares))[0];
+                            const engagement = bestPost.reactions + bestPost.comments + bestPost.shares;
+                            const rate = ((engagement / bestPost.reach) * 100).toFixed(2);
 
-                        {/* HEADER: ANALYTICS WIDGETS */}
-                        <div className="mb-6 space-y-6">
-                            {/* 1. Best Post Card */}
-                            {/* 1. Best Post Card + Total Interactions Stats */}
-                            {(() => {
-                                const bestPost = [...data.top_posts].sort((a, b) => (b.reactions + b.comments + b.shares) - (a.reactions + a.comments + a.shares))[0];
-                                const engagement = bestPost.reactions + bestPost.comments + bestPost.shares;
-                                const rate = ((engagement / bestPost.reach) * 100).toFixed(2);
+                            // Stats for the right side
+                            const totalInteractions = data.top_posts.reduce((acc, curr) => acc + curr.reactions + curr.comments + curr.shares, 0); const totalPosts = data.top_posts.length; const avgInteractions = Math.round(totalInteractions / (totalPosts || 1));
 
-                                // Stats for the right side
-                                const totalInteractions = data.top_posts.reduce((acc, curr) => acc + curr.reactions + curr.comments + curr.shares, 0); const totalPosts = data.top_posts.length; const avgInteractions = Math.round(totalInteractions / (totalPosts || 1));
-
-                                return (
-                                    <div className="flex flex-col xl:flex-row gap-4">
-                                        <div className="flex-1 bg-blue-50 dark:bg-blue-500/5 rounded-xl p-4 border border-blue-100 dark:border-blue-500/20">
-                                            <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wide">
-                                                <HandThumbUpIcon className="w-4 h-4" />
-                                                Melhor post por engajamento
-                                            </div>
-                                            <div className="flex gap-4">
-                                                <div className="w-24 h-24 shrink-0 rounded-lg bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
-                                                    <img src={bestPost.image} className="w-full h-full object-cover" alt="Best post" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 text-[10px] text-zinc-500 mb-1">
-                                                        <span className="flex items-center gap-1"><span className="w-3 h-3">📅</span> {bestPost.date}</span>
-                                                    </div>
-                                                    <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2 italic">"{bestPost.message}"</p>
-                                                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                                        Taxa de engajamento de <span className="font-bold text-blue-600 dark:text-blue-400">{rate}%</span> ({formatNumber(engagement)} interações).
-                                                    </p>
-                                                </div>
-                                            </div>
+                            return (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                    <div className="flex-1 bg-blue-50 dark:bg-blue-500/5 rounded-xl p-4 border border-blue-100 dark:border-blue-500/20">
+                                        <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wide">
+                                            <HandThumbUpIcon className="w-4 h-4" />
+                                            Melhor post por engajamento
                                         </div>
-
-                                        {/* Right: Summary Stats Highlight */}
-                                        <div className="w-full xl:w-1/3 bg-[var(--shell-side)] rounded-xl p-6 flex flex-col justify-center text-center border border-[var(--shell-border)]">
-                                            <span className="text-zinc-500 text-xs font-bold uppercase">Total de Interações</span>
-                                            <span className="text-5xl font-black text-[var(--foreground)] mt-2 mb-3">{formatNumber(totalInteractions)}</span>
-                                            <div className="text-[11px] text-zinc-500 pt-3 border-t border-[var(--shell-border)]">
-                                                Média: <span className="font-bold text-[var(--foreground)]">{formatNumber(avgInteractions)}</span> / post
+                                        <div className="flex gap-4">
+                                            <div className="w-24 h-24 shrink-0 rounded-lg bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                                                <img src={bestPost.image} className="w-full h-full object-cover" alt="Best post" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 text-[10px] text-zinc-500 mb-1">
+                                                    <span className="flex items-center gap-1"><span className="w-3 h-3">📅</span> {bestPost.date}</span>
+                                                </div>
+                                                <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2 italic">"{bestPost.message}"</p>
+                                                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                                    Taxa de engajamento de <span className="font-bold text-blue-600 dark:text-blue-400">{rate}%</span> ({formatNumber(engagement)} interações).
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
-                                )
-                            })()}
+
+                                    {/* Right: Summary Stats Highlight */}
+                                    <div className="w-full bg-[var(--shell-side)] rounded-xl p-6 flex flex-col justify-center text-center border border-[var(--shell-border)]">
+                                        <span className="text-zinc-500 text-xs font-bold uppercase mb-1">Total de Interações</span>
+                                        <div className="flex items-center justify-center gap-2 mb-3">
+                                            <span className="text-5xl font-black text-[var(--foreground)] tracking-tight">{totalInteractions.toLocaleString('pt-BR')}</span>
+                                        </div>
+                                        <div className="text-[11px] text-zinc-500 pt-3 border-t border-[var(--shell-border)]">
+                                            Média: <span className="font-bold text-[var(--foreground)]">{avgInteractions.toLocaleString('pt-BR')}</span> / post
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })()}
 
 
-                        </div>
+                        {/* HEADER: ANALYTICS WIDGETS */}
+                        {/* Chart: Reaction Performance (Top) */}
 
-                        <div className="overflow-x-auto flex-1">
+
+
+
+                        <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm whitespace-nowrap">
                                 <thead className="bg-[var(--shell-surface)] z-10">
                                     <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-zinc-500 text-xs">
@@ -969,7 +1294,7 @@ export default function SocialInsights() {
                             </div>
                         </div>
 
-                        {/* Chart: Reaction Performance */}
+                        {/* CHART MOVED HERE: Reaction Performance */}
                         <div className="mb-8 mt-8">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                 <h4 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
@@ -1130,9 +1455,11 @@ export default function SocialInsights() {
                                                             <span className="text-[10px] font-mono font-bold text-zinc-500 mb-2 bg-[var(--shell-side)] relative z-10 px-1 rounded">{hour}h</span>
 
                                                             {/* Date Badge */}
-                                                            <div className="flex flex-col border border-zinc-200/20 rounded overflow-hidden w-8 text-center shadow-sm relative z-10">
-                                                                <div className="bg-red-600 text-white text-[8px] font-black uppercase py-0.5">{month}</div>
-                                                                <div className="bg-white text-zinc-900 text-xs font-black py-0.5">{day}</div>
+                                                            <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20 relative z-10 transform hover:scale-110 transition-transform duration-200">
+                                                                <div className="w-[30px] h-[30px] bg-white rounded-lg flex flex-col items-center justify-center pb-0.5">
+                                                                    <span className="text-[7px] font-black text-zinc-400 uppercase leading-none mb-0.5 tracking-tighter">{month}</span>
+                                                                    <span className="text-sm font-black text-zinc-900 leading-none tracking-tight">{day}</span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     );
@@ -1144,6 +1471,183 @@ export default function SocialInsights() {
                             </div>
                         </div>
 
+
+
+                        {heatmapData && (
+                            <div className="mt-8 pt-8 border-t border-[var(--shell-border)]">
+                                <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                                    <h4 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
+                                        <ClockIcon className="w-4 h-4 text-emerald-500" />
+                                        Melhores Horários
+                                    </h4>
+                                    <div className="flex items-center gap-4">
+                                        {/* Metric Toggle */}
+                                        <div className="flex bg-[var(--shell-hover)] rounded-lg p-0.5 border border-[var(--shell-border)]">
+                                            <button onClick={() => setHeatmapMetric('interactions')} className={`px-2 py-1 text-[10px] uppercase font-bold rounded-md transition-all ${heatmapMetric === 'interactions' ? 'bg-[var(--shell-active)] text-emerald-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>Interação</button>
+                                            <button onClick={() => setHeatmapMetric('reach')} className={`px-2 py-1 text-[10px] uppercase font-bold rounded-md transition-all ${heatmapMetric === 'reach' ? 'bg-[var(--shell-active)] text-blue-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>Visualização</button>
+                                        </div>
+                                        {/* Summary Text */}
+                                        {(() => {
+                                            const allCells: { val: number; day: string; hour: string }[] = [];
+                                            const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+                                            heatmapData.forEach((dayData, dIdx) => {
+                                                dayData.forEach((cell, hIdx) => {
+                                                    if (cell[heatmapMetric] > 0) {
+                                                        allCells.push({
+                                                            val: cell[heatmapMetric],
+                                                            day: days[dIdx],
+                                                            hour: `${hIdx * 2}h`
+                                                        });
+                                                    }
+                                                });
+                                            });
+
+                                            if (allCells.length === 0) return null;
+
+                                            const best = allCells.reduce((prev, curr) => curr.val > prev.val ? curr : prev, allCells[0]);
+                                            const worst = allCells.reduce((prev, curr) => curr.val < prev.val ? curr : prev, allCells[0]);
+
+                                            return (
+                                                <div className="hidden lg:flex items-center gap-3 ml-4 pl-4 border-l border-[var(--shell-border)]/50">
+                                                    {/* Best Time Card */}
+                                                    <div className="flex items-center gap-3 bg-blue-500/5 hover:bg-blue-500/10 transition-colors border border-blue-500/10 rounded-xl px-4 py-2 group cursor-default shadow-sm">
+                                                        <div className="bg-blue-500 p-1.5 rounded-lg shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                                                            <ArrowTrendingUpIcon className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[9px] font-bold text-blue-400/80 uppercase tracking-widest leading-none mb-1">Melhor Horário</span>
+                                                            <span className="text-sm font-black text-[var(--foreground)] tracking-tight leading-none">
+                                                                {best.hour} <span className="text-zinc-500 font-medium text-[10px] mx-0.5">•</span> {best.day}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Worst Time Card */}
+                                                    <div className="flex items-center gap-3 bg-red-500/5 hover:bg-red-500/10 transition-colors border border-red-500/10 rounded-xl px-4 py-2 group cursor-default shadow-sm">
+                                                        <div className="bg-red-500 p-1.5 rounded-lg shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform">
+                                                            <ArrowTrendingDownIcon className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[9px] font-bold text-red-500/80 uppercase tracking-widest leading-none mb-1">Menor Volume</span>
+                                                            <span className="text-sm font-black text-[var(--foreground)] tracking-tight leading-none">
+                                                                {worst.hour} <span className="text-zinc-500 font-medium text-[10px] mx-0.5">•</span> {worst.day}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+
+                                <div className="bg-[var(--shell-surface)] rounded-2xl p-6 border border-[var(--shell-border)] overflow-x-auto">
+                                    <div className="min-w-[500px]">
+                                        <div className="flex gap-4">
+                                            {/* Y-Axis Labels (Hours) */}
+                                            <div className="flex flex-col justify-between py-2 text-[9px] font-mono text-zinc-500 text-right pr-2">
+                                                {Array.from({ length: 12 }).map((_, i) => (
+                                                    <div key={i} className="h-6 flex items-center justify-end">{i * 2}h</div>
+                                                ))}
+                                            </div>
+
+                                            {/* Day Columns */}
+                                            {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((fullDayName, dayIdx) => {
+                                                const dayAbbr = fullDayName.charAt(0);
+                                                const dayData = heatmapData[dayIdx];
+
+                                                // Calculate min/max for normalization
+                                                const allValues = heatmapData.flat().map((c: any) => c[heatmapMetric]);
+                                                const max = Math.max(...allValues) || 1;
+                                                const min = Math.min(...allValues);
+
+                                                return (
+                                                    <div key={dayIdx} className="flex-1 flex flex-col gap-1 min-w-[40px]">
+                                                        {/* Hour Cells Stack */}
+                                                        {dayData.map((cell: any, hourIdx: number) => {
+                                                            const val = cell[heatmapMetric];
+
+                                                            // 1-10 Scale Calculation
+                                                            // We enforce a minimum score of 1 to ensure all cells are "painted"
+                                                            let score = 1;
+                                                            if (val > 0) {
+                                                                const normalized = (val - min) / (max - min || 1);
+                                                                // Map 0..1 to 1..10
+                                                                score = Math.floor(normalized * 9) + 1;
+                                                            }
+
+                                                            // Color mapping based on score 1-10 - MONOCHROMATIC BLUE GRADIENT
+                                                            // Weaker (1) -> Stronger (10)
+                                                            let bgClass = "";
+                                                            if (score === 1) bgClass = "bg-sky-200 border-sky-300";           // Lightest/White-ish Blue
+                                                            else if (score === 2) bgClass = "bg-sky-300 border-sky-400";
+                                                            else if (score === 3) bgClass = "bg-sky-400 border-sky-500";
+                                                            else if (score === 4) bgClass = "bg-blue-400 border-blue-500";
+                                                            else if (score === 5) bgClass = "bg-blue-500 border-blue-600";
+                                                            else if (score === 6) bgClass = "bg-blue-600 border-blue-700";
+                                                            else if (score === 7) bgClass = "bg-blue-700 border-blue-800";
+                                                            else if (score === 8) bgClass = "bg-blue-800 border-blue-900";
+                                                            else if (score === 9) bgClass = "bg-blue-900 border-blue-950";
+                                                            else if (score === 10) bgClass = "bg-blue-950 border-black shadow-[0_0_12px_rgba(30,58,138,0.5)]"; // Deepest Blue
+
+                                                            return (
+                                                                <div
+                                                                    key={hourIdx}
+                                                                    className={`h-6 rounded hover:scale-105 transition-all relative group cursor-pointer border ${val === 0 ? 'border-transparent' : ''} ${bgClass}`}
+                                                                >
+                                                                    {/* Enhanced Tooltip - Show for ALL cells now */}
+                                                                    {true && (
+                                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[999] pointer-events-none w-max">
+                                                                            <div className="bg-zinc-900/95 backdrop-blur-md text-white text-[10px] rounded-xl p-3 shadow-2xl border border-zinc-700/50 text-center min-w-[120px]">
+                                                                                <p className="font-bold text-xs mb-1 text-zinc-300 border-b border-zinc-800 pb-1">{fullDayName}, {hourIdx * 2}h</p>
+                                                                                <div className="flex items-center justify-between gap-4 mt-2">
+                                                                                    <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">Score</span>
+                                                                                    <div className="flex gap-0.5">
+                                                                                        {/* Mini Score Bar */}
+                                                                                        {Array.from({ length: 10 }).map((_, i) => (
+                                                                                            <div key={i} className={`w-1 h-3 rounded-[1px] ${i < score ? (i > 7 ? 'bg-blue-500' : 'bg-emerald-500') : 'bg-zinc-800'}`}></div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="flex items-center justify-between gap-4 mt-1">
+                                                                                    <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">Vol</span>
+                                                                                    <span className="font-mono font-bold text-white">{formatNumber(val)}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                            {/* Arrow */}
+                                                                            <div className="w-3 h-3 bg-zinc-900 border-r border-b border-zinc-700/50 rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-1.5 backdrop-blur-md"></div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+
+                                                        {/* Day Label (Bottom) */}
+                                                        <div className="text-center mt-2 text-[10px] font-bold text-zinc-500">{dayAbbr}</div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Legend 1-10 Scale */}
+                                        <div className="flex items-center justify-between mt-6 text-[9px] text-zinc-500 font-medium font-mono uppercase tracking-wider bg-zinc-900/30 rounded-full p-2 border border-zinc-800/50">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-sky-200 w-3 h-3 rounded block border border-sky-300"></span>
+                                                <span>1 (Menor)</span>
+                                            </div>
+
+                                            {/* Gradient Bar Representation */}
+                                            <div className="flex-1 mx-4 h-1.5 rounded-full bg-gradient-to-r from-sky-200 via-blue-500 to-blue-950 relative"></div>
+
+                                            <div className="flex items-center gap-2">
+                                                <span>10 (Maior)</span>
+                                                <span className="bg-blue-950 w-3 h-3 rounded block shadow-[0_0_5px_rgba(30,58,138,0.5)]"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )
@@ -1152,15 +1656,582 @@ export default function SocialInsights() {
             {/* TAB CONTENT: PÚBLICO */}
             {
                 activeTab === "publico" && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 flex flex-col justify-center relative min-h-[500px]">
-                            <h3 className="absolute top-6 left-6 text-lg font-black italic tracking-tight">Faixa Etária & Gênero (Funil)</h3>
-                            {data.demographics && (
-                                <div className="mt-8 w-full h-full flex items-center">
-                                    <PopulationPyramid data={data.demographics.age} />
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
+
+                        {/* 1. TOP METRICS CARDS */}
+                        {data.demographics && (
+                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
+                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
+                                    <div>
+                                        <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_country}</div>
+                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                    </div>
                                 </div>
-                            )}
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
+                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
+                                    <div>
+                                        <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_city}</div>
+                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                    </div>
+                                </div>
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
+                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
+                                    <div>
+                                        <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_language}</div>
+                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                    </div>
+                                </div>
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
+                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Público Principal</h3>
+                                    <div>
+                                        <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_audience}</div>
+                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                    </div>
+                                </div>
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px] col-span-2 lg:col-span-1">
+                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Faixa Etária Principal</h3>
+                                    <div>
+                                        <div className="text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">{data.demographics.top_age_group}</div>
+                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 2. DEMOGRAPHIC FUNNEL & SUMMARIES */}
+                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 relative">
+                            <h3 className="text-lg font-black italic tracking-tight flex items-center gap-2 mb-8">
+                                <UserGroupIcon className="w-5 h-5 text-blue-500" />
+                                Faixa Etária & Gênero
+                            </h3>
+
+                            {data.demographics && (() => {
+                                // Calculate Summaries Dynamically
+                                const rawTotalMale = data.demographics.age.reduce((acc, curr) => acc + curr.male, 0);
+                                const rawTotalFemale = data.demographics.age.reduce((acc, curr) => acc + curr.female, 0);
+                                const grandTotal = rawTotalMale + rawTotalFemale;
+
+                                // Normalize to 100%
+                                const totalMale = Math.round((rawTotalMale / grandTotal) * 100);
+                                const totalFemale = Math.round((rawTotalFemale / grandTotal) * 100);
+
+                                const sortedByTotal = [...data.demographics.age].sort((a, b) => (b.male + b.female) - (a.male + a.female));
+                                const topAge = sortedByTotal[0];
+                                const topAgePercentage = topAge.male + topAge.female;
+
+                                return (
+                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
+
+                                        {/* LEFT: Age Summary (NOW CHART) */}
+                                        <div className="flex flex-col p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] h-full relative overflow-hidden">
+                                            <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-2 tracking-widest z-10 w-full text-center lg:text-left">Total por Faixa Etária</h4>
+
+                                            {/* Winner Text Block */}
+                                            {(() => {
+                                                const topGroup = [...data.demographics.age].sort((a, b) => (b.male + b.female) - (a.male + a.female))[0];
+                                                const topPercentage = Math.round((topGroup.male + topGroup.female) / (rawTotalMale + rawTotalFemale) * 100);
+                                                return (
+                                                    <div className="w-full text-left mb-2 z-10 relative">
+                                                        <div className="text-xl font-black text-[var(--foreground)]">
+                                                            {topGroup.range} anos
+                                                        </div>
+                                                        <div className="text-[10px] text-zinc-500 mt-1">
+                                                            são a maioria, representando <strong className="text-[var(--foreground)]">{topPercentage}%</strong> do total.
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            <div className="flex flex-col items-center justify-between h-full gap-4 relative z-10">
+                                                {/* Single Ring Donut Chart */}
+                                                <div className="relative w-40 h-40 shrink-0">
+                                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                                                        {(() => {
+                                                            const radius = 40;
+                                                            const circumference = 2 * Math.PI * radius;
+                                                            let cumulativePercent = 0;
+
+                                                            // Sort by Age Logic
+                                                            const ageOrder = { '13-17': 1, '18-24': 2, '25-34': 3, '35-44': 4, '45-54': 5, '55-64': 6, '65+': 7 };
+                                                            const sortedByAge = [...data.demographics.age].sort((a, b) => {
+                                                                const orderA = ageOrder[a.range as keyof typeof ageOrder] || 99;
+                                                                const orderB = ageOrder[b.range as keyof typeof ageOrder] || 99;
+                                                                return orderA - orderB;
+                                                            });
+
+                                                            // Extended Palette
+                                                            const palette = [
+                                                                '#3b82f6', // blue-500
+                                                                '#06b6d4', // cyan-500
+                                                                '#14b8a6', // teal-500
+                                                                '#10b981', // emerald-500
+                                                                '#84cc16', // lime-500
+                                                                '#eab308', // yellow-500
+                                                                '#f97316', // orange-500
+                                                            ];
+
+                                                            // Render Chart Segments
+                                                            const segments = sortedByAge.map((item, index) => {
+                                                                const totalVal = ((item.male + item.female) / (rawTotalMale + rawTotalFemale) * 100);
+                                                                const strokeDasharray = `${(totalVal / 100) * circumference} ${circumference}`;
+                                                                const rotateAngle = (cumulativePercent / 100) * 360;
+
+                                                                cumulativePercent += totalVal;
+                                                                const color = palette[index % palette.length];
+
+                                                                return (
+                                                                    <circle
+                                                                        key={item.range}
+                                                                        cx="50"
+                                                                        cy="50"
+                                                                        r={radius}
+                                                                        fill="none"
+                                                                        stroke={color}
+                                                                        strokeWidth="20"
+                                                                        strokeDasharray={strokeDasharray}
+                                                                        strokeDashoffset={0}
+                                                                        transform={`rotate(${rotateAngle} 50 50)`}
+                                                                        className="hover:opacity-80 transition-opacity duration-300"
+                                                                    />
+                                                                );
+                                                            });
+
+                                                            return <>{segments}</>;
+                                                        })()}
+                                                    </svg>
+
+                                                    {/* Center Total Label (Absolute over SVG) */}
+                                                    {(() => {
+                                                        const topGroup = [...data.demographics.age].sort((a, b) => (b.male + b.female) - (a.male + a.female))[0];
+                                                        const topPercentage = Math.round((topGroup.male + topGroup.female) / (rawTotalMale + rawTotalFemale) * 100);
+                                                        return (
+                                                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                                                <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
+                                                                    {topPercentage}%
+                                                                </span>
+                                                                <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
+                                                                    {topGroup.range}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+
+                                                {/* Detailed Legend List - Two Columns with Separator */}
+                                                <div className="w-full mt-2 flex items-start gap-4">
+                                                    {(() => {
+                                                        // Re-sort for list rendering (Chronological)
+                                                        const ageOrder = { '13-17': 1, '18-24': 2, '25-34': 3, '35-44': 4, '45-54': 5, '55-64': 6, '65+': 7 };
+                                                        const sortedByAge = [...data.demographics.age].sort((a, b) => {
+                                                            const orderA = ageOrder[a.range as keyof typeof ageOrder] || 99;
+                                                            const orderB = ageOrder[b.range as keyof typeof ageOrder] || 99;
+                                                            return orderA - orderB;
+                                                        });
+
+                                                        const palette = [
+                                                            'bg-blue-500',
+                                                            'bg-cyan-500',
+                                                            'bg-teal-500',
+                                                            'bg-emerald-500',
+                                                            'bg-lime-500',
+                                                            'bg-yellow-500',
+                                                            'bg-orange-500',
+                                                        ];
+
+                                                        const renderItem = (item: any, index: number) => {
+                                                            const totalVal = Math.round((item.male + item.female) / (rawTotalMale + rawTotalFemale) * 100);
+                                                            return (
+                                                                <div key={item.range} className="flex items-center justify-between text-[10px] w-full group hover:bg-[var(--shell-surface)] p-1 rounded transition-colors cursor-default">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className={`w-2.5 h-2.5 rounded-full ${palette[index % palette.length]} shadow-sm`}></div>
+                                                                        <span className="text-zinc-400 font-medium group-hover:text-[var(--foreground)] transition-colors">{item.range} anos</span>
+                                                                    </div>
+                                                                    <span className="font-mono font-black text-[var(--foreground)] bg-[var(--shell-surface)] group-hover:bg-[var(--shell-side)] px-1.5 py-0.5 rounded transition-colors">
+                                                                        {totalVal}%
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        };
+
+                                                        return (
+                                                            <>
+                                                                {/* Column 1 (First 4) */}
+                                                                <div className="flex-1 flex flex-col gap-1.5">
+                                                                    {sortedByAge.slice(0, 4).map((item, i) => renderItem(item, i))}
+                                                                </div>
+
+                                                                {/* Separator Line */}
+                                                                <div className="w-px bg-zinc-800 self-stretch my-1"></div>
+
+                                                                {/* Column 2 (Last 3) */}
+                                                                <div className="flex-1 flex flex-col gap-1.5">
+                                                                    {sortedByAge.slice(4).map((item, i) => renderItem(item, i + 4))}
+                                                                </div>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* CENTER: Pyramid */}
+                                        <div className="lg:col-span-2">
+                                            <PopulationPyramid data={data.demographics.age} />
+                                        </div>
+
+                                        {/* RIGHT: Gender Summary */}
+                                        <div className="flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] h-full relative">
+                                            <div className="w-full text-left">
+                                                <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-1 tracking-widest">Resumo de Gênero</h4>
+                                                <div className="text-xl font-black text-[var(--foreground)]">
+                                                    {totalFemale > totalMale ? 'Mulheres' : 'Homens'}
+                                                </div>
+                                                <div className="text-[10px] text-zinc-500 mt-1">
+                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{Math.max(totalFemale, totalMale)}%</strong> do total.
+                                                </div>
+                                            </div>
+
+                                            {/* DONUT CHART */}
+                                            <div className="relative w-40 h-40 flex items-center justify-center">
+                                                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                                                    {/* Background Circle */}
+                                                    <circle
+                                                        cx="50"
+                                                        cy="50"
+                                                        r="40"
+                                                        fill="none"
+                                                        stroke="var(--shell-surface)"
+                                                        strokeWidth="20"
+                                                    />
+                                                    {/* Female Segment (Orange) */}
+                                                    <circle
+                                                        cx="50"
+                                                        cy="50"
+                                                        r="40"
+                                                        fill="none"
+                                                        stroke="#fb923c" // orange-400
+                                                        strokeWidth="20"
+                                                        strokeDasharray={`${(totalFemale / 100) * 251.2} 251.2`}
+                                                        strokeLinecap="round"
+                                                        className="transition-all duration-1000 ease-out"
+                                                    />
+                                                    {/* Male Segment (Blue) - Starts where Female ends via stroke-dashoffset */}
+                                                    <circle
+                                                        cx="50"
+                                                        cy="50"
+                                                        r="40"
+                                                        fill="none"
+                                                        stroke="#0ea5e9" // sky-500
+                                                        strokeWidth="20"
+                                                        strokeDasharray={`${(totalMale / 100) * 251.2} 251.2`}
+                                                        strokeDashoffset={-((totalFemale / 100) * 251.2)}
+                                                        strokeLinecap="round"
+                                                        className="transition-all duration-1000 ease-out"
+                                                    />
+                                                </svg>
+                                                {/* Center Text */}
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                                    <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
+                                                        {Math.max(totalFemale, totalMale)}%
+                                                    </span>
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
+                                                        {totalFemale > totalMale ? 'Mulheres' : 'Homens'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Legend */}
+                                            <div className="w-full space-y-2">
+                                                <div className="flex justify-between items-center text-[10px] font-bold">
+                                                    <span className="flex items-center gap-1.5 text-zinc-500 uppercase tracking-wide">
+                                                        <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+                                                        Mulheres
+                                                    </span>
+                                                    <span className="text-[var(--foreground)]">{totalFemale}%</span>
+                                                </div>
+
+                                                <div className="flex justify-between items-center text-[10px] font-bold">
+                                                    <span className="flex items-center gap-1.5 text-zinc-500 uppercase tracking-wide">
+                                                        <div className="w-2 h-2 rounded-full bg-sky-500"></div>
+                                                        Homens
+                                                    </span>
+                                                    <span className="text-[var(--foreground)]">{totalMale}%</span>
+                                                </div>
+                                                {/* Custom Progress Bar for Secondary Visual */}
+                                                <div className="w-full h-1.5 bg-[var(--shell-surface)] rounded-full overflow-hidden flex mt-2">
+                                                    <div className="h-full bg-orange-400" style={{ width: `${totalFemale}%` }}></div>
+                                                    <div className="h-full bg-sky-500" style={{ width: `${totalMale}%` }}></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                );
+                            })()}
                         </div>
+
+                        {/* 3. GEOGRAPHY & HEATMAP */}
+                        {data.demographics && (
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
+                                {/* Countries Table */}
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+                                    <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)]">
+                                        <h3 className="text-lg font-black italic tracking-tight text-blue-500">Fãs por Geografia - País</h3>
+                                        <p className="text-xs text-zinc-500 mt-1">De onde vêm os seus fãs</p>
+                                    </div>
+                                    <div className="overflow-x-auto flex-1">
+                                        <table className="w-full text-left text-xs whitespace-nowrap">
+                                            <thead className="bg-[var(--shell-surface)] border-b border-[var(--shell-border)]">
+                                                <tr className="text-zinc-500 font-bold uppercase tracking-wider">
+                                                    <th className="px-6 py-3">País</th>
+                                                    <th className="px-6 py-3 text-right">Curtidas da Pág.</th>
+                                                    <th className="px-6 py-3 text-right">Cresc. Absoluto</th>
+                                                    <th className="px-6 py-3 text-right">% do Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-[var(--shell-border)]">
+                                                {data.demographics.countries_data
+                                                    .slice((countryPage - 1) * PAGE_SIZE, countryPage * PAGE_SIZE)
+                                                    .map((item, idx) => (
+                                                        <tr key={idx} className="hover:bg-[var(--shell-side)] transition-colors">
+                                                            <td className="px-6 py-3 font-bold text-[var(--foreground)]">{item.country}</td>
+                                                            <td className="px-6 py-3 text-right font-mono text-zinc-400">
+                                                                {formatNumber(item.likes)}
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                    {item.growth > 0 ? '+' : ''}{(item.growth / item.likes * 100).toFixed(1)}%
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-3 text-right font-mono">
+                                                                <span className={item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                                                                    {item.growth > 0 ? '+' : ''}{item.growth}
+                                                                </span>
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500/70' : 'text-rose-500/70'} opacity-70`}>
+                                                                    {item.growth > 0 ? '+' : ''}{(item.growth * 10).toFixed(1)}% est.
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-3 text-right font-mono font-bold text-[var(--foreground)]">
+                                                                {item.percentage}%
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                    {item.growth > 0 ? '+' : ''}0.2%
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <PaginationControl
+                                        currentPage={countryPage}
+                                        totalItems={data.demographics.countries_data.length}
+                                        pageSize={PAGE_SIZE}
+                                        onPageChange={setCountryPage}
+                                    />
+                                </div>
+
+                                {/* Cities Table */}
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+                                    <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-start">
+                                        <div>
+                                            <h3 className="text-lg font-black italic tracking-tight text-blue-500">Fãs por Geografia - Cidade</h3>
+                                            <p className="text-xs text-zinc-500 mt-1">Cidades onde seus fãs vivem</p>
+                                        </div>
+                                        <select
+                                            value={selectedStateFilter}
+                                            onChange={(e) => {
+                                                setSelectedStateFilter(e.target.value);
+                                                setCityPage(1);
+                                            }}
+                                            className="bg-[var(--shell-surface)] text-[10px] font-bold text-zinc-500 border border-[var(--shell-border)] rounded-lg px-2 py-1 outline-none focus:border-blue-500 transition-colors"
+                                        >
+                                            <option value="todos">Todos os Estados</option>
+                                            <option value="SP">São Paulo (SP)</option>
+                                            <option value="RJ">Rio de Janeiro (RJ)</option>
+                                            <option value="MG">Minas Gerais (MG)</option>
+                                            <option value="BA">Bahia (BA)</option>
+                                            <option value="DF">Distrito Federal (DF)</option>
+                                            <option value="PR">Paraná (PR)</option>
+                                            <option value="CE">Ceará (CE)</option>
+                                            <option value="PE">Pernambuco (PE)</option>
+                                            <option value="RS">Rio Grande do Sul (RS)</option>
+                                            <option value="GO">Goiás (GO)</option>
+                                            <option value="AM">Amazonas (AM)</option>
+                                            <option value="PA">Pará (PA)</option>
+                                            <option value="MA">Maranhão (MA)</option>
+                                            <option value="AL">Alagoas (AL)</option>
+                                        </select>
+                                    </div>
+                                    <div className="overflow-x-auto flex-1">
+                                        <table className="w-full text-left text-xs whitespace-nowrap">
+                                            <thead className="bg-[var(--shell-surface)] border-b border-[var(--shell-border)]">
+                                                <tr className="text-zinc-500 font-bold uppercase tracking-wider">
+                                                    <th className="px-6 py-3">Cidade</th>
+                                                    <th className="px-6 py-3 text-right">Curtidas da Pág.</th>
+                                                    <th className="px-6 py-3 text-right">Cresc. Absoluto</th>
+                                                    <th className="px-6 py-3 text-right">% do Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-[var(--shell-border)]">
+                                                {data.demographics.cities_data
+                                                    .filter(city => selectedStateFilter === 'todos' || city.city.includes(selectedStateFilter))
+                                                    .slice((cityPage - 1) * PAGE_SIZE, cityPage * PAGE_SIZE)
+                                                    .map((item, idx) => (
+                                                        <tr key={idx} className="hover:bg-[var(--shell-side)] transition-colors">
+                                                            <td className="px-6 py-3 font-bold text-[var(--foreground)]">{item.city}</td>
+                                                            <td className="px-6 py-3 text-right font-mono text-zinc-400">
+                                                                {formatNumber(item.likes)}
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                    {item.growth > 0 ? '+' : ''}{(item.growth / item.likes * 100).toFixed(1)}%
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-3 text-right font-mono">
+                                                                <span className={item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                                                                    {item.growth > 0 ? '+' : ''}{item.growth}
+                                                                </span>
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500/70' : 'text-rose-500/70'} opacity-70`}>
+                                                                    {item.growth > 0 ? '+' : ''}{(item.growth * 10).toFixed(1)}% est.
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-3 text-right font-mono font-bold text-[var(--foreground)]">
+                                                                {item.percentage}%
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                    {item.growth > 0 ? '+' : ''}0.2%
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <PaginationControl
+                                        currentPage={cityPage}
+                                        totalItems={data.demographics.cities_data.filter(city => selectedStateFilter === 'todos' || city.city.includes(selectedStateFilter)).length}
+                                        pageSize={PAGE_SIZE}
+                                        onPageChange={setCityPage}
+                                    />
+                                </div>
+
+                                {/* Heatmap (Right Column - Spans 2 Rows) */}
+                                <BrazilFollowersMap />
+
+                                {/* Cidades por Gênero */}
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+                                    <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-start">
+                                        <div>
+                                            <h3 className="text-sm font-black italic tracking-tight text-blue-500">Cidades por Gênero</h3>
+                                            <p className="text-[10px] text-zinc-500 mt-1">Classificado por %</p>
+                                        </div>
+                                        <div className="flex bg-[var(--shell-surface)] rounded-lg p-0.5 border border-[var(--shell-border)]">
+                                            <button
+                                                onClick={() => setGenderSort('female')}
+                                                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${genderSort === 'female' ? 'bg-orange-400 text-white shadow-sm' : 'text-zinc-500 hover:text-[var(--foreground)]'}`}
+                                            >
+                                                Mulheres
+                                            </button>
+                                            <button
+                                                onClick={() => setGenderSort('male')}
+                                                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${genderSort === 'male' ? 'bg-sky-500 text-white shadow-sm' : 'text-zinc-500 hover:text-[var(--foreground)]'}`}
+                                            >
+                                                Homens
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 space-y-4">
+                                        {[...data.demographics.cities_by_gender]
+                                            .sort((a, b) => b[genderSort] - a[genderSort])
+                                            .slice((citiesGenderPage - 1) * PAGE_SIZE, citiesGenderPage * PAGE_SIZE)
+                                            .map((item, idx) => (
+                                                <div key={idx} className="flex flex-col gap-1">
+                                                    <div className="flex justify-between text-[10px] font-bold text-[var(--foreground)]">
+                                                        <span>{item.city}</span>
+                                                        <div className="flex gap-2 text-[9px]">
+                                                            <span className={`transition-colors ${genderSort === 'female' ? 'text-orange-400 font-black' : 'text-zinc-400'}`}>Mulheres {item.female}%</span>
+                                                            <span className={`transition-colors ${genderSort === 'male' ? 'text-sky-500 font-black' : 'text-zinc-400'}`}>Homens {item.male}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-[var(--shell-border)]">
+                                                        <div className={`h-full transition-all duration-500 ${genderSort === 'female' ? 'bg-orange-400' : 'bg-orange-400/30'}`} style={{ width: `${item.female}%` }} />
+                                                        <div className={`h-full transition-all duration-500 ${genderSort === 'male' ? 'bg-sky-500' : 'bg-sky-500/30'}`} style={{ width: `${item.male}%` }} />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                    <PaginationControl
+                                        currentPage={citiesGenderPage}
+                                        totalItems={data.demographics.cities_by_gender.length}
+                                        pageSize={PAGE_SIZE}
+                                        onPageChange={setCitiesGenderPage}
+                                    />
+                                </div>
+
+
+                                {/* Cidades por Faixa Etária */}
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+                                    <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-center">
+                                        <div>
+                                            <h3 className="text-sm font-black italic tracking-tight text-blue-500">Cidades por Idade</h3>
+                                            <p className="text-[10px] text-zinc-500 mt-1">Fãs por faixa etária</p>
+                                        </div>
+                                        {/* Age Group Selector */}
+                                        <div className="flex items-center gap-2 bg-[var(--shell-surface)] rounded-lg p-1 border border-[var(--shell-border)]">
+                                            <button
+                                                onClick={() => {
+                                                    setActiveAgeGroupIndex(prev => Math.max(0, prev - 1));
+                                                    setCitiesAgePage(1);
+                                                }}
+                                                disabled={activeAgeGroupIndex === 0}
+                                                className="p-1 hover:bg-[var(--shell-side)] rounded disabled:opacity-30 transition-colors"
+                                            >
+                                                <ChevronLeftIcon className="w-3 h-3 text-zinc-500" />
+                                            </button>
+                                            <span className="text-[10px] font-black min-w-[50px] text-center text-[var(--foreground)]">
+                                                {data.demographics.cities_by_age && data.demographics.cities_by_age[activeAgeGroupIndex]?.age_group}
+                                            </span>
+                                            <button
+                                                onClick={() => {
+                                                    setActiveAgeGroupIndex(prev => Math.min((data.demographics?.cities_by_age?.length || 1) - 1, prev + 1));
+                                                    setCitiesAgePage(1);
+                                                }}
+                                                disabled={!data.demographics?.cities_by_age || activeAgeGroupIndex === data.demographics.cities_by_age.length - 1}
+                                                className="p-1 hover:bg-[var(--shell-side)] rounded disabled:opacity-30 transition-colors"
+                                            >
+                                                <ChevronRightIcon className="w-3 h-3 text-zinc-500" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 flex-1">
+                                        <div className="space-y-1">
+                                            {/* Column Headers */}
+                                            <div className="flex justify-between text-[9px] font-bold text-zinc-500 uppercase px-2 mb-2">
+                                                <span>Cidade</span>
+                                                <span>Fãs</span>
+                                            </div>
+                                            {/* Rows */}
+                                            {data.demographics.cities_by_age &&
+                                                (data.demographics.cities_by_age[activeAgeGroupIndex]?.cities || [])
+                                                    .slice((citiesAgePage - 1) * PAGE_SIZE, citiesAgePage * PAGE_SIZE)
+                                                    .map((city, idx) => (
+                                                        <div key={idx} className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--shell-side)] transition-colors">
+                                                            <span className="text-[10px] font-bold text-[var(--foreground)]">{city.city}</span>
+                                                            <span className="text-[10px] font-mono font-bold text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded">
+                                                                {formatNumber(city.fans)}
+                                                            </span>
+                                                        </div>
+                                                    ))
+                                            }
+                                        </div>
+                                    </div>
+                                    {data.demographics.cities_by_age && data.demographics.cities_by_age[activeAgeGroupIndex] && (
+                                        <PaginationControl
+                                            currentPage={citiesAgePage}
+                                            totalItems={data.demographics.cities_by_age[activeAgeGroupIndex].cities.length}
+                                            pageSize={PAGE_SIZE}
+                                            onPageChange={setCitiesAgePage}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )
             }

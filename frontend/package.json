@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@antv/l7": "^2.23.2",
+    "@antv/l7-maps": "^2.23.2",
+    "@antv/l7-react": "^2.4.3",
     "@heroicons/react": "^2.2.0",
     "next": "16.1.6",
     "react": "19.2.3",
