@@ -182,6 +182,74 @@ const getStateCodeFromCity = (cityName: string) => {
     return parts[parts.length - 1]?.trim().toUpperCase() ?? "";
 };
 
+const normalizeLookupKey = (value: string) => {
+    return value
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+};
+
+const formatCityWithState = (rawCity: string, fallbackCities?: Array<{ city: string }>) => {
+    const trimmed = rawCity.trim();
+    const match = trimmed.match(/^(.*?)(?:,|\/|\s-\s)\s*([A-Za-z]{2})$/);
+    if (match) {
+        const cityName = match[1]?.trim();
+        const state = match[2]?.trim().toUpperCase();
+        if (cityName && state) return `${cityName}/${state}`;
+    }
+
+    if (fallbackCities?.length) {
+        const key = normalizeLookupKey(trimmed);
+        const candidate = fallbackCities.find((item) => normalizeLookupKey(item.city).startsWith(key));
+        if (candidate) return formatCityWithState(candidate.city);
+    }
+
+    return trimmed;
+};
+
+const COUNTRY_FLAG_BY_NAME: Record<string, string> = {
+    brasil: "🇧🇷",
+    brazil: "🇧🇷",
+    portugal: "🇵🇹",
+    "estados unidos": "🇺🇸",
+    eua: "🇺🇸",
+    usa: "🇺🇸",
+    "united states": "🇺🇸",
+    argentina: "🇦🇷",
+    chile: "🇨🇱",
+    uruguai: "🇺🇾",
+    paraguai: "🇵🇾",
+    bolivia: "🇧🇴",
+    colombia: "🇨🇴",
+    peru: "🇵🇪",
+    mexico: "🇲🇽",
+    espanha: "🇪🇸",
+    franca: "🇫🇷",
+    alemanha: "🇩🇪",
+    italia: "🇮🇹",
+    "reino unido": "🇬🇧",
+    "united kingdom": "🇬🇧",
+    canada: "🇨🇦",
+    japao: "🇯🇵",
+};
+
+const getCountryFlagEmoji = (countryName: string) => {
+    const key = normalizeLookupKey(countryName);
+    return COUNTRY_FLAG_BY_NAME[key] ?? "🌎";
+};
+
+const getGenderBadge = (clusterLabel: string) => {
+    const key = normalizeLookupKey(clusterLabel);
+    if (key.includes("mulher") || key.includes("femin")) {
+        return { symbol: "♀", label: "Mulheres", className: "bg-violet-500/10 border-violet-500/25 text-violet-300" };
+    }
+    if (key.includes("homem") || key.includes("masc")) {
+        return { symbol: "♂", label: "Homens", className: "bg-blue-500/10 border-blue-500/25 text-blue-300" };
+    }
+    return { symbol: "♀♂", label: "Gênero", className: "bg-zinc-500/10 border-zinc-500/25 text-zinc-300" };
+};
+
 const mulberry32 = (seed: number) => {
     return () => {
         let t = seed += 0x6D2B79F5;
@@ -1650,51 +1718,6 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
             sortedByAge: [...audienceRowsForView].sort((a, b) => (AGE_ORDER[a.range] ?? 99) - (AGE_ORDER[b.range] ?? 99)),
         };
     }, [audienceRowsForView]);
-    const instagramAudienceReportSummary = useMemo(() => {
-        if (!isInstagram || !data?.demographics || !instagramAudienceModel) return null;
-
-        const demographics = data.demographics;
-        const genderData = audienceViewMode === "base_engajada"
-            ? instagramAudienceModel.engagedGender
-            : instagramAudienceModel.baseGender;
-        const dominantGender = genderData.femalePct >= genderData.malePct ? "Mulheres" : "Homens";
-        const dominantGenderPct = Math.max(genderData.femalePct, genderData.malePct);
-        const topAge = audienceTotalsForView.topAge;
-        const topAgePct = audienceTotalsForView.topAgePercentage;
-
-        const top3CitiesShare = Number(
-            demographics.cities_data
-                .slice(0, 3)
-                .reduce((acc, item) => acc + item.percentage, 0)
-                .toFixed(1)
-        );
-        const top3CountriesShare = Number(
-            demographics.countries_data
-                .slice(0, 3)
-                .reduce((acc, item) => acc + item.percentage, 0)
-                .toFixed(1)
-        );
-
-        const concentrationLevel = top3CitiesShare >= 60 ? "ALTA" : top3CitiesShare >= 40 ? "MÉDIA" : "BAIXA";
-        const concentrationTone = top3CitiesShare >= 60 ? "text-rose-400" : top3CitiesShare >= 40 ? "text-amber-400" : "text-emerald-400";
-        const recommendation = top3CitiesShare >= 60
-            ? "Expandir conteúdo para regiões secundárias e testar criativos locais por estado."
-            : "Manter cluster principal e abrir testes com públicos lookalike por cidade.";
-
-        return {
-            viewModeLabel: audienceViewMode === "base_engajada" ? "Base Engajada" : "Base Total",
-            dominantGender,
-            dominantGenderPct,
-            topAgeRange: topAge?.range || "—",
-            topAgePct,
-            top3CitiesShare,
-            top3CountriesShare,
-            topLanguage: demographics.top_language,
-            concentrationLevel,
-            concentrationTone,
-            recommendation: `${recommendation} ${instagramAudienceModel.geoAlert.recommendation}`,
-        };
-    }, [audienceTotalsForView.topAge, audienceTotalsForView.topAgePercentage, audienceViewMode, data, instagramAudienceModel, isInstagram]);
     const maxAction = data ? Math.max(data.actions_split.reactions, data.actions_split.comments, data.actions_split.shares) : 1;
 
     if (!data) return <div className="p-20 text-center animate-pulse text-zinc-500">Carregando Insights do {isInstagram ? "Instagram" : "Facebook"}...</div>;
@@ -1748,19 +1771,88 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             />
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {summaryCards.map((card) => (
-                            <div key={card.title} className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{card.title}</div>
-                                <div className={`text-3xl font-black mt-2 tracking-tight ${card.tone}`}>{card.value}</div>
-                                <div className="text-[11px] text-zinc-500 mt-1">{card.subtitle}</div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                        <KPICard title={isInstagram ? "Seguidores Ativos" : "Seguidores da Página"} value={data.page_followers.value} change={data.page_followers.change} icon={UserGroupIcon} tooltip="Quantidade de perfis que acompanham a conta neste período." />
-                        <KPICard title={isInstagram ? "Interações Qualificadas" : "Reações Totais"} value={data.total_reactions.value} change={data.total_reactions.change} icon={HandThumbUpIcon} tooltip={isInstagram ? "Ações com intenção (salvar, compartilhar, responder, etc.)." : "Reações totais das publicações no período."} />
-                        <KPICard title={isInstagram ? "Views de Reels" : "Visualizações de Vídeo"} value={data.organic_video_views.value} change={data.organic_video_views.change} icon={VideoCameraIcon} tooltip="Volume de visualizações de conteúdo em vídeo." />
+	                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+	                        {summaryCards.map((card) => (
+	                            <div key={card.title} className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
+	                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{card.title}</div>
+	                                <div className={`text-3xl font-black mt-2 tracking-tight ${card.tone}`}>{card.value}</div>
+	                                <div className="text-[11px] text-zinc-500 mt-1">{card.subtitle}</div>
+	                            </div>
+	                        ))}
+	                    </div>
+	                    {isInstagram && instagramAudienceModel && (
+	                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+	                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
+	                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Quality Score</div>
+	                                <div className="mt-3 flex items-center gap-4">
+	                                    <div className="relative w-24 h-24 shrink-0">
+	                                        <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+	                                            <circle cx="60" cy="60" r="44" fill="none" stroke="var(--shell-border)" strokeWidth="12" />
+	                                            <circle
+	                                                cx="60"
+	                                                cy="60"
+	                                                r="44"
+	                                                fill="none"
+	                                                stroke={instagramAudienceModel.qualityColor}
+	                                                strokeWidth="12"
+	                                                strokeLinecap="round"
+	                                                strokeDasharray={`${(instagramAudienceModel.qualityScore / 100) * (2 * Math.PI * 44)} ${2 * Math.PI * 44}`}
+	                                                className="transition-all duration-700"
+	                                            />
+	                                        </svg>
+	                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+	                                            <span className={`text-2xl font-black tracking-tight ${instagramAudienceModel.qualityTone}`}>{instagramAudienceModel.qualityScore}</span>
+	                                            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">/100</span>
+	                                        </div>
+	                                    </div>
+	                                    <div>
+	                                        <div className={`text-sm font-black ${instagramAudienceModel.qualityTone}`}>{instagramAudienceModel.qualityLabel}</div>
+	                                        <div className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{instagramAudienceModel.qualitySubtitle}</div>
+	                                    </div>
+	                                </div>
+	                            </div>
+	                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
+	                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Influenciador vs Decisor</div>
+	                                <div className="mt-3 flex flex-wrap gap-2">
+	                                    <span className="px-2 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[10px] font-black uppercase tracking-wide">
+	                                        Influenciador {instagramAudienceModel.influencerRange} ({instagramAudienceModel.influencerShare}%)
+	                                    </span>
+	                                    <span className="px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wide">
+	                                        Decisor {instagramAudienceModel.decisorRange} ({instagramAudienceModel.decisorShare}%)
+	                                    </span>
+	                                </div>
+	                                <div className="text-[11px] text-zinc-500 mt-3 leading-relaxed">
+	                                    {instagramAudienceModel.conversionInsight}
+	                                </div>
+	                            </div>
+	                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
+	                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Botômetro (Prévia)</div>
+	                                <div className="mt-3 space-y-2">
+	                                    <div className="flex items-center justify-between text-[10px] font-bold">
+	                                        <span className="text-emerald-300 uppercase tracking-wide">Valiosos</span>
+	                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.valuablePct}%</span>
+	                                    </div>
+	                                    <div className="flex items-center justify-between text-[10px] font-bold">
+	                                        <span className="text-amber-300 uppercase tracking-wide">Fantasmas</span>
+	                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.ghostPct}%</span>
+	                                    </div>
+	                                    <div className="flex items-center justify-between text-[10px] font-bold">
+	                                        <span className="text-rose-300 uppercase tracking-wide">Bots/Mass</span>
+	                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.botPct}%</span>
+	                                    </div>
+	                                    <div className="h-2 rounded-full overflow-hidden bg-[var(--shell-border)] flex mt-3">
+	                                        <div className="h-full bg-emerald-500" style={{ width: `${instagramAudienceModel.botometer.valuablePct}%` }} />
+	                                        <div className="h-full bg-amber-400" style={{ width: `${instagramAudienceModel.botometer.ghostPct}%` }} />
+	                                        <div className="h-full bg-rose-500" style={{ width: `${instagramAudienceModel.botometer.botPct}%` }} />
+	                                    </div>
+	                                </div>
+	                            </div>
+	                        </div>
+	                    )}
+	                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+	                        <KPICard title={isInstagram ? "Seguidores Ativos" : "Seguidores da Página"} value={data.page_followers.value} change={data.page_followers.change} icon={UserGroupIcon} tooltip="Quantidade de perfis que acompanham a conta neste período." />
+	                        <KPICard title={isInstagram ? "Interações Qualificadas" : "Reações Totais"} value={data.total_reactions.value} change={data.total_reactions.change} icon={HandThumbUpIcon} tooltip={isInstagram ? "Ações com intenção (salvar, compartilhar, responder, etc.)." : "Reações totais das publicações no período."} />
+	                        <KPICard title={isInstagram ? "Views de Reels" : "Visualizações de Vídeo"} value={data.organic_video_views.value} change={data.organic_video_views.change} icon={VideoCameraIcon} tooltip="Volume de visualizações de conteúdo em vídeo." />
                         <KPICard title="Engajamento" value={data.engagements.value} change={data.engagements.change} icon={ChatBubbleLeftEllipsisIcon} tooltip="Soma das interações geradas nas publicações." />
                         <KPICard title={isInstagram ? "Conteúdos Publicados" : "Total de Posts"} value={data.number_of_posts.value} change={data.number_of_posts.change} icon={DocumentTextIcon} tooltip="Quantidade de conteúdos publicados no período selecionado." />
                         <KPICard title={isInstagram ? "Alcance Não Seguidores" : "Impressões"} value={data.organic_impressions.value} change={data.organic_impressions.change} icon={EyeIcon} tooltip={isInstagram ? "Pessoas alcançadas fora da base atual de seguidores." : "Total de visualizações exibidas, incluindo repetições."} />
@@ -3571,208 +3663,183 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                 activeTab === "publico" && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
 
-                        {isInstagram && instagramAudienceReportSummary && (
-                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5">
-                                <div className="flex items-center justify-between gap-3 mb-4">
-                                    <div>
-                                        <h3 className="text-sm font-black italic tracking-tight text-blue-500">Resumo para Relatório (Instagram)</h3>
-                                        <p className="text-[11px] text-zinc-500 mt-1">Leitura executiva pronta para apresentação ao cliente.</p>
-                                    </div>
-                                    <div className="flex flex-wrap items-center gap-2 justify-end">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-blue-300 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-1">
-                                            {instagramAudienceReportSummary.viewModeLabel}
-                                        </span>
-                                        <span className={`text-[10px] font-black uppercase tracking-widest ${instagramAudienceReportSummary.concentrationTone}`}>
-                                            Concentração {instagramAudienceReportSummary.concentrationLevel}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
-                                        <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Diagnóstico</div>
-                                        <div className="text-sm font-black text-[var(--foreground)] mt-2">
-                                            {instagramAudienceReportSummary.dominantGender} ({instagramAudienceReportSummary.dominantGenderPct}%)
-                                        </div>
-                                        <div className="text-[11px] text-zinc-500 mt-2">
-                                            Faixa dominante: <strong className="text-[var(--foreground)]">{instagramAudienceReportSummary.topAgeRange}</strong> ({instagramAudienceReportSummary.topAgePct}%).
-                                        </div>
-                                    </div>
-                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
-                                        <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Geografia</div>
-                                        <div className="text-[11px] text-zinc-500 mt-2">
-                                            Top 3 cidades concentram <strong className="text-[var(--foreground)]">{instagramAudienceReportSummary.top3CitiesShare}%</strong>.
-                                        </div>
-                                        <div className="text-[11px] text-zinc-500 mt-1">
-                                            Top 3 países concentram <strong className="text-[var(--foreground)]">{instagramAudienceReportSummary.top3CountriesShare}%</strong>.
-                                        </div>
-                                        <div className="text-[11px] text-zinc-500 mt-1">
-                                            Idioma predominante: <strong className="text-[var(--foreground)]">{instagramAudienceReportSummary.topLanguage}</strong>.
-                                        </div>
-                                    </div>
-                                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-                                        <div className="text-[10px] uppercase tracking-widest font-bold text-emerald-400">Ação Recomendada</div>
-                                        <div className="text-[11px] text-emerald-100 mt-2 leading-relaxed">
-                                            {instagramAudienceReportSummary.recommendation}
-                                        </div>
-                                    </div>
+                        {isInstagram && data.demographics && (
+                            <div className="flex items-center justify-end">
+                                <div className="inline-flex rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-1">
+                                    <button
+                                        onClick={() => setAudienceViewMode("base_total")}
+                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_total" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                    >
+                                        Base Total
+                                    </button>
+                                    <button
+                                        onClick={() => setAudienceViewMode("base_engajada")}
+                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_engajada" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                    >
+                                        Base Engajada
+                                    </button>
                                 </div>
                             </div>
                         )}
 
                         {/* 1. TOP METRICS CARDS */}
-			                        {data.demographics && (
-			                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
-                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
-                                    <div>
-                                        <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_country}</div>
-                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                        {data.demographics && (
+                            isInstagram ? (
+                                <div className="overflow-x-auto">
+                                    <div className="grid grid-cols-8 gap-3 min-w-[1760px]">
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 min-h-[112px] flex flex-col justify-between">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Novos Seguidores</h3>
+                                            <div className="text-5xl font-black text-emerald-400 tracking-tighter leading-none">+{formatNumber(periodFollowers.newFollowers)}</div>
+                                            <div className={`text-[9px] font-bold uppercase tracking-wide ${periodFollowers.growthPct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                                {periodFollowers.growthPct >= 0 ? "+" : ""}{periodFollowers.growthPct.toFixed(1)}% no período
+                                            </div>
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 min-h-[112px] flex flex-col justify-between">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Total de Seguidores</h3>
+                                            <div className="text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none">{formatNumber(data.page_followers.value)}</div>
+                                            <div className="text-[9px] text-zinc-500">Base ativa da conta no período.</div>
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 min-h-[112px] flex flex-col justify-between">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Botômetro</h3>
+                                            {instagramAudienceModel ? (
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center justify-between text-[9px] font-bold">
+                                                        <span className="text-emerald-300 uppercase tracking-wide">Valiosos</span>
+                                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.valuablePct}%</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between text-[9px] font-bold">
+                                                        <span className="text-amber-300 uppercase tracking-wide">Fantasmas</span>
+                                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.ghostPct}%</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between text-[9px] font-bold">
+                                                        <span className="text-rose-300 uppercase tracking-wide">Bots</span>
+                                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.botPct}%</span>
+                                                    </div>
+                                                    <div className="h-1.5 rounded-full overflow-hidden bg-[var(--shell-border)] flex mt-1">
+                                                        <div className="h-full bg-emerald-500" style={{ width: `${instagramAudienceModel.botometer.valuablePct}%` }} />
+                                                        <div className="h-full bg-amber-400" style={{ width: `${instagramAudienceModel.botometer.ghostPct}%` }} />
+                                                        <div className="h-full bg-rose-500" style={{ width: `${instagramAudienceModel.botometer.botPct}%` }} />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="text-[9px] text-zinc-500">Sem dados suficientes para higienização.</div>
+                                            )}
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 min-h-[112px] flex flex-col justify-between">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Cluster Principal</h3>
+                                            {(() => {
+                                                const badge = getGenderBadge(data.demographics.top_audience);
+                                                const cluster = data.demographics.top_audience ?? "";
+                                                const ageMatch = cluster.match(/\b\d{2}\s*-\s*\d{2}\b|\b\d{2}\+\b/);
+                                                const ageRange = (ageMatch?.[0] ?? audienceTotalsForView.topAge?.range ?? data.demographics.top_age_group).replace(/\s/g, "");
+                                                return (
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl border text-2xl font-black leading-none shrink-0 ${badge.className}`}>
+                                                            {badge.symbol}
+                                                        </span>
+                                                        <div className="min-w-0">
+                                                            <div className="text-2xl font-black text-[var(--foreground)] tracking-tight leading-none truncate">{badge.label}</div>
+                                                            <div className="text-sm font-bold text-zinc-500 mt-1">{ageRange}</div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 min-h-[112px] flex flex-col justify-between">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+                                                {audienceViewMode === "base_engajada" ? "Faixa Etária (Engajada)" : "Faixa Etária Principal"}
+                                            </h3>
+                                            <div className="text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none">
+                                                {audienceTotalsForView.topAge?.range ?? data.demographics.top_age_group}
+                                            </div>
+                                            {audienceTotalsForView.topAge && (
+                                                <div className="text-[9px] text-blue-300 font-bold uppercase tracking-wide">
+                                                    {AGE_ECONOMIC_TAGS[audienceTotalsForView.topAge.range] ?? "Cluster"}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 min-h-[112px] flex flex-col justify-between">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Cidade Principal</h3>
+                                            <div className="text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none">
+                                                {formatCityWithState(data.demographics.top_city, data.demographics.cities_data)}
+                                            </div>
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 min-h-[112px] flex flex-col justify-between">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">País Principal</h3>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-7xl leading-none shrink-0">
+                                                    {getCountryFlagEmoji(data.demographics.top_country)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="text-3xl font-black text-[var(--foreground)] tracking-tight leading-none truncate">{data.demographics.top_country}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 min-h-[112px] flex flex-col justify-between">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Idioma Principal</h3>
+                                            <div className="text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none">{data.demographics.top_language}</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
-                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
-                                    <div>
-                                        <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_city}</div>
-                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                            ) : (
+                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
+                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
+                                        <div>
+                                            <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_country}</div>
+                                            <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
+                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
+                                        <div>
+                                            <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_city}</div>
+                                            <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
+                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
+                                        <div>
+                                            <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_language}</div>
+                                            <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
+                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Público Principal</h3>
+                                        <div>
+                                            <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_audience}</div>
+                                            <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px] col-span-2 lg:col-span-1">
+                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Faixa Etária Principal</h3>
+                                        <div>
+                                            <div className="text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">{data.demographics.top_age_group}</div>
+                                            <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
-                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
-                                    <div>
-                                        <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_language}</div>
-                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
-                                    </div>
-                                </div>
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
-                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">{isInstagram ? "Cluster Principal" : "Público Principal"}</h3>
-                                    <div>
-                                        <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_audience}</div>
-                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
-                                    </div>
-                                </div>
-	                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px] col-span-2 lg:col-span-1">
-	                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">
-	                                        {isInstagram && audienceViewMode === "base_engajada" ? "Faixa Etária (Engajada)" : "Faixa Etária Principal"}
-	                                    </h3>
-	                                    <div>
-	                                        <div className="text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">
-	                                            {isInstagram ? audienceTotalsForView.topAge?.range ?? data.demographics.top_age_group : data.demographics.top_age_group}
-	                                        </div>
-	                                        {isInstagram && audienceTotalsForView.topAge && (
-	                                            <div className="text-[10px] text-blue-300 font-bold uppercase tracking-wide">
-	                                                {AGE_ECONOMIC_TAGS[audienceTotalsForView.topAge.range] ?? "Cluster"}
-	                                            </div>
-	                                        )}
-	                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
-	                                    </div>
-	                                </div>
+                            )
+                        )}
+
+		                        {/* 2. AUDIENCE INTELLIGENCE */}
+		                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 relative">
+		                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+		                                <div>
+		                                    <h3 className="text-lg font-black italic tracking-tight flex items-center gap-2">
+		                                        <UserGroupIcon className="w-5 h-5 text-blue-500" />
+		                                        Faixa Etária & Gênero
+		                                    </h3>
+		                                    <p className="text-[11px] text-zinc-500 mt-1">
+		                                        {isInstagram ? "Leitura de volume vs valor para priorizar quem realmente converte." : "Resumo da distribuição demográfica da base."}
+		                                    </p>
+		                                </div>
 		                            </div>
-		                        )}
 
-	                        {/* 2. AUDIENCE INTELLIGENCE */}
-	                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 relative">
-	                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-	                                <div>
-	                                    <h3 className="text-lg font-black italic tracking-tight flex items-center gap-2">
-	                                        <UserGroupIcon className="w-5 h-5 text-blue-500" />
-	                                        Faixa Etária & Gênero
-	                                    </h3>
-	                                    <p className="text-[11px] text-zinc-500 mt-1">
-	                                        {isInstagram ? "Leitura de volume vs valor para priorizar quem realmente converte." : "Resumo da distribuição demográfica da base."}
-	                                    </p>
-	                                </div>
-	                                {isInstagram && (
-	                                    <div className="inline-flex rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-1">
-	                                        <button
-	                                            onClick={() => setAudienceViewMode("base_total")}
-	                                            className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_total" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
-	                                        >
-	                                            Base Total
-	                                        </button>
-	                                        <button
-	                                            onClick={() => setAudienceViewMode("base_engajada")}
-	                                            className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_engajada" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
-	                                        >
-	                                            Base Engajada
-	                                        </button>
-	                                    </div>
-	                                )}
-	                            </div>
-
-	                            {isInstagram && instagramAudienceModel && (
-	                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-	                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
-	                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Quality Score</div>
-	                                        <div className="mt-3 flex items-center gap-4">
-	                                            <div className="relative w-24 h-24 shrink-0">
-	                                                <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-	                                                    <circle cx="60" cy="60" r="44" fill="none" stroke="var(--shell-border)" strokeWidth="12" />
-	                                                    <circle
-	                                                        cx="60"
-	                                                        cy="60"
-	                                                        r="44"
-	                                                        fill="none"
-	                                                        stroke={instagramAudienceModel.qualityColor}
-	                                                        strokeWidth="12"
-	                                                        strokeLinecap="round"
-	                                                        strokeDasharray={`${(instagramAudienceModel.qualityScore / 100) * (2 * Math.PI * 44)} ${2 * Math.PI * 44}`}
-	                                                        className="transition-all duration-700"
-	                                                    />
-	                                                </svg>
-	                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-	                                                    <span className={`text-2xl font-black tracking-tight ${instagramAudienceModel.qualityTone}`}>{instagramAudienceModel.qualityScore}</span>
-	                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">/100</span>
-	                                                </div>
-	                                            </div>
-	                                            <div>
-	                                                <div className={`text-sm font-black ${instagramAudienceModel.qualityTone}`}>{instagramAudienceModel.qualityLabel}</div>
-	                                                <div className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{instagramAudienceModel.qualitySubtitle}</div>
-	                                            </div>
-	                                        </div>
-	                                    </div>
-	                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
-	                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Influenciador vs Decisor</div>
-	                                        <div className="mt-3 flex flex-wrap gap-2">
-	                                            <span className="px-2 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[10px] font-black uppercase tracking-wide">
-	                                                Influenciador {instagramAudienceModel.influencerRange} ({instagramAudienceModel.influencerShare}%)
-	                                            </span>
-	                                            <span className="px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wide">
-	                                                Decisor {instagramAudienceModel.decisorRange} ({instagramAudienceModel.decisorShare}%)
-	                                            </span>
-	                                        </div>
-	                                        <div className="text-[11px] text-zinc-500 mt-3 leading-relaxed">
-	                                            {instagramAudienceModel.conversionInsight}
-	                                        </div>
-	                                    </div>
-	                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
-	                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Botômetro (Prévia)</div>
-	                                        <div className="mt-3 space-y-2">
-	                                            <div className="flex items-center justify-between text-[10px] font-bold">
-	                                                <span className="text-emerald-300 uppercase tracking-wide">Valiosos</span>
-	                                                <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.valuablePct}%</span>
-	                                            </div>
-	                                            <div className="flex items-center justify-between text-[10px] font-bold">
-	                                                <span className="text-amber-300 uppercase tracking-wide">Fantasmas</span>
-	                                                <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.ghostPct}%</span>
-	                                            </div>
-	                                            <div className="flex items-center justify-between text-[10px] font-bold">
-	                                                <span className="text-rose-300 uppercase tracking-wide">Bots/Mass</span>
-	                                                <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.botPct}%</span>
-	                                            </div>
-	                                            <div className="h-2 rounded-full overflow-hidden bg-[var(--shell-border)] flex mt-3">
-	                                                <div className="h-full bg-emerald-500" style={{ width: `${instagramAudienceModel.botometer.valuablePct}%` }} />
-	                                                <div className="h-full bg-amber-400" style={{ width: `${instagramAudienceModel.botometer.ghostPct}%` }} />
-	                                                <div className="h-full bg-rose-500" style={{ width: `${instagramAudienceModel.botometer.botPct}%` }} />
-	                                            </div>
-	                                        </div>
-	                                    </div>
-	                                </div>
-	                            )}
-
-	                            {data.demographics && (() => {
-	                                const topAge = audienceTotalsForView.topAge;
-	                                const topAgePercentage = audienceTotalsForView.topAgePercentage;
-	                                const totalMale = audienceTotalsForView.totalMale;
+		                            {data.demographics && (() => {
+		                                const topAge = audienceTotalsForView.topAge;
+		                                const topAgePercentage = audienceTotalsForView.topAgePercentage;
+		                                const totalMale = audienceTotalsForView.totalMale;
 	                                const totalFemale = audienceTotalsForView.totalFemale;
 	                                const sortedByAge = audienceTotalsForView.sortedByAge;
 	                                const palette = ["#3b82f6", "#06b6d4", "#14b8a6", "#10b981", "#84cc16", "#eab308", "#f97316"];
@@ -3866,26 +3933,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 	                                            </div>
 	                                        </div>
 
-	                                        <div className="lg:col-span-2 flex flex-col gap-3">
-	                                            {isInstagram && instagramAudienceModel && (
-	                                                <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
-	                                                    <div className="flex flex-wrap items-center gap-2">
-	                                                        <span className="px-2 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/25 text-[10px] font-black uppercase tracking-wide">
-	                                                            Influenciador: {instagramAudienceModel.influencerRange}
-	                                                        </span>
-	                                                        <span className="px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 text-[10px] font-black uppercase tracking-wide">
-	                                                            Decisor: {instagramAudienceModel.decisorRange}
-	                                                        </span>
-	                                                    </div>
-	                                                    <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed">
-	                                                        {instagramAudienceModel.conversionInsight}
-	                                                    </p>
-	                                                </div>
-	                                            )}
-	                                            <PopulationPyramid
-	                                                data={sortedByAge.map((item) => ({
-	                                                    range: item.range,
-	                                                    male: Number(item.male.toFixed(1)),
+		                                        <div className="lg:col-span-2 flex flex-col gap-3">
+		                                            <PopulationPyramid
+		                                                data={sortedByAge.map((item) => ({
+		                                                    range: item.range,
+		                                                    male: Number(item.male.toFixed(1)),
 	                                                    female: Number(item.female.toFixed(1)),
 	                                                }))}
 	                                                influencerRange={isInstagram ? instagramAudienceModel?.influencerRange : undefined}
@@ -3972,39 +4024,6 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 	                        {/* 3. GEOGRAPHY & HEATMAP */}
 	                        {data.demographics && (
 	                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
-	                                {isInstagram && instagramAudienceModel && (
-	                                    <div className="lg:col-span-3 rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-5">
-	                                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-	                                            <div>
-	                                                <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Alerta Logístico (Geo-Strategy)</div>
-	                                                <div className="text-sm font-black text-[var(--foreground)] mt-1">
-	                                                    {instagramAudienceModel.geoAlert.message}
-	                                                </div>
-	                                            </div>
-	                                            <span className={`text-[10px] font-black uppercase tracking-widest ${instagramAudienceModel.geoAlert.tone}`}>
-	                                                Risco {instagramAudienceModel.geoAlert.level}
-	                                            </span>
-	                                        </div>
-	                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-	                                            <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-3">
-	                                                <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Audiência fora da malha base</div>
-	                                                <div className="text-2xl font-black text-[var(--foreground)] mt-1">{instagramAudienceModel.geoAlert.outsideShare}%</div>
-	                                            </div>
-	                                            <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-3">
-	                                                <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Cidade crítica</div>
-	                                                <div className="text-sm font-black text-[var(--foreground)] mt-2">
-	                                                    {instagramAudienceModel.geoAlert.topOutsideCity || "Sem concentração fora da malha"}
-	                                                </div>
-	                                            </div>
-	                                            <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-3">
-	                                                <div className="text-[10px] uppercase tracking-widest text-amber-300 font-bold">Ação sugerida</div>
-	                                                <div className="text-[11px] text-amber-100 mt-2 leading-relaxed">
-	                                                    {instagramAudienceModel.geoAlert.recommendation}
-	                                                </div>
-	                                            </div>
-	                                        </div>
-	                                    </div>
-	                                )}
 	                                {/* Countries Table */}
 	                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)]">
