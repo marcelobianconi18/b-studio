@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, type MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useState, useMemo, type ComponentType, type MouseEvent as ReactMouseEvent } from "react";
 import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 import dynamic from 'next/dynamic';
 
@@ -72,10 +72,22 @@ interface InsightsData {
     actions_split_changes?: { reactions: number; comments: number; shares: number; };
 }
 
+type InsightPost = InsightsData["top_posts"][number];
+type PostType = "video" | "photo" | "album";
+
 const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
     if (num >= 1000) return (num / 1000).toFixed(0) + " mil";
     return num.toString();
+};
+
+const getQualitySignalsTotal = (post: InsightsData["top_posts"][number]) => {
+    return (post.reaction_breakdown?.like || 0)
+        + (post.reaction_breakdown?.love || 0)
+        + (post.reaction_breakdown?.haha || 0)
+        + (post.reaction_breakdown?.wow || 0)
+        + (post.reaction_breakdown?.sad || 0)
+        + (post.reaction_breakdown?.angry || 0);
 };
 
 type FollowersInterval = "daily" | "weekly" | "monthly";
@@ -186,10 +198,28 @@ const makePeriodFollowersSnapshot = (period: PeriodValue, totalFollowers: number
     return { newFollowers, net, growthPct };
 };
 
-const KPICard = ({ title, value, change, icon: Icon }: any) => (
+type KPICardProps = {
+    title: string;
+    value: number;
+    change: number;
+    icon: ComponentType<{ className?: string }>;
+    tooltip?: string;
+};
+
+const KPICard = ({ title, value, change, icon: Icon, tooltip }: KPICardProps) => (
     <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group">
         <div className="flex justify-between items-start mb-2">
-            <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest">{title}</h3>
+            <div className="flex items-center gap-1">
+                <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest">{title}</h3>
+                {tooltip && (
+                    <span
+                        title={tooltip}
+                        className="w-4 h-4 rounded-full border border-[var(--shell-border)] text-[9px] font-black text-zinc-500 flex items-center justify-center cursor-help"
+                    >
+                        ?
+                    </span>
+                )}
+            </div>
             <div className="p-2 rounded-lg bg-[var(--shell-side)] text-zinc-400 group-hover:text-blue-500 group-hover:bg-blue-500/10 transition-colors">
                 <Icon className="w-4 h-4" />
             </div>
@@ -263,10 +293,10 @@ const PopulationPyramid = ({ data }: { data: Array<{ range: string; male: number
     )
 }
 
-const getPostType = (post: any) => {
+const getPostType = (post: InsightPost): PostType => {
     // Deterministic type assignment based on ID chars sum
     const sum = post.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-    const types = ['video', 'photo', 'album'];
+    const types: PostType[] = ['video', 'photo', 'album'];
     return types[sum % 3];
 };
 
@@ -281,16 +311,14 @@ const SpeedometerChart = ({ title, data }: { title: string, data: { label: strin
         return { x: x + r * Math.cos(rad), y: y + r * Math.sin(rad) };
     };
 
-    let currentAngle = 180;
-
-    const segments = data.map(d => {
-        const percent = d.value / total;
+    const segments = data.reduce<Array<{ label: string; value: number; color: string; start: number; end: number; percent: number }>>((acc, entry) => {
+        const percent = entry.value / total;
         const deg = percent * 180;
-        const start = currentAngle;
-        const end = currentAngle + deg;
-        currentAngle += deg;
-        return { ...d, start, end, percent };
-    });
+        const start = acc.length ? acc[acc.length - 1].end : 180;
+        const end = start + deg;
+        acc.push({ ...entry, start, end, percent });
+        return acc;
+    }, []);
 
     const winner = segments.reduce((p, c) => (p.value > c.value ? p : c));
     const needleAngle = winner.start + (winner.end - winner.start) / 2;
@@ -489,9 +517,11 @@ const parseEditorConfigMap = (raw: string | null) => {
 
 type SocialInsightsProps = {
     hideTopPeriodSelector?: boolean;
+    platform?: "facebook" | "instagram";
 };
 
-export default function SocialInsights({ hideTopPeriodSelector = false }: SocialInsightsProps) {
+export default function SocialInsights({ hideTopPeriodSelector = false, platform = "facebook" }: SocialInsightsProps) {
+    const isInstagram = platform === "instagram";
     const [activeTab, setActiveTab] = useState("geral");
     const [period, setPeriod] = useState<PeriodValue>("30d");
     const [isGeneralArrangeMode, setIsGeneralArrangeMode] = useState(false);
@@ -677,14 +707,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
     const speedData = useMemo(() => {
         if (!data || !data.top_posts) return null;
 
-        const stats: any = {
-            video: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'Vídeo', color: '#facc15' },
-            photo: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'Foto', color: '#ef4444' },
-            album: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'Álbum', color: '#22c55e' }
+        const stats: Record<PostType, { count: number; reach: number; engagement: number; clicks: number; label: string; color: string }> = {
+            video: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'REELS/VÍDEO', color: '#facc15' },
+            photo: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'FOTO', color: '#ef4444' },
+            album: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'CARROSSEL', color: '#22c55e' }
         };
 
-        data.top_posts.forEach((p: any) => {
-            const type = getPostType(p) as 'video' | 'photo' | 'album';
+        data.top_posts.forEach((p: InsightPost) => {
+            const type = getPostType(p);
             const s = stats[type];
             if (s) {
                 s.count++;
@@ -694,23 +724,23 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
             }
         });
 
-        const getAvg = (s: any) => s.count ? s.reach / s.count : 0;
+        const getAvg = (s: { count: number; reach: number }) => s.count ? s.reach / s.count : 0;
 
         return {
             reach: [
-                { label: 'Vídeo', value: getAvg(stats.video), color: stats.video.color },
-                { label: 'Foto', value: getAvg(stats.photo), color: stats.photo.color },
-                { label: 'Álbum', value: getAvg(stats.album), color: stats.album.color }
+                { label: stats.video.label, value: getAvg(stats.video), color: stats.video.color },
+                { label: stats.photo.label, value: getAvg(stats.photo), color: stats.photo.color },
+                { label: stats.album.label, value: getAvg(stats.album), color: stats.album.color }
             ],
             engagement: [
-                { label: 'Vídeo', value: stats.video.engagement, color: stats.video.color },
-                { label: 'Foto', value: stats.photo.engagement, color: stats.photo.color },
-                { label: 'Álbum', value: stats.album.engagement, color: stats.album.color }
+                { label: stats.video.label, value: stats.video.engagement, color: stats.video.color },
+                { label: stats.photo.label, value: stats.photo.engagement, color: stats.photo.color },
+                { label: stats.album.label, value: stats.album.engagement, color: stats.album.color }
             ],
             clicks: [
-                { label: 'Vídeo', value: stats.video.clicks, color: stats.video.color },
-                { label: 'Foto', value: stats.photo.clicks, color: stats.photo.color },
-                { label: 'Álbum', value: stats.album.clicks, color: stats.album.color }
+                { label: stats.video.label, value: stats.video.clicks, color: stats.video.color },
+                { label: stats.photo.label, value: stats.photo.clicks, color: stats.photo.color },
+                { label: stats.album.label, value: stats.album.clicks, color: stats.album.color }
             ]
         };
     }, [data]);
@@ -721,7 +751,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
         // 7 days x 12 intervals (2h)
         const counts = Array.from({ length: 7 }, () => Array.from({ length: 12 }, () => ({ count: 0, reach: 0, interactions: 0 })));
 
-        data.top_posts.forEach((p: any) => {
+        data.top_posts.forEach((p: InsightPost) => {
             const d = new Date(p.timestamp);
             const day = d.getDay(); // 0-6 (Dom-Sab)
             const hour = d.getHours();
@@ -764,46 +794,86 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
             try {
                 // Mock data generation for demo purposes if fetch fails or for dev
                 const generateMockPosts = () => {
+                    if (!isInstagram) {
+                        return Array.from({ length: 15 }).map((_, i) => ({
+                            id: (i + 1).toString(),
+                            image: "https://placehold.co/100x100/png",
+                            message: i === 0 ? "Para de andar na BR e vai trabalhar, Nikolas! ..." : i === 1 ? "2026 tá aí já! ..." : `Postagem Exemplo ${i + 1} sobre um tema irrelevante...`,
+                            date: (() => {
+                                const d = new Date(2026, 0, 21 - i);
+                                return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+                            })(),
+                            timestamp: new Date(2026, 0, 21 - i, [8, 10, 14, 16, 20][i % 5], 0).getTime(),
+                            impressions: 0,
+                            reach: 38000 - (i * 2000) + Math.floor(Math.random() * 2000),
+                            reactions: 2578 - (i * 100),
+                            comments: 16680 - (i * 500),
+                            shares: 1657 - (i * 50),
+                            video_views: 250328,
+                            link_clicks: Math.floor(Math.random() * 50),
+                            link: "#",
+                            reaction_breakdown: {
+                                like: 2139 - (i * 80),
+                                love: 174 - (i * 5),
+                                haha: 227 - (i * 8),
+                                thankful: 0,
+                                wow: 4,
+                                pride: 0,
+                                sad: 0,
+                                angry: 34 + i
+                            }
+                        }));
+                    }
+
+                    const mockMessages = [
+                        "Reel: 3 prompts de IA para vender no Instagram em 2026. Salve para aplicar hoje.",
+                        "Carrossel utilitário: checklist de bio que converte visita em lead.",
+                        "Bastidor real da operação: o que mudou quando cortamos edição pesada.",
+                        "Reel com prova social: case de cliente que dobrou leads via DM.",
+                        "Tutorial rápido: CTA que aumenta compartilhamento no direct.",
+                        "Carrossel comparativo: conteúdo de alcance vs conteúdo de conversão.",
+                    ];
+
                     return Array.from({ length: 15 }).map((_, i) => ({
                         id: (i + 1).toString(),
                         image: "https://placehold.co/100x100/png",
-                        message: i === 0 ? "Para de andar na BR e vai trabalhar, Nikolas! ..." : i === 1 ? "2026 tá aí já! ..." : `Postagem Exemplo ${i + 1} sobre um tema irrelevante...`,
+                        message: mockMessages[i % mockMessages.length],
                         date: (() => {
-                            const d = new Date(2026, 0, 21 - i);
+                            const d = new Date(2026, 1, 17 - i);
                             return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
                         })(),
-                        timestamp: new Date(2026, 0, 21 - i, [8, 10, 14, 16, 20][i % 5], 0).getTime(),
-                        impressions: 0,
-                        reach: 38000 - (i * 2000) + Math.floor(Math.random() * 2000),
-                        reactions: 2578 - (i * 100),
-                        comments: 16680 - (i * 500),
-                        shares: 1657 - (i * 50),
-                        video_views: 250328,
-                        link_clicks: Math.floor(Math.random() * 50),
+                        timestamp: new Date(2026, 1, 17 - i, [8, 10, 12, 14, 18, 20][i % 6], 0).getTime(),
+                        impressions: Math.max(9000, Math.round((68200 - (i * 2100)) * 1.35)),
+                        reach: Math.max(6200, 68200 - (i * 2100)),
+                        reactions: Math.max(240, 2840 - (i * 95)),
+                        comments: Math.max(60, 620 - (i * 18)),
+                        shares: Math.max(40, 930 - (i * 26)),
+                        video_views: Math.max(9800, Math.round((68200 - (i * 2100)) * 1.9)),
+                        link_clicks: Math.max(18, 150 - (i * 6)),
                         link: "#",
                         reaction_breakdown: {
-                            like: 2139 - (i * 80),
-                            love: 174 - (i * 5),
-                            haha: 227 - (i * 8),
+                            like: Math.max(100, 2840 - (i * 95)),
+                            love: Math.max(40, 930 - (i * 26)),
+                            haha: Math.max(70, 2100 - (i * 60)),
                             thankful: 0,
-                            wow: 4,
+                            wow: Math.max(24, 690 - (i * 20)),
                             pride: 0,
-                            sad: 0,
-                            angry: 34 + i
+                            sad: Math.max(18, 280 - (i * 9)),
+                            angry: Math.max(10, 190 - (i * 6))
                         }
                     }));
                 };
 
                 // Simulate fetch or use expanded mock
                 setData({
-                    page_followers: { value: 344000, change: 0.9 },
-                    total_reactions: { value: 73000, change: 0 },
-                    organic_video_views: { value: 433000, change: 9.7 },
-                    engagements: { value: 134000, change: 108.5 },
-                    number_of_posts: { value: 157, change: -53.4 },
-                    organic_impressions: { value: 0, change: 0 },
-                    actions_split: { reactions: 72756, comments: 55941, shares: 5672 },
-                    actions_split_changes: { reactions: -7.4, comments: 144.7, shares: -42.5 },
+                    page_followers: isInstagram ? { value: 344000, change: 2.3 } : { value: 344000, change: 0.9 },
+                    total_reactions: isInstagram ? { value: 98200, change: 12.4 } : { value: 73000, change: 0 },
+                    organic_video_views: isInstagram ? { value: 1264000, change: 18.1 } : { value: 433000, change: 9.7 },
+                    engagements: isInstagram ? { value: 152800, change: 21.6 } : { value: 134000, change: 108.5 },
+                    number_of_posts: isInstagram ? { value: 52, change: -8.2 } : { value: 157, change: -53.4 },
+                    organic_impressions: isInstagram ? { value: 2860000, change: 14.9 } : { value: 0, change: 0 },
+                    actions_split: isInstagram ? { reactions: 62140, comments: 18670, shares: 25790 } : { reactions: 72756, comments: 55941, shares: 5672 },
+                    actions_split_changes: isInstagram ? { reactions: 17.8, comments: 9.4, shares: 24.2 } : { reactions: -7.4, comments: 144.7, shares: -42.5 },
                     top_posts: generateMockPosts(),
                     demographics: {
                         age: [
@@ -985,7 +1055,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                             }
                         ]
                     },
-                    reactions_by_type: { photo: 9642, album: 6086, video_inline: 4508, video: 9 }
+                    reactions_by_type: isInstagram ? { photo: 12400, album: 22310, video_inline: 65120, video: 7400 } : { photo: 9642, album: 6086, video_inline: 4508, video: 9 }
                 });
 
             } catch (e) {
@@ -993,21 +1063,281 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
             }
         };
         fetchData();
-    }, []);
+    }, [isInstagram]);
 
-    if (!data) return <div className="p-20 text-center animate-pulse text-zinc-500">Carregando Insights do Facebook...</div>;
-
-    const maxAction = Math.max(data.actions_split.reactions, data.actions_split.comments, data.actions_split.shares);
-    const followersSeries = useMemo(() => makeFollowersSeries(followersInterval, data.page_followers.value), [followersInterval, data.page_followers.value]);
+    const followersBase = data?.page_followers.value ?? 0;
+    const followersSeries = useMemo(() => makeFollowersSeries(followersInterval, followersBase), [followersInterval, followersBase]);
     const followersSummary = useMemo(() => {
         const totalNew = followersSeries.reduce((acc, point) => acc + point.gained, 0);
         const totalLost = followersSeries.reduce((acc, point) => acc + point.lost, 0);
         const net = totalNew - totalLost;
-        const previousBase = Math.max(1, data.page_followers.value - net);
+        const previousBase = Math.max(1, followersBase - net);
         const growthPct = (net / previousBase) * 100;
         return { totalNew, totalLost, net, growthPct };
-    }, [followersSeries, data.page_followers.value]);
-    const periodFollowers = useMemo(() => makePeriodFollowersSnapshot(period, data.page_followers.value), [period, data.page_followers.value]);
+    }, [followersSeries, followersBase]);
+    const periodFollowers = useMemo(() => makePeriodFollowersSnapshot(period, followersBase), [period, followersBase]);
+    const summaryCards = useMemo(() => {
+        if (!data) return [];
+
+        const qualityRate = data.organic_impressions.value > 0
+            ? (data.total_reactions.value / data.organic_impressions.value) * 100
+            : 0;
+        const engagementPerPost = data.number_of_posts.value > 0
+            ? Math.round(data.engagements.value / data.number_of_posts.value)
+            : 0;
+        const conversationSignals = data.actions_split.comments + data.actions_split.shares;
+
+        if (isInstagram) {
+            return [
+                {
+                    title: "Resumo do Mês",
+                    value: `${data.page_followers.change > 0 ? "+" : ""}${data.page_followers.change.toFixed(1)}%`,
+                    subtitle: "Crescimento da base ativa",
+                    tone: data.page_followers.change >= 0 ? "text-emerald-500" : "text-rose-500",
+                },
+                {
+                    title: "Taxa de Qualidade",
+                    value: `${qualityRate.toFixed(2)}%`,
+                    subtitle: "Interação qualificada / alcance",
+                    tone: "text-blue-500",
+                },
+                {
+                    title: "Eficiência de Conteúdo",
+                    value: formatNumber(engagementPerPost),
+                    subtitle: "Engajamento médio por post",
+                    tone: "text-[var(--foreground)]",
+                },
+            ];
+        }
+
+        return [
+            {
+                title: "Resumo do Mês",
+                value: `${data.page_followers.change > 0 ? "+" : ""}${data.page_followers.change.toFixed(1)}%`,
+                subtitle: "Crescimento da base",
+                tone: data.page_followers.change >= 0 ? "text-emerald-500" : "text-rose-500",
+            },
+            {
+                title: "Engajamento por Post",
+                value: formatNumber(engagementPerPost),
+                subtitle: "Interações médias por publicação",
+                tone: "text-blue-500",
+            },
+            {
+                title: "Sinais de Conversa",
+                value: formatNumber(conversationSignals),
+                subtitle: "Comentários + compartilhamentos",
+                tone: "text-[var(--foreground)]",
+            },
+        ];
+    }, [data, isInstagram]);
+    const videoRetentionSummary = useMemo(() => {
+        if (!data) return { retention3s: 0, avgWatchSeconds: 0, rewatchRate: 0 };
+
+        const distributionRatio = data.organic_impressions.value > 0
+            ? data.organic_video_views.value / data.organic_impressions.value
+            : 0.4;
+        const ratio = Math.max(0.25, Math.min(1.4, distributionRatio));
+
+        const retention3s = Math.round(Math.max(35, Math.min(92, 40 + ratio * 28)));
+        const avgWatchSeconds = Number(Math.max(4.5, Math.min(26, 5 + ratio * 12)).toFixed(1));
+        const rewatchRate = Number(Math.max(6, Math.min(38, 7 + ratio * 20)).toFixed(1));
+
+        return { retention3s, avgWatchSeconds, rewatchRate };
+    }, [data]);
+    const conversionFunnel = useMemo(() => {
+        if (!data) return { reach: 0, retention: 0, conversion: 0 };
+
+        const fallbackReach = data.top_posts.reduce((acc, post) => acc + (post.reach || 0), 0);
+        const reach = Math.max(1, data.organic_impressions.value || fallbackReach);
+        const retentionSignals = data.actions_split.reactions + data.actions_split.comments + data.actions_split.shares;
+        const retention = Math.max(1, Math.min(reach, Math.round(retentionSignals * 8)));
+        const conversion = Math.max(1, data.top_posts.reduce((acc, post) => acc + (post.link_clicks || 0), 0));
+
+        return {
+            reach,
+            retention: Math.max(conversion, retention),
+            conversion,
+        };
+    }, [data]);
+    const healthcheck = useMemo(() => {
+        if (!data) {
+            return {
+                score: 0,
+                label: "Perigo",
+                tone: "text-rose-500",
+                subtitle: "Sem dados para classificar",
+            };
+        }
+
+        const reachBase = Math.max(1, conversionFunnel.reach);
+        const qualityRate = (data.total_reactions.value / reachBase) * 100;
+        const conversionRate = (conversionFunnel.conversion / reachBase) * 100;
+
+        const normalize = (value: number, min: number, max: number) => {
+            if (max <= min) return 0;
+            return Math.max(0, Math.min(1, (value - min) / (max - min)));
+        };
+
+        const qualityNorm = normalize(qualityRate, 1.5, 6);
+        const retentionNorm = normalize(videoRetentionSummary.retention3s, 45, 80);
+        const conversionNorm = normalize(conversionRate, 0.03, 0.2);
+        const score = Math.round((qualityNorm * 0.45 + retentionNorm * 0.35 + conversionNorm * 0.2) * 100);
+
+        if (score >= 80) {
+            return {
+                score,
+                label: "Oceano Azul",
+                tone: "text-emerald-500",
+                subtitle: "Alta retenção e boa conversão",
+            };
+        }
+
+        if (score >= 40) {
+            return {
+                score,
+                label: "Atenção",
+                tone: "text-amber-400",
+                subtitle: "Distribui bem, mas pode converter melhor",
+            };
+        }
+
+        return {
+            score,
+            label: "Perigo",
+            tone: "text-rose-500",
+            subtitle: "Risco de conteúdo com baixa tração real",
+        };
+    }, [conversionFunnel, data, videoRetentionSummary.retention3s]);
+    const sixMonthTrend = useMemo(() => {
+        if (!data) return { rows: [] as Array<{ month: string; reach: number; engagement: number; quality: number }>, cagrReach: 0, cagrEngagement: 0 };
+
+        const reachCurrent = Math.max(1, conversionFunnel.reach);
+        const engagementCurrent = Math.max(1, data.engagements.value);
+        const startFactor = data.engagements.change >= 0 ? 0.72 : 1.22;
+        const rows = Array.from({ length: 6 }).map((_, idx) => {
+            const position = idx / 5;
+            const factor = startFactor + (1 - startFactor) * position;
+            const wave = 0.94 + (Math.sin((idx + 1) * 1.2) + 1) * 0.05;
+            const reach = Math.round(reachCurrent * factor * wave);
+            const engagement = Math.round(engagementCurrent * factor * (0.93 + (Math.cos((idx + 1) * 1.05) + 1) * 0.06));
+            const quality = Number(((engagement / Math.max(1, reach)) * 100).toFixed(2));
+            const date = new Date();
+            date.setMonth(date.getMonth() - (5 - idx), 1);
+            const month = date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "").toUpperCase();
+            return { month, reach, engagement, quality };
+        });
+
+        const first = rows[0];
+        const last = rows[rows.length - 1];
+        const cagrReach = Number(((Math.pow(last.reach / Math.max(1, first.reach), 1 / 5) - 1) * 100).toFixed(1));
+        const cagrEngagement = Number(((Math.pow(last.engagement / Math.max(1, first.engagement), 1 / 5) - 1) * 100).toFixed(1));
+
+        return { rows, cagrReach, cagrEngagement };
+    }, [conversionFunnel.reach, data]);
+    const formatEfficiencyRows = useMemo(() => {
+        if (!data) return [] as Array<{ label: string; posts: number; avgReach: number; avgEngagement: number; avgClicks: number; efficiency: number }>;
+
+        const stats: Record<"video" | "photo" | "album", { label: string; posts: number; reach: number; engagement: number; clicks: number }> = {
+            video: { label: "Reels/Vídeo", posts: 0, reach: 0, engagement: 0, clicks: 0 },
+            photo: { label: "Foto", posts: 0, reach: 0, engagement: 0, clicks: 0 },
+            album: { label: "Carrossel", posts: 0, reach: 0, engagement: 0, clicks: 0 },
+        };
+
+        data.top_posts.forEach((post) => {
+            const type = getPostType(post) as "video" | "photo" | "album";
+            const bucket = stats[type];
+            bucket.posts += 1;
+            bucket.reach += post.reach || 0;
+            bucket.engagement += (post.reactions || 0) + (post.comments || 0) + (post.shares || 0);
+            bucket.clicks += post.link_clicks || 0;
+        });
+
+        const rows = Object.values(stats).map((bucket) => {
+            const posts = Math.max(1, bucket.posts);
+            const avgReach = Math.round(bucket.reach / posts);
+            const avgEngagement = Math.round(bucket.engagement / posts);
+            const avgClicks = Math.round(bucket.clicks / posts);
+            return {
+                label: bucket.label,
+                posts: bucket.posts,
+                avgReach,
+                avgEngagement,
+                avgClicks,
+                efficiency: avgReach > 0 ? Number(((avgEngagement / avgReach) * 100).toFixed(2)) : 0,
+            };
+        });
+
+        return rows.sort((a, b) => b.efficiency - a.efficiency);
+    }, [data]);
+    const actionableMatrix = useMemo(() => {
+        if (!data) return [] as Array<{ issue: string; recommendation: string; priority: "ALTA" | "MÉDIA" | "BAIXA"; tone: string }>;
+
+        const items: Array<{ issue: string; recommendation: string; priority: "ALTA" | "MÉDIA" | "BAIXA"; tone: string }> = [];
+        const qualityRate = (data.total_reactions.value / Math.max(1, conversionFunnel.reach)) * 100;
+        const leakRatio = conversionFunnel.retention / Math.max(1, conversionFunnel.conversion);
+
+        if (isInstagram && videoRetentionSummary.retention3s < 62) {
+            items.push({
+                issue: "Retenção inicial abaixo do ideal",
+                recommendation: "Abrir Reels com promessa forte e prova visual nos primeiros 2s.",
+                priority: "ALTA",
+                tone: "text-rose-500",
+            });
+        }
+
+        if (qualityRate < 3) {
+            items.push({
+                issue: "Baixa taxa de sinal qualificado",
+                recommendation: "Aumentar conteúdo utilitário com CTA explícito para salvar e compartilhar no DM.",
+                priority: "ALTA",
+                tone: "text-rose-500",
+            });
+        }
+
+        if (leakRatio > 90) {
+            items.push({
+                issue: "Vazamento entre retenção e conversão",
+                recommendation: "Inserir CTA de conversão em 2 momentos do conteúdo e reforçar na legenda.",
+                priority: "MÉDIA",
+                tone: "text-amber-400",
+            });
+        }
+
+        if (items.length < 3) {
+            items.push({
+                issue: "Ritmo de formatos pouco distribuído",
+                recommendation: "Padronizar mix semanal: 2 Reels, 1 Carrossel, 1 conteúdo de prova social.",
+                priority: "BAIXA",
+                tone: "text-emerald-500",
+            });
+        }
+
+        return items.slice(0, 4);
+    }, [conversionFunnel, data, isInstagram, videoRetentionSummary.retention3s]);
+    const instagramPublicationsTopStats = useMemo(() => {
+        if (!isInstagram) return null;
+        return {
+            totalPosts: 36,
+            totalInteractions: 11712,
+            split: [
+                { label: "Curtidas", percentage: 93.49, tone: "text-blue-400", color: "#60a5fa" },
+                { label: "Comentários", percentage: 5.41, tone: "text-zinc-400", color: "#a1a1aa" },
+                { label: "Salvos", percentage: 1.1, tone: "text-emerald-400", color: "#10b981" },
+            ],
+            postTypeSplit: [
+                { label: "Reels/Vídeo", count: 16, tone: "text-blue-400", color: "#60a5fa" },
+                { label: "Imagens", count: 11, tone: "text-orange-400", color: "#fb923c" },
+                { label: "Carrosséis", count: 9, tone: "text-emerald-400", color: "#10b981" },
+            ],
+            avgInteractionsPerPost: 325,
+            avgViewsPerPost: 7190,
+            avgEngagementPerPost: 7.28,
+        };
+    }, [isInstagram]);
+    const maxAction = data ? Math.max(data.actions_split.reactions, data.actions_split.comments, data.actions_split.shares) : 1;
+
+    if (!data) return <div className="p-20 text-center animate-pulse text-zinc-500">Carregando Insights do {isInstagram ? "Instagram" : "Facebook"}...</div>;
 
     return (
         <div className="space-y-6 pb-20">
@@ -1038,13 +1368,80 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
             {/* TAB CONTENT: GERAL */}
             {activeTab === "geral" && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Quick Healthcheck</div>
+                                <div className={`text-3xl font-black tracking-tight mt-1 ${healthcheck.tone}`}>{healthcheck.score}/100</div>
+                                <div className="text-[11px] text-zinc-500 mt-1">{healthcheck.label} · {healthcheck.subtitle}</div>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                                <span className="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">Oceano Azul 80-100</span>
+                                <span className="px-2 py-1 rounded-full bg-amber-500/10 text-amber-400">Atenção 40-79</span>
+                                <span className="px-2 py-1 rounded-full bg-rose-500/10 text-rose-400">Perigo 0-39</span>
+                            </div>
+                        </div>
+                        <div className="mt-4 h-2 rounded-full bg-zinc-100 dark:bg-white/5 overflow-hidden">
+                            <div
+                                className={`h-full rounded-full ${healthcheck.score >= 80 ? "bg-emerald-500" : healthcheck.score >= 40 ? "bg-amber-400" : "bg-rose-500"}`}
+                                style={{ width: `${Math.max(2, healthcheck.score)}%` }}
+                            />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {summaryCards.map((card) => (
+                            <div key={card.title} className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{card.title}</div>
+                                <div className={`text-3xl font-black mt-2 tracking-tight ${card.tone}`}>{card.value}</div>
+                                <div className="text-[11px] text-zinc-500 mt-1">{card.subtitle}</div>
+                            </div>
+                        ))}
+                    </div>
                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                        <KPICard title="Seguidores da Página" value={data.page_followers.value} change={data.page_followers.change} icon={UserGroupIcon} />
-                        <KPICard title="Reações Totais" value={data.total_reactions.value} change={data.total_reactions.change} icon={HandThumbUpIcon} />
-                        <KPICard title="Visualizações de Vídeo" value={data.organic_video_views.value} change={data.organic_video_views.change} icon={VideoCameraIcon} />
-                        <KPICard title="Engajamento" value={data.engagements.value} change={data.engagements.change} icon={ChatBubbleLeftEllipsisIcon} />
-                        <KPICard title="Total de Posts" value={data.number_of_posts.value} change={data.number_of_posts.change} icon={DocumentTextIcon} />
-                        <KPICard title="Impressões" value={data.organic_impressions.value} change={data.organic_impressions.change} icon={EyeIcon} />
+                        <KPICard title={isInstagram ? "Seguidores Ativos" : "Seguidores da Página"} value={data.page_followers.value} change={data.page_followers.change} icon={UserGroupIcon} tooltip="Quantidade de perfis que acompanham a conta neste período." />
+                        <KPICard title={isInstagram ? "Interações Qualificadas" : "Reações Totais"} value={data.total_reactions.value} change={data.total_reactions.change} icon={HandThumbUpIcon} tooltip={isInstagram ? "Ações com intenção (salvar, compartilhar, responder, etc.)." : "Reações totais das publicações no período."} />
+                        <KPICard title={isInstagram ? "Views de Reels" : "Visualizações de Vídeo"} value={data.organic_video_views.value} change={data.organic_video_views.change} icon={VideoCameraIcon} tooltip="Volume de visualizações de conteúdo em vídeo." />
+                        <KPICard title="Engajamento" value={data.engagements.value} change={data.engagements.change} icon={ChatBubbleLeftEllipsisIcon} tooltip="Soma das interações geradas nas publicações." />
+                        <KPICard title={isInstagram ? "Conteúdos Publicados" : "Total de Posts"} value={data.number_of_posts.value} change={data.number_of_posts.change} icon={DocumentTextIcon} tooltip="Quantidade de conteúdos publicados no período selecionado." />
+                        <KPICard title={isInstagram ? "Alcance Não Seguidores" : "Impressões"} value={data.organic_impressions.value} change={data.organic_impressions.change} icon={EyeIcon} tooltip={isInstagram ? "Pessoas alcançadas fora da base atual de seguidores." : "Total de visualizações exibidas, incluindo repetições."} />
+                    </div>
+                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                            <div>
+                                <h4 className="text-sm font-black italic tracking-tight text-[var(--foreground)]">Tendência Semestral</h4>
+                                <p className="text-[11px] text-zinc-500 mt-1">Leitura de 6 meses para evitar decisões baseadas em janelas curtas.</p>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide">
+                                <span className={`px-2 py-1 rounded-full ${sixMonthTrend.cagrReach >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}>
+                                    CAGR Alcance {sixMonthTrend.cagrReach >= 0 ? "+" : ""}{sixMonthTrend.cagrReach}%
+                                </span>
+                                <span className={`px-2 py-1 rounded-full ${sixMonthTrend.cagrEngagement >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}>
+                                    CAGR Engaj. {sixMonthTrend.cagrEngagement >= 0 ? "+" : ""}{sixMonthTrend.cagrEngagement}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm whitespace-nowrap">
+                                <thead>
+                                    <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                                        <th className="pb-2 pr-3">Mês</th>
+                                        <th className="pb-2 pr-3 text-right">Alcance</th>
+                                        <th className="pb-2 pr-3 text-right">Engajamento</th>
+                                        <th className="pb-2 pr-3 text-right">Taxa de Qualidade</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[var(--shell-border)]">
+                                    {sixMonthTrend.rows.map((row) => (
+                                        <tr key={row.month}>
+                                            <td className="py-2 pr-3 font-black text-[var(--foreground)]">{row.month}</td>
+                                            <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.reach)}</td>
+                                            <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.engagement)}</td>
+                                            <td className="py-2 pr-3 text-right font-mono text-blue-400">{row.quality.toFixed(2)}%</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -1117,7 +1514,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
 
                                 {(() => {
                                     const posts = data.top_posts || [];
-                                    const interactions = (p: any) => (p.reactions || 0) + (p.comments || 0) + (p.shares || 0);
+                                    const interactions = (p: InsightPost) => (p.reactions || 0) + (p.comments || 0) + (p.shares || 0);
                                     const bestByReach = [...posts].sort((a, b) => (b.reach || 0) - (a.reach || 0))[0];
                                     const bestByInteractions = [...posts].sort((a, b) => interactions(b) - interactions(a))[0];
                                     const avgReach = posts.length ? posts.reduce((acc, p) => acc + (p.reach || 0), 0) / posts.length : 0;
@@ -1166,7 +1563,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                 <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
                                                     <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Média de Interações</div>
                                                     <div className="text-2xl font-black text-[var(--foreground)] mt-2">{formatNumber(Math.round(avgInteractions))}</div>
-                                                    <div className="text-[10px] text-zinc-500 mt-1">reac. + com. + comp.</div>
+                                                    <div className="text-[10px] text-zinc-500 mt-1">{isInstagram ? "salvos + com. + comp. DM" : "reac. + com. + comp."}</div>
                                                 </div>
                                                 <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
                                                     <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Melhor por Alcance</div>
@@ -1195,7 +1592,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                     <div className="space-y-3">
                                                         <div className="space-y-1">
                                                             <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500">
-                                                                <span>Reações</span>
+                                                                <span>{isInstagram ? "Salvamentos" : "Reações"}</span>
                                                                 <span>{formatNumber(data.actions_split.reactions)}</span>
                                                             </div>
                                                             <div className="h-3 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
@@ -1213,7 +1610,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                         </div>
                                                         <div className="space-y-1">
                                                             <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500">
-                                                                <span>Compart.</span>
+                                                                <span>{isInstagram ? "Compart. DM" : "Compart."}</span>
                                                                 <span>{formatNumber(data.actions_split.shares)}</span>
                                                             </div>
                                                             <div className="h-3 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
@@ -1274,7 +1671,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                             const bestFor = engagementRate >= 0.55 ? "Engajamento" : "Alcance";
                                                             const typeEntries = Object.entries(slot.typeCounts);
                                                             const topType = typeEntries.sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
-                                                            const topTypeLabel = topType === "video" ? "Vídeo" : topType === "photo" ? "Foto" : topType === "album" ? "Álbum" : topType;
+                                                            const topTypeLabel = topType === "video" ? "Reels/Vídeo" : topType === "photo" ? "Foto" : topType === "album" ? "Carrossel" : topType;
 
                                                             return (
                                                                 <div
@@ -1533,7 +1930,239 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
 
             {/* TAB CONTENT: PUBLICAÇÕES (SPLIT VIEW) */}
             {activeTab === "publicacoes" && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
+
+                    {isInstagram && instagramPublicationsTopStats && (
+                        <div className="grid grid-cols-1 lg:grid-cols-8 gap-4 items-stretch">
+                            <div className="lg:col-span-4 space-y-4">
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl overflow-hidden">
+                                    <div className="px-4 py-3 bg-[var(--shell-side)] border-b border-[var(--shell-border)] text-zinc-400 text-sm font-semibold">
+                                        Total de Posts
+                                    </div>
+                                    <div className="p-5">
+                                        <div className="text-center">
+                                            <div className="text-5xl font-black text-[var(--foreground)] tracking-tight">
+                                                {instagramPublicationsTopStats.totalPosts.toLocaleString("pt-BR")}
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 pt-3 border-t border-[var(--shell-border)] flex items-center justify-between">
+                                            <span className="text-[11px] font-semibold text-zinc-500">Média de Engajamento/Post</span>
+                                            <span className="text-lg font-black text-emerald-400">
+                                                {instagramPublicationsTopStats.avgEngagementPerPost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl overflow-hidden">
+                                    <div className="px-4 py-3 bg-[var(--shell-side)] border-b border-[var(--shell-border)] text-zinc-400 text-sm font-semibold">
+                                        Médias por Post
+                                    </div>
+                                    <div className="p-5 grid grid-cols-2 gap-4">
+                                        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4 text-center">
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Interações</div>
+                                            <div className="text-3xl font-black text-[var(--foreground)] tracking-tight mt-2">
+                                                {instagramPublicationsTopStats.avgInteractionsPerPost.toLocaleString("pt-BR")}
+                                            </div>
+                                            <div className="text-[10px] text-zinc-500 mt-1">Média por post</div>
+                                        </div>
+                                        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4 text-center">
+                                            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Visualizações</div>
+                                            <div className="text-3xl font-black text-[var(--foreground)] tracking-tight mt-2">
+                                                {instagramPublicationsTopStats.avgViewsPerPost.toLocaleString("pt-BR")}
+                                            </div>
+                                            <div className="text-[10px] text-zinc-500 mt-1">Média por post</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="lg:col-span-4 lg:justify-self-end w-full h-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="w-full h-full flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] relative">
+                                    {(() => {
+                                        const radius = 34;
+                                        const circumference = 2 * Math.PI * radius;
+                                        let cumulative = 0;
+                                        const segments = instagramPublicationsTopStats.split.map((item) => {
+                                            const value = Math.max(0, Math.min(100, item.percentage));
+                                            const length = (value / 100) * circumference;
+                                            const offset = -cumulative;
+                                            cumulative += length;
+                                            return { ...item, length, offset };
+                                        });
+                                        const main = instagramPublicationsTopStats.split.reduce((prev, curr) =>
+                                            curr.percentage > prev.percentage ? curr : prev
+                                        );
+
+                                        return (
+                                            <>
+                                                <div className="w-full text-left">
+                                                    <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-1 tracking-widest">Total de Interações</h4>
+                                                    <div className="text-3xl font-black text-[var(--foreground)] tracking-tight">
+                                                        {instagramPublicationsTopStats.totalInteractions.toLocaleString("pt-BR")}
+                                                    </div>
+                                                    <div className="text-[10px] text-zinc-500 mt-1">
+                                                        {main.label} é o maior sinal, com <strong className="text-[var(--foreground)]">{main.percentage.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%</strong> do total.
+                                                    </div>
+                                                </div>
+
+                                                <div className="relative w-40 h-40 flex items-center justify-center">
+                                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                                                        <circle
+                                                            cx="50"
+                                                            cy="50"
+                                                            r="40"
+                                                            fill="none"
+                                                            stroke="var(--shell-surface)"
+                                                            strokeWidth="20"
+                                                        />
+                                                        {segments.map((segment) => (
+                                                            <circle
+                                                                key={segment.label}
+                                                                cx="50"
+                                                                cy="50"
+                                                                r="40"
+                                                                fill="none"
+                                                                stroke={segment.color}
+                                                                strokeWidth="20"
+                                                                strokeDasharray={`${segment.length} ${circumference}`}
+                                                                strokeDashoffset={segment.offset}
+                                                                strokeLinecap="round"
+                                                                className="transition-all duration-1000 ease-out"
+                                                            />
+                                                        ))}
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                        <div className="text-4xl leading-none font-black text-[var(--foreground)] tracking-tight">
+                                                            {main.percentage.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%
+                                                        </div>
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1">
+                                                            {main.label}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="w-full space-y-1.5">
+                                                    {instagramPublicationsTopStats.split.map((item) => (
+                                                        <div key={item.label} className="flex items-center justify-between text-xs">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                                                                <span className="text-zinc-500 uppercase font-bold tracking-wide">{item.label}</span>
+                                                            </div>
+                                                            <span className={`font-black ${item.tone}`}>
+                                                                {item.percentage.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                    <div className="h-1.5 rounded-full overflow-hidden flex bg-[var(--shell-border)] mt-1">
+                                                        {instagramPublicationsTopStats.split.map((item) => (
+                                                            <div
+                                                                key={`bar-${item.label}`}
+                                                                style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+
+                                <div className="w-full h-full flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] relative">
+                                    {(() => {
+                                        const radius = 34;
+                                        const circumference = 2 * Math.PI * radius;
+                                        const totalPosts = Math.max(1, instagramPublicationsTopStats.totalPosts);
+                                        let cumulative = 0;
+                                        const segments = instagramPublicationsTopStats.postTypeSplit.map((item) => {
+                                            const percentage = (item.count / totalPosts) * 100;
+                                            const length = (percentage / 100) * circumference;
+                                            const offset = -cumulative;
+                                            cumulative += length;
+                                            return { ...item, percentage, length, offset };
+                                        });
+                                        const main = segments.reduce((prev, curr) =>
+                                            curr.count > prev.count ? curr : prev
+                                        );
+
+                                        return (
+                                            <>
+                                                <div className="w-full text-left">
+                                                    <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-1 tracking-widest">Tipo de Posts</h4>
+                                                    <div className="text-3xl font-black text-[var(--foreground)] tracking-tight">
+                                                        {instagramPublicationsTopStats.totalPosts.toLocaleString("pt-BR")}
+                                                    </div>
+                                                    <div className="text-[10px] text-zinc-500 mt-1">
+                                                        {main.label} lidera com <strong className="text-[var(--foreground)]">{main.count}</strong> de {instagramPublicationsTopStats.totalPosts} posts.
+                                                    </div>
+                                                </div>
+
+                                                <div className="relative w-40 h-40 flex items-center justify-center">
+                                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                                                        <circle
+                                                            cx="50"
+                                                            cy="50"
+                                                            r="40"
+                                                            fill="none"
+                                                            stroke="var(--shell-surface)"
+                                                            strokeWidth="20"
+                                                        />
+                                                        {segments.map((segment) => (
+                                                            <circle
+                                                                key={segment.label}
+                                                                cx="50"
+                                                                cy="50"
+                                                                r="40"
+                                                                fill="none"
+                                                                stroke={segment.color}
+                                                                strokeWidth="20"
+                                                                strokeDasharray={`${segment.length} ${circumference}`}
+                                                                strokeDashoffset={segment.offset}
+                                                                strokeLinecap="round"
+                                                                className="transition-all duration-1000 ease-out"
+                                                            />
+                                                        ))}
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                        <div className="text-4xl leading-none font-black text-[var(--foreground)] tracking-tight">
+                                                            {main.count}
+                                                        </div>
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1">
+                                                            {main.label}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="w-full space-y-1.5">
+                                                    {segments.map((item) => (
+                                                        <div key={item.label} className="flex items-center justify-between text-xs">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                                                                <span className="text-zinc-500 uppercase font-bold tracking-wide">{item.label}</span>
+                                                            </div>
+                                                            <span className={`font-black ${item.tone}`}>
+                                                                {item.count}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                    <div className="h-1.5 rounded-full overflow-hidden flex bg-[var(--shell-border)] mt-1">
+                                                        {segments.map((item) => (
+                                                            <div
+                                                                key={`bar-type-${item.label}`}
+                                                                style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                     {/* LEFT: DESEMPENHO (Detailed Performance Table with Pagination) */}
                     <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 flex flex-col h-full">
@@ -1562,7 +2191,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                 <div className="flex items-center gap-2 text-[10px] text-zinc-500 mb-1">
                                                     <span className="flex items-center gap-1"><span className="w-3 h-3">📅</span> {bestPostPerformance.date}</span>
                                                 </div>
-                                                <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2 italic">"{bestPostPerformance.message}"</p>
+                                                <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2 italic">{`"${bestPostPerformance.message}"`}</p>
                                                 <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                                     Este post alcançou <span className="font-bold">{formatNumber(bestPostPerformance.reach)}</span> pessoas.
                                                 </p>
@@ -1572,7 +2201,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
 
                                     {/* Right: Engagement Stats Highlights */}
                                     <div className="bg-[var(--shell-side)] rounded-xl p-6 flex flex-col justify-center text-center border border-[var(--shell-border)]">
-                                        <span className="text-zinc-500 text-xs font-bold uppercase mb-1">Total Engagement</span>
+                                        <span className="text-zinc-500 text-xs font-bold uppercase mb-1">{isInstagram ? "Engajamento Total" : "Total Engagement"}</span>
                                         <div className="flex items-center justify-center gap-2 mb-3">
                                             <span className="text-5xl font-black text-[var(--foreground)] tracking-tight">{Math.round(data.engagements.value).toLocaleString('pt-BR')}</span>
                                             <span className={`text-sm font-bold ${data.engagements.change > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
@@ -1580,9 +2209,9 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                             </span>
                                         </div>
                                         <div className="flex justify-center gap-4 text-[11px] text-zinc-500 font-medium pt-3 border-t border-[var(--shell-border)]">
-                                            <span title="Reactions">👍 {data.actions_split.reactions.toLocaleString('pt-BR')}</span>
+                                            <span title={isInstagram ? "Saves" : "Reactions"}>{isInstagram ? "🔖" : "👍"} {data.actions_split.reactions.toLocaleString('pt-BR')}</span>
                                             <span title="Comments">💬 {data.actions_split.comments.toLocaleString('pt-BR')}</span>
-                                            <span title="Shares">🔗 {data.actions_split.shares.toLocaleString('pt-BR')}</span>
+                                            <span title={isInstagram ? "DM Shares" : "Shares"}>{isInstagram ? "✈️" : "🔗"} {data.actions_split.shares.toLocaleString('pt-BR')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1595,15 +2224,15 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                 <thead className="bg-[var(--shell-surface)] z-10">
                                     <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-zinc-500 text-xs">
                                         <th className="pb-3 pl-2">Post</th>
-                                        <th className="pb-3 px-2">Message</th>
-                                        <th className="pb-3 px-2">Date</th>
+                                        <th className="pb-3 px-2">{isInstagram ? "Conteúdo" : "Message"}</th>
+                                        <th className="pb-3 px-2">{isInstagram ? "Data" : "Date"}</th>
                                         <th className="pb-3 text-right px-2">Imp.</th>
                                         <th className="pb-3 text-right px-2">Alcance</th>
-                                        <th className="pb-3 text-right px-2">Reações</th>
+                                        <th className="pb-3 text-right px-2">{isInstagram ? "Salvos" : "Reações"}</th>
                                         <th className="pb-3 text-right px-2">Coment.</th>
-                                        <th className="pb-3 text-right px-2">Compart.</th>
-                                        <th className="pb-3 text-right px-2">Video</th>
-                                        <th className="pb-3 text-right px-2">Cliques</th>
+                                        <th className="pb-3 text-right px-2">{isInstagram ? "Comp. DM" : "Compart."}</th>
+                                        <th className="pb-3 text-right px-2">{isInstagram ? "Views Reels" : "Video"}</th>
+                                        <th className="pb-3 text-right px-2">{isInstagram ? "Toques Link" : "Cliques"}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[var(--shell-border)]">
@@ -1677,7 +2306,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                         onClick={() => setVisibleMetrics(prev => ({ ...prev, reactions: !prev.reactions }))}
                                         className={`flex items-center gap-1.5 transition-all hover:opacity-80 ${visibleMetrics.reactions ? 'opacity-100' : 'opacity-40 grayscale'}`}
                                     >
-                                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>Reações
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>{isInstagram ? "Salvos" : "Reações"}
                                     </button>
                                     <button
                                         onClick={() => setVisibleMetrics(prev => ({ ...prev, comments: !prev.comments }))}
@@ -1689,7 +2318,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                         onClick={() => setVisibleMetrics(prev => ({ ...prev, shares: !prev.shares }))}
                                         className={`flex items-center gap-1.5 transition-all hover:opacity-80 ${visibleMetrics.shares ? 'opacity-100' : 'opacity-40 grayscale'}`}
                                     >
-                                        <span className="w-2 h-2 rounded-full bg-amber-400"></span>Compart.
+                                        <span className="w-2 h-2 rounded-full bg-amber-400"></span>{isInstagram ? "Comp. DM" : "Compart."}
                                     </button>
                                 </div>
                             </div>
@@ -1865,7 +2494,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                                             <span className="font-bold text-emerald-400">{dateLabel} <span className="text-zinc-500 mx-1">•</span> {timeLabel}</span>
                                                                             <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[9px] font-bold">Reach: {formatNumber(post.reach)}</span>
                                                                         </div>
-                                                                        <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px] italic">"{post.message}"</div>
+                                                                        <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px] italic">{`"${post.message}"`}</div>
 
                                                                         <div className="space-y-1">
                                                                             <div className="flex justify-between text-zinc-400">
@@ -1949,8 +2578,61 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 min-h-[320px]">
                                         <SpeedometerChart title="Alcance Médio" data={speedData.reach} />
                                         <SpeedometerChart title="Engajamento Total" data={speedData.engagement} />
-                                        <SpeedometerChart title="Cliques (Tráfego)" data={speedData.clicks} />
+                                        <SpeedometerChart title={isInstagram ? "Toques no Link" : "Cliques (Tráfego)"} data={speedData.clicks} />
                                     </div>
+
+                                    <div className="mt-6 bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h5 className="text-xs font-black uppercase tracking-widest text-zinc-500">Eficiência por Formato (Média/Post)</h5>
+                                            <span className="text-[10px] font-bold text-zinc-500">Comparativo de produtividade criativa</span>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left text-sm whitespace-nowrap">
+                                                <thead>
+                                                    <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                                                        <th className="pb-2 pr-3">Formato</th>
+                                                        <th className="pb-2 pr-3 text-right">Posts</th>
+                                                        <th className="pb-2 pr-3 text-right">Alcance Médio</th>
+                                                        <th className="pb-2 pr-3 text-right">Engaj. Médio</th>
+                                                        <th className="pb-2 pr-3 text-right">Toques Médios</th>
+                                                        <th className="pb-2 pr-3 text-right">Eficiência</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-[var(--shell-border)]">
+                                                    {formatEfficiencyRows.map((row, idx) => (
+                                                        <tr key={row.label}>
+                                                            <td className="py-2 pr-3 font-black text-[var(--foreground)]">{row.label}</td>
+                                                            <td className="py-2 pr-3 text-right font-mono text-zinc-400">{row.posts}</td>
+                                                            <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.avgReach)}</td>
+                                                            <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.avgEngagement)}</td>
+                                                            <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.avgClicks)}</td>
+                                                            <td className={`py-2 pr-3 text-right font-mono font-black ${idx === 0 ? "text-emerald-400" : "text-blue-400"}`}>{row.efficiency.toFixed(2)}%</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {isInstagram && (
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
+                                                <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Retenção 0-3s</div>
+                                                <div className="text-3xl font-black text-emerald-500 mt-2">{videoRetentionSummary.retention3s}%</div>
+                                                <div className="text-[10px] text-zinc-500 mt-1">Taxa de permanência inicial</div>
+                                            </div>
+                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
+                                                <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Tempo Médio</div>
+                                                <div className="text-3xl font-black text-blue-500 mt-2">{videoRetentionSummary.avgWatchSeconds}s</div>
+                                                <div className="text-[10px] text-zinc-500 mt-1">Visualização média por Reel</div>
+                                            </div>
+                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
+                                                <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Re-watch</div>
+                                                <div className="text-3xl font-black text-indigo-500 mt-2">{videoRetentionSummary.rewatchRate}%</div>
+                                                <div className="text-[10px] text-zinc-500 mt-1">Taxa estimada de loop/revisita</div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* INSIGHTS / TIPS SECTION */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-8 border-t border-[var(--shell-border)]/50">
@@ -1962,7 +2644,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                             <div>
                                                 <h5 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Dica de Postagem</h5>
                                                 <p className="text-sm text-[var(--foreground)] leading-snug">
-                                                    Vídeos curtos (Reels) estão gerando <strong>2x mais alcance</strong> que fotos estáticas. Explore esse formato para crescer.
+                                                    {isInstagram ? (
+                                                        <>Nos Reels, os primeiros <strong>2 segundos</strong> estão decidindo a distribuição. Comece com promessa clara e corte sem introdução.</>
+                                                    ) : (
+                                                        <>Vídeos curtos (Reels) estão gerando <strong>2x mais alcance</strong> que fotos estáticas. Explore esse formato para crescer.</>
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>
@@ -1975,7 +2661,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                             <div>
                                                 <h5 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-1">Ponto de Atenção</h5>
                                                 <p className="text-sm text-[var(--foreground)] leading-snug">
-                                                    O engajamento em <strong>Álbuns</strong> caiu 15% esta semana. Tente reduzir a quantidade de fotos por carrossel.
+                                                    {isInstagram ? (
+                                                        <>Muito alcance com pouco <strong>salvamento</strong> indica conteúdo consumido e descartado. Falta utilidade prática para retorno.</>
+                                                    ) : (
+                                                        <>O engajamento em <strong>Álbuns</strong> caiu 15% esta semana. Tente reduzir a quantidade de fotos por carrossel.</>
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>
@@ -1988,9 +2678,40 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                             <div>
                                                 <h5 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">Ponto de Sucesso</h5>
                                                 <p className="text-sm text-[var(--foreground)] leading-snug">
-                                                    Seus posts de <strong>terça-feira às 18h</strong> têm a melhor performance. Mantenha a consistência neste horário!
+                                                    {isInstagram ? (
+                                                        <>Conteúdos com <strong>CTA para DM</strong> estão puxando os melhores resultados de lead. Escale esse formato 2x por semana.</>
+                                                    ) : (
+                                                        <>Seus posts de <strong>terça-feira às 18h</strong> têm a melhor performance. Mantenha a consistência neste horário!</>
+                                                    )}
                                                 </p>
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h5 className="text-xs font-black uppercase tracking-widest text-zinc-500">Matriz de Prioridade</h5>
+                                            <span className="text-[10px] font-bold text-zinc-500">Issue → Recommendation → Priority</span>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left text-sm">
+                                                <thead>
+                                                    <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                                                        <th className="pb-2 pr-3">Issue</th>
+                                                        <th className="pb-2 pr-3">Recommendation</th>
+                                                        <th className="pb-2 pr-3 text-right">Priority</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-[var(--shell-border)]">
+                                                    {actionableMatrix.map((item, idx) => (
+                                                        <tr key={`${item.issue}-${idx}`}>
+                                                            <td className="py-2 pr-3 text-[11px] text-[var(--foreground)] font-semibold">{item.issue}</td>
+                                                            <td className="py-2 pr-3 text-[11px] text-zinc-400">{item.recommendation}</td>
+                                                            <td className={`py-2 pr-3 text-right text-[10px] font-black uppercase tracking-wider ${item.tone}`}>{item.priority}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
@@ -2003,7 +2724,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                     {/* RIGHT: REAÇÕES DESCRITIVAS DESTAQUE (Detailed Reactions) */}
                     < div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 overflow-hidden flex flex-col h-full" >
 
-                        <h3 className="text-lg font-black italic tracking-tight mb-4 text-emerald-500">Detalhamento de Reações</h3>
+                        <h3 className="text-lg font-black italic tracking-tight mb-4 text-emerald-500">{isInstagram ? "Detalhamento de Sinais de Qualidade" : "Detalhamento de Reações"}</h3>
                         {/* 1. Best Post Card + Total Interactions Stats */}
                         {(() => {
                             const bestPost = [...data.top_posts].sort((a, b) => (b.reactions + b.comments + b.shares) - (a.reactions + a.comments + a.shares))[0];
@@ -2018,7 +2739,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                     <div className="flex-1 bg-blue-50 dark:bg-blue-500/5 rounded-xl p-4 border border-blue-100 dark:border-blue-500/20">
                                         <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wide">
                                             <HandThumbUpIcon className="w-4 h-4" />
-                                            Melhor post por engajamento
+                                            {isInstagram ? "Melhor post por sinal qualificado" : "Melhor post por engajamento"}
                                         </div>
                                         <div className="flex gap-4">
                                             <div className="w-24 h-24 shrink-0 rounded-lg bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
@@ -2028,7 +2749,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                 <div className="flex items-center gap-2 text-[10px] text-zinc-500 mb-1">
                                                     <span className="flex items-center gap-1"><span className="w-3 h-3">📅</span> {bestPost.date}</span>
                                                 </div>
-                                                <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2 italic">"{bestPost.message}"</p>
+                                                <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2 italic">{`"${bestPost.message}"`}</p>
                                                 <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                                     Taxa de engajamento de <span className="font-bold text-blue-600 dark:text-blue-400">{rate}%</span> ({formatNumber(engagement)} interações).
                                                 </p>
@@ -2050,7 +2771,6 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                             )
                         })()}
 
-
                         {/* HEADER: ANALYTICS WIDGETS */}
                         {/* Chart: Reaction Performance (Top) */}
 
@@ -2062,13 +2782,13 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                 <thead className="bg-[var(--shell-surface)] z-10">
                                     <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-zinc-500 text-xs">
                                         <th className="pb-3 pl-2 min-w-[200px]">Post</th>
-                                        <th className="pb-3 text-right px-2 text-blue-500">Total</th>
-                                        <th className="pb-3 text-right px-2" title="Like"><span className="text-2xl">👍</span></th>
-                                        <th className="pb-3 text-right px-2" title="Love"><span className="text-2xl">❤️</span></th>
-                                        <th className="pb-3 text-right px-2" title="Haha"><span className="text-2xl">😂</span></th>
-                                        <th className="pb-3 text-right px-2" title="Wow"><span className="text-2xl">😮</span></th>
-                                        <th className="pb-3 text-right px-2" title="Sad"><span className="text-2xl">😢</span></th>
-                                        <th className="pb-3 text-right px-2" title="Angry"><span className="text-2xl">😡</span></th>
+                                        <th className="pb-3 text-right px-2 text-blue-500">{isInstagram ? "Total Qualif." : "Total"}</th>
+                                        <th className="pb-3 text-right px-2" title={isInstagram ? "Salvamentos" : "Like"}>{isInstagram ? "Salvos" : <span className="text-2xl">👍</span>}</th>
+                                        <th className="pb-3 text-right px-2" title={isInstagram ? "Compartilhamentos por DM" : "Love"}>{isInstagram ? "Comp. DM" : <span className="text-2xl">❤️</span>}</th>
+                                        <th className="pb-3 text-right px-2" title={isInstagram ? "Visitas ao Perfil" : "Haha"}>{isInstagram ? "Perfil" : <span className="text-2xl">😂</span>}</th>
+                                        <th className="pb-3 text-right px-2" title={isInstagram ? "Toques no Link" : "Wow"}>{isInstagram ? "Link" : <span className="text-2xl">😮</span>}</th>
+                                        <th className="pb-3 text-right px-2" title={isInstagram ? "Respostas" : "Sad"}>{isInstagram ? "Resp." : <span className="text-2xl">😢</span>}</th>
+                                        <th className="pb-3 text-right px-2" title={isInstagram ? "Novos Seguidores" : "Angry"}>{isInstagram ? "Follows" : <span className="text-2xl">😡</span>}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[var(--shell-border)]">
@@ -2083,7 +2803,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                     <a href="#" className="text-xs text-blue-500 hover:underline">Link do post</a>
                                                 </div>
                                             </td>
-                                            <td className="py-3 text-right px-2 font-bold text-blue-500">{formatNumber(post.reactions)}</td>
+                                            <td className="py-3 text-right px-2 font-bold text-blue-500">{formatNumber(isInstagram ? getQualitySignalsTotal(post) : post.reactions)}</td>
                                             <td className="py-3 text-right px-2 text-zinc-400 font-mono">{post.reaction_breakdown?.like || 0}</td>
                                             <td className="py-3 text-right px-2 text-zinc-400 font-mono">{post.reaction_breakdown?.love || 0}</td>
                                             <td className="py-3 text-right px-2 text-zinc-400 font-mono">{post.reaction_breakdown?.haha || 0}</td>
@@ -2128,29 +2848,29 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                 <h4 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
                                     <ArrowTrendingUpIcon className="w-4 h-4 text-emerald-500" />
-                                    Desempenho de Reações
+                                    {isInstagram ? "Desempenho de Sinais de Qualidade" : "Desempenho de Reações"}
                                 </h4>
                                 <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-zinc-500">
                                     <button onClick={() => setVisibleReactions(p => ({ ...p, total: !p.total }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800/50 hover:bg-zinc-800 transition-all ${visibleReactions.total ? 'opacity-100' : 'opacity-50 grayscale'}`}>
                                         <span className="w-2 h-2 rounded-full bg-white border border-zinc-500"></span><span className="text-white">Total</span>
                                     </button>
                                     <button onClick={() => setVisibleReactions(p => ({ ...p, like: !p.like }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 transition-all ${visibleReactions.like ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                        <span className="w-2 h-2 rounded-full bg-blue-400"></span><span className="text-blue-400">Like</span>
+                                        <span className="w-2 h-2 rounded-full bg-blue-400"></span><span className="text-blue-400">{isInstagram ? "Salvos" : "Like"}</span>
                                     </button>
                                     <button onClick={() => setVisibleReactions(p => ({ ...p, love: !p.love }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 transition-all ${visibleReactions.love ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                        <span className="w-2 h-2 rounded-full bg-rose-400"></span><span className="text-rose-400">Love</span>
+                                        <span className="w-2 h-2 rounded-full bg-rose-400"></span><span className="text-rose-400">{isInstagram ? "Comp. DM" : "Love"}</span>
                                     </button>
                                     <button onClick={() => setVisibleReactions(p => ({ ...p, haha: !p.haha }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-yellow-500/10 hover:bg-yellow-500/20 transition-all ${visibleReactions.haha ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                        <span className="w-2 h-2 rounded-full bg-yellow-400"></span><span className="text-yellow-400">Haha</span>
+                                        <span className="w-2 h-2 rounded-full bg-yellow-400"></span><span className="text-yellow-400">{isInstagram ? "Perfil" : "Haha"}</span>
                                     </button>
                                     <button onClick={() => setVisibleReactions(p => ({ ...p, wow: !p.wow }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-orange-500/10 hover:bg-orange-500/20 transition-all ${visibleReactions.wow ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                        <span className="w-2 h-2 rounded-full bg-orange-400"></span><span className="text-orange-400">Wow</span>
+                                        <span className="w-2 h-2 rounded-full bg-orange-400"></span><span className="text-orange-400">{isInstagram ? "Link" : "Wow"}</span>
                                     </button>
                                     <button onClick={() => setVisibleReactions(p => ({ ...p, sad: !p.sad }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 transition-all ${visibleReactions.sad ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                        <span className="w-2 h-2 rounded-full bg-cyan-400"></span><span className="text-cyan-400">Sad</span>
+                                        <span className="w-2 h-2 rounded-full bg-cyan-400"></span><span className="text-cyan-400">{isInstagram ? "Resp." : "Sad"}</span>
                                     </button>
                                     <button onClick={() => setVisibleReactions(p => ({ ...p, angry: !p.angry }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-all ${visibleReactions.angry ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                        <span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-red-500">Angry</span>
+                                        <span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-red-500">{isInstagram ? "Follows" : "Angry"}</span>
                                     </button>
                                 </div>
                             </div>
@@ -2165,11 +2885,12 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                     const maxTime = sortedPosts[sortedPosts.length - 1].timestamp;
                                     const timeRange = maxTime - minTime || 1;
 
-                                    // Calculate max Y based on TOTAL reactions
-                                    const maxReactions = Math.max(...sortedPosts.map(p => p.reactions)) * 1.1 || 10;
+                                    const maxChartTotal = isInstagram
+                                        ? Math.max(...sortedPosts.map((post) => getQualitySignalsTotal(post))) * 1.1 || 10
+                                        : Math.max(...sortedPosts.map((post) => post.reactions)) * 1.1 || 10;
 
                                     const getX = (ts: number) => ((ts - minTime) / timeRange) * 100;
-                                    const getY = (val: number) => 100 - ((val / maxReactions) * 100);
+                                    const getY = (val: number) => 100 - ((val / maxChartTotal) * 100);
 
                                     return (
                                         <div className="w-full h-full relative">
@@ -2177,7 +2898,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                             <div className="absolute inset-0 flex flex-col justify-between text-[9px] text-zinc-500 pointer-events-none pb-6 pr-4">
                                                 {[1, 0.5, 0].map((t) => (
                                                     <div key={t} className="flex items-center w-full relative h-0">
-                                                        <span className="w-6 text-right mr-2 shrink-0">{formatNumber(Math.round(maxReactions * t))}</span>
+                                                        <span className="w-6 text-right mr-2 shrink-0">{formatNumber(Math.round(maxChartTotal * t))}</span>
                                                         <div className="w-full h-px bg-[var(--shell-border)] border-t border-dashed border-zinc-700/30"></div>
                                                     </div>
                                                 ))}
@@ -2187,7 +2908,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                             <div className="absolute top-0 left-8 right-8 bottom-24">
                                                 {/* Layer 1: SVG Lines */}
                                                 <svg className="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-                                                    {visibleReactions.total && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reactions)}`).join(" ")} fill="none" stroke="white" strokeWidth="0.5" vectorEffect="non-scaling-stroke" strokeDasharray="4 4" className="opacity-30" />}
+                                                    {visibleReactions.total && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(isInstagram ? getQualitySignalsTotal(p) : p.reactions)}`).join(" ")} fill="none" stroke="white" strokeWidth="0.5" vectorEffect="non-scaling-stroke" strokeDasharray="4 4" className="opacity-30" />}
                                                     {visibleReactions.like && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.like || 0)}`).join(" ")} fill="none" stroke="#60a5fa" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
                                                     {visibleReactions.love && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.love || 0)}`).join(" ")} fill="none" stroke="#fb7185" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
                                                     {visibleReactions.haha && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.haha || 0)}`).join(" ")} fill="none" stroke="#facc15" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
@@ -2199,7 +2920,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                 {/* Layer 2: HTML Overlay */}
                                                 <div className="absolute inset-0 pointer-events-none">
                                                     {sortedPosts.map((p) => {
-                                                        const total = p.reactions;
+                                                        const total = isInstagram ? getQualitySignalsTotal(p) : p.reactions;
                                                         return (
                                                             <div key={p.id} className="absolute group pointer-events-auto" style={{ left: `${getX(p.timestamp)}%`, top: 0, bottom: 0, width: '1px' }}>
                                                                 <div className="absolute -left-3 -right-3 top-0 bottom-0 bg-transparent z-20 cursor-crosshair"></div>
@@ -2224,30 +2945,30 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                                             </span>
                                                                             <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[9px] font-bold">Total: {formatNumber(total)}</span>
                                                                         </div>
-                                                                        <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px] italic">"{p.message}"</div>
+                                                                        <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px] italic">{`"${p.message}"`}</div>
                                                                         <div className="grid grid-cols-6 gap-1 pt-2 text-[9px] text-center">
                                                                             <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.like ? 'opacity-100' : 'opacity-40'}`}>
-                                                                                <div>👍</div>
+                                                                                <div>{isInstagram ? "SALV" : "👍"}</div>
                                                                                 <div className="font-bold text-blue-400 mt-0.5">{formatNumber(p.reaction_breakdown?.like || 0)}</div>
                                                                             </div>
                                                                             <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.love ? 'opacity-100' : 'opacity-40'}`}>
-                                                                                <div>❤️</div>
+                                                                                <div>{isInstagram ? "DM" : "❤️"}</div>
                                                                                 <div className="font-bold text-rose-400 mt-0.5">{formatNumber(p.reaction_breakdown?.love || 0)}</div>
                                                                             </div>
                                                                             <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.haha ? 'opacity-100' : 'opacity-40'}`}>
-                                                                                <div>😂</div>
+                                                                                <div>{isInstagram ? "PERFIL" : "😂"}</div>
                                                                                 <div className="font-bold text-yellow-400 mt-0.5">{formatNumber(p.reaction_breakdown?.haha || 0)}</div>
                                                                             </div>
                                                                             <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.wow ? 'opacity-100' : 'opacity-40'}`}>
-                                                                                <div>😮</div>
+                                                                                <div>{isInstagram ? "LINK" : "😮"}</div>
                                                                                 <div className="font-bold text-orange-400 mt-0.5">{formatNumber(p.reaction_breakdown?.wow || 0)}</div>
                                                                             </div>
                                                                             <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.sad ? 'opacity-100' : 'opacity-40'}`}>
-                                                                                <div>😢</div>
+                                                                                <div>{isInstagram ? "RESP" : "😢"}</div>
                                                                                 <div className="font-bold text-cyan-400 mt-0.5">{formatNumber(p.reaction_breakdown?.sad || 0)}</div>
                                                                             </div>
                                                                             <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.angry ? 'opacity-100' : 'opacity-40'}`}>
-                                                                                <div>😡</div>
+                                                                                <div>{isInstagram ? "FOLLOW" : "😡"}</div>
                                                                                 <div className="font-bold text-red-500 mt-0.5">{formatNumber(p.reaction_breakdown?.angry || 0)}</div>
                                                                             </div>
                                                                         </div>
@@ -2386,14 +3107,16 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                 const dayData = heatmapData[dayIdx];
 
                                                 // Calculate min/max for normalization
-                                                const allValues = heatmapData.flat().map((c: any) => c[heatmapMetric]);
+                                                const allValues = heatmapData
+                                                    .flat()
+                                                    .map((cell: { reach: number; interactions: number }) => cell[heatmapMetric]);
                                                 const max = Math.max(...allValues) || 1;
                                                 const min = Math.min(...allValues);
 
                                                 return (
                                                     <div key={dayIdx} className="flex-1 flex flex-col gap-1 min-w-[40px]">
                                                         {/* Hour Cells Stack */}
-                                                        {dayData.map((cell: any, hourIdx: number) => {
+                                                        {dayData.map((cell: { reach: number; interactions: number }, hourIdx: number) => {
                                                             const val = cell[heatmapMetric];
 
                                                             // 1-10 Scale Calculation
@@ -2478,6 +3201,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                             </div>
                         )}
                     </div>
+                </div>
                 </div>
             )
             }
@@ -2668,7 +3392,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false }: Social
                                                             'bg-orange-500',
                                                         ];
 
-                                                        const renderItem = (item: any, index: number) => {
+                                                        const renderItem = (item: { range: string; male: number; female: number }, index: number) => {
                                                             const totalVal = Math.round((item.male + item.female) / (rawTotalMale + rawTotalFemale) * 100);
                                                             return (
                                                                 <div key={item.range} className="flex items-center justify-between text-[10px] w-full group hover:bg-[var(--shell-surface)] p-1 rounded transition-colors cursor-default">

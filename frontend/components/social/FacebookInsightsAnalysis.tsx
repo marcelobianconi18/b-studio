@@ -3,5 +3,5 @@
 import SocialInsights from "./SocialInsights";
 
 export default function FacebookInsightsAnalysis() {
-    return <SocialInsights hideTopPeriodSelector />;
+    return <SocialInsights hideTopPeriodSelector platform="facebook" />;
 }

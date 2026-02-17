@@ -43,8 +43,8 @@ export default function PlanStatusCard() {
             {/* Metrics Grid */}
             <div className="grid gap-3">
                 <div
-                    className="p-3.5 rounded-2xl backdrop-blur-sm border-0 ring-1 ring-inset space-y-2 relative overflow-hidden"
-                    style={{ backgroundColor: "var(--shell-side)", ringColor: "var(--shell-border)" }}
+                    className="p-3.5 rounded-2xl backdrop-blur-sm border-0 ring-1 ring-inset ring-[var(--shell-border)] space-y-2 relative overflow-hidden"
+                    style={{ backgroundColor: "var(--shell-side)" }}
                 >
                     <div className="relative z-10 flex items-center gap-2 mb-1">
                         <div className="p-1 rounded-md bg-[#83A2DB]/10">
