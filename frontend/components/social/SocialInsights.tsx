@@ -106,6 +106,82 @@ type PeriodFollowersSnapshot = {
     growthPct: number;
 };
 
+type AudienceViewMode = "base_total" | "base_engajada";
+
+type AudienceAgeRow = {
+    range: string;
+    male: number;
+    female: number;
+    total: number;
+};
+
+const AGE_ORDER: Record<string, number> = {
+    "13-17": 1,
+    "18-24": 2,
+    "25-34": 3,
+    "35-44": 4,
+    "45-54": 5,
+    "55-64": 6,
+    "65+": 7,
+};
+
+const AGE_ECONOMIC_TAGS: Record<string, string> = {
+    "13-17": "Gen Alpha / Descoberta",
+    "18-24": "Gen Z / Entrada",
+    "25-34": "Millennials / Decisores",
+    "35-44": "Millennials / Conversao",
+    "45-54": "Senior / Ticket Alto",
+    "55-64": "Senior / Lealdade",
+    "65+": "Legacy / Relacao",
+};
+
+const AGE_ENGAGEMENT_WEIGHT: Record<string, number> = {
+    "13-17": 0.86,
+    "18-24": 1.14,
+    "25-34": 1.12,
+    "35-44": 1.04,
+    "45-54": 0.94,
+    "55-64": 0.82,
+    "65+": 0.7,
+};
+
+const AGE_CONVERSION_WEIGHT: Record<string, number> = {
+    "13-17": 0.45,
+    "18-24": 0.72,
+    "25-34": 1.15,
+    "35-44": 1.28,
+    "45-54": 1.1,
+    "55-64": 0.9,
+    "65+": 0.78,
+};
+
+const FREIGHT_BASE_STATES = new Set(["SP", "RJ", "MG", "ES", "PR", "SC", "RS"]);
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const normalizeAudienceRows = (rows: AudienceAgeRow[]) => {
+    const sum = rows.reduce((acc, item) => acc + item.total, 0);
+    const base = Math.max(1, sum);
+    return rows
+        .map((item) => {
+            const male = (item.male / base) * 100;
+            const female = (item.female / base) * 100;
+            return {
+                range: item.range,
+                male,
+                female,
+                total: male + female,
+            };
+        })
+        .sort((a, b) => (AGE_ORDER[a.range] ?? 99) - (AGE_ORDER[b.range] ?? 99));
+};
+
+const getStateCodeFromCity = (cityName: string) => {
+    const parts = cityName.split(",");
+    if (parts.length < 2) return "";
+    return parts[parts.length - 1]?.trim().toUpperCase() ?? "";
+};
+
 const mulberry32 = (seed: number) => {
     return () => {
         let t = seed += 0x6D2B79F5;
@@ -237,7 +313,15 @@ const KPICard = ({ title, value, change, icon: Icon, tooltip }: KPICardProps) =>
 );
 
 // Population Pyramid Component
-const PopulationPyramid = ({ data }: { data: Array<{ range: string; male: number; female: number }> }) => {
+const PopulationPyramid = ({
+    data,
+    influencerRange,
+    decisorRange,
+}: {
+    data: Array<{ range: string; male: number; female: number }>;
+    influencerRange?: string;
+    decisorRange?: string;
+}) => {
     const maxVal = Math.max(...data.map(d => Math.max(d.male, d.female))) * 1.1; // Add 10% buffer
 
     return (
@@ -257,7 +341,15 @@ const PopulationPyramid = ({ data }: { data: Array<{ range: string; male: number
             {/* Pyramid */}
             <div className="w-full max-w-3xl mx-auto flex flex-col font-sans">
                 {[...data].reverse().map((item) => (
-                    <div key={item.range} className="flex items-center w-full relative h-9 border-b border-[var(--shell-border)] last:border-0 hover:bg-[var(--shell-side)] transition-colors group">
+                    <div
+                        key={item.range}
+                        className={`flex items-center w-full relative h-9 border-b border-[var(--shell-border)] last:border-0 transition-colors group ${decisorRange === item.range
+                            ? "bg-emerald-500/10 hover:bg-emerald-500/15"
+                            : influencerRange === item.range
+                                ? "bg-blue-500/10 hover:bg-blue-500/15"
+                                : "hover:bg-[var(--shell-side)]"
+                            }`}
+                    >
 
                         {/* Left Side: Male (Blue) */}
                         <div className="flex-1 flex justify-end items-center gap-3 pr-4 h-full">
@@ -271,7 +363,12 @@ const PopulationPyramid = ({ data }: { data: Array<{ range: string; male: number
                         </div>
 
                         {/* Central Axis: Age Range */}
-                        <div className="w-16 text-center text-[10px] font-bold text-zinc-400 shrink-0">
+                        <div className={`w-16 text-center text-[10px] font-bold shrink-0 ${decisorRange === item.range
+                            ? "text-emerald-300"
+                            : influencerRange === item.range
+                                ? "text-blue-300"
+                                : "text-zinc-400"
+                            }`}>
                             {item.range}
                         </div>
 
@@ -285,6 +382,17 @@ const PopulationPyramid = ({ data }: { data: Array<{ range: string; male: number
                                 {item.female}%
                             </span>
                         </div>
+
+                        {decisorRange === item.range && (
+                            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8px] font-black uppercase tracking-wider text-emerald-300 bg-emerald-500/20 border border-emerald-500/35 rounded-full px-1.5 py-0.5">
+                                Decisor
+                            </span>
+                        )}
+                        {decisorRange !== item.range && influencerRange === item.range && (
+                            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8px] font-black uppercase tracking-wider text-blue-300 bg-blue-500/20 border border-blue-500/35 rounded-full px-1.5 py-0.5">
+                                Influenciador
+                            </span>
+                        )}
 
                     </div>
                 ))}
@@ -562,6 +670,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
     const [activeAgeGroupIndex, setActiveAgeGroupIndex] = useState(0);
     const [citiesAgePage, setCitiesAgePage] = useState(1);
     const [selectedStateFilter, setSelectedStateFilter] = useState<string>('todos');
+    const [audienceViewMode, setAudienceViewMode] = useState<AudienceViewMode>("base_total");
     const PAGE_SIZE = 5;
     const isLocalEditor = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
@@ -1335,6 +1444,257 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
             avgEngagementPerPost: 7.28,
         };
     }, [isInstagram]);
+    const instagramAudienceModel = useMemo(() => {
+        if (!isInstagram || !data?.demographics) return null;
+
+        const baseRows = normalizeAudienceRows(
+            data.demographics.age.map((item) => ({
+                range: item.range,
+                male: item.male,
+                female: item.female,
+                total: item.male + item.female,
+            }))
+        );
+
+        const engagedRows = normalizeAudienceRows(
+            baseRows.map((item) => {
+                const engagementWeight = AGE_ENGAGEMENT_WEIGHT[item.range] ?? 1;
+                const maleBias = item.range === "13-17" || item.range === "18-24" ? 1.05 : 0.94;
+                const femaleBias = item.range === "25-34" || item.range === "35-44" ? 1.1 : 0.98;
+                const male = item.male * engagementWeight * maleBias;
+                const female = item.female * engagementWeight * femaleBias;
+                return {
+                    range: item.range,
+                    male,
+                    female,
+                    total: male + female,
+                };
+            })
+        );
+
+        const getGenderShare = (rows: AudienceAgeRow[]) => {
+            const male = rows.reduce((acc, item) => acc + item.male, 0);
+            const female = rows.reduce((acc, item) => acc + item.female, 0);
+            const total = Math.max(1, male + female);
+            const malePct = Math.round((male / total) * 100);
+            return {
+                malePct,
+                femalePct: 100 - malePct,
+            };
+        };
+
+        const baseGender = getGenderShare(baseRows);
+        const engagedGender = getGenderShare(engagedRows);
+
+        const influencerRange = [...engagedRows].sort((a, b) => b.total - a.total)[0]?.range ?? "25-34";
+        const decisorRange = [...engagedRows].sort((a, b) => {
+            const scoreB = b.total * (AGE_CONVERSION_WEIGHT[b.range] ?? 1);
+            const scoreA = a.total * (AGE_CONVERSION_WEIGHT[a.range] ?? 1);
+            return scoreB - scoreA;
+        })[0]?.range ?? influencerRange;
+
+        const engagementRate = data.organic_impressions.value > 0
+            ? data.engagements.value / data.organic_impressions.value
+            : 0;
+        const deepSignalRate = (data.actions_split.comments + data.actions_split.shares) / Math.max(1, data.total_reactions.value);
+        const churnRate = followersSummary.totalLost / Math.max(1, followersSummary.totalNew);
+
+        const retentionNorm = clamp((videoRetentionSummary.retention3s - 40) / 40, 0, 1);
+        const engagementNorm = clamp(engagementRate / 0.08, 0, 1);
+        const deepSignalNorm = clamp(deepSignalRate / 0.24, 0, 1);
+        const churnNorm = clamp(1 - churnRate / 0.85, 0, 1);
+
+        const qualityScore = Math.round((engagementNorm * 0.34 + deepSignalNorm * 0.2 + retentionNorm * 0.28 + churnNorm * 0.18) * 100);
+        const qualityLabel = qualityScore >= 80 ? "Oceano Azul" : qualityScore >= 40 ? "Atenção" : "Perigo";
+        const qualityTone = qualityScore >= 80 ? "text-emerald-400" : qualityScore >= 40 ? "text-amber-400" : "text-rose-400";
+        const qualityColor = qualityScore >= 80 ? "#10b981" : qualityScore >= 40 ? "#f59e0b" : "#f43f5e";
+        const qualitySubtitle = qualityScore >= 80
+            ? "Base limpa, engajada e com baixa perda."
+            : qualityScore >= 40
+                ? "Boa base, mas com sinais de dispersão."
+                : "Risco alto de audiência fria ou pouco qualificada.";
+
+        const rawBots = clamp(Math.round(4 + (1 - churnNorm) * 10 + (1 - deepSignalNorm) * 6), 3, 18);
+        const rawGhost = clamp(Math.round(8 + (1 - engagementNorm) * 14 + (1 - retentionNorm) * 6), 6, 30);
+        let valuablePct = 100 - rawBots - rawGhost;
+        let ghostPct = rawGhost;
+        let botPct = rawBots;
+        if (valuablePct < 55) {
+            const deficit = 55 - valuablePct;
+            ghostPct = Math.max(6, ghostPct - Math.ceil(deficit * 0.7));
+            botPct = Math.max(3, botPct - Math.floor(deficit * 0.3));
+            valuablePct = 100 - ghostPct - botPct;
+        }
+
+        const topCities = data.demographics.cities_data.slice(0, 8);
+        let outsideShare = 0;
+        let topOutsideCity = "";
+        let topOutsideShare = 0;
+
+        topCities.forEach((city) => {
+            const stateCode = getStateCodeFromCity(city.city);
+            const isOutsideFreight = stateCode !== "" && !FREIGHT_BASE_STATES.has(stateCode);
+            if (isOutsideFreight) {
+                outsideShare += city.percentage;
+                if (city.percentage > topOutsideShare) {
+                    topOutsideShare = city.percentage;
+                    topOutsideCity = city.city;
+                }
+            }
+        });
+
+        outsideShare = Number(outsideShare.toFixed(1));
+        const geoRiskLevel = outsideShare >= 35 ? "ALTO" : outsideShare >= 20 ? "MÉDIO" : "BAIXO";
+        const geoRiskTone = outsideShare >= 35 ? "text-rose-400" : outsideShare >= 20 ? "text-amber-400" : "text-emerald-400";
+        const geoMessage = outsideShare >= 35
+            ? `${outsideShare}% da audiência está fora da malha Sul/Sudeste.`
+            : outsideShare >= 20
+                ? `${outsideShare}% da audiência já demanda operação regional.`
+                : "Distribuição regional está aderente à malha base atual.";
+        const geoRecommendation = outsideShare >= 35
+            ? "Ativar campanhas regionais e revisar promessas de frete/prazo para evitar fricção."
+            : outsideShare >= 20
+                ? "Separar criativos por região e monitorar custo de atendimento fora da zona principal."
+                : "Manter cobertura nacional leve, concentrando investimento em praças de maior conversão.";
+
+        const decisorShare = Number(
+            engagedRows
+                .filter((item) => item.range === decisorRange)
+                .reduce((acc, item) => acc + item.total, 0)
+                .toFixed(1)
+        );
+        const influencerShare = Number(
+            engagedRows
+                .filter((item) => item.range === influencerRange)
+                .reduce((acc, item) => acc + item.total, 0)
+                .toFixed(1)
+        );
+        const conversionInsight = influencerRange !== decisorRange
+            ? `Audiência de volume em ${influencerRange}, mas clique/conversão tende a ${decisorRange}.`
+            : `${decisorRange} concentra volume e conversão no período.`;
+
+        return {
+            baseRows,
+            engagedRows,
+            baseGender,
+            engagedGender,
+            influencerRange,
+            decisorRange,
+            conversionInsight,
+            decisorShare,
+            influencerShare,
+            qualityScore,
+            qualityLabel,
+            qualityTone,
+            qualityColor,
+            qualitySubtitle,
+            botometer: {
+                valuablePct,
+                ghostPct,
+                botPct,
+            },
+            geoAlert: {
+                outsideShare,
+                topOutsideCity,
+                level: geoRiskLevel,
+                tone: geoRiskTone,
+                message: geoMessage,
+                recommendation: geoRecommendation,
+            },
+        };
+    }, [data, followersSummary.totalLost, followersSummary.totalNew, isInstagram, videoRetentionSummary.retention3s]);
+    const audienceRowsForView = useMemo(() => {
+        if (!data?.demographics) return [] as AudienceAgeRow[];
+        if (isInstagram && instagramAudienceModel) {
+            return audienceViewMode === "base_engajada"
+                ? instagramAudienceModel.engagedRows
+                : instagramAudienceModel.baseRows;
+        }
+        return normalizeAudienceRows(
+            data.demographics.age.map((item) => ({
+                range: item.range,
+                male: item.male,
+                female: item.female,
+                total: item.male + item.female,
+            }))
+        );
+    }, [audienceViewMode, data, instagramAudienceModel, isInstagram]);
+    const audienceTotalsForView = useMemo(() => {
+        if (!audienceRowsForView.length) {
+            return {
+                rawTotalMale: 0,
+                rawTotalFemale: 0,
+                totalMale: 0,
+                totalFemale: 0,
+                topAge: null as AudienceAgeRow | null,
+                topAgePercentage: 0,
+                sortedByAge: [] as AudienceAgeRow[],
+            };
+        }
+
+        const rawTotalMale = audienceRowsForView.reduce((acc, item) => acc + item.male, 0);
+        const rawTotalFemale = audienceRowsForView.reduce((acc, item) => acc + item.female, 0);
+        const grandTotal = Math.max(1, rawTotalMale + rawTotalFemale);
+        const totalMale = Math.round((rawTotalMale / grandTotal) * 100);
+        const totalFemale = 100 - totalMale;
+        const topAge = [...audienceRowsForView].sort((a, b) => b.total - a.total)[0] ?? null;
+        const topAgePercentage = topAge ? Math.round(topAge.total) : 0;
+
+        return {
+            rawTotalMale,
+            rawTotalFemale,
+            totalMale,
+            totalFemale,
+            topAge,
+            topAgePercentage,
+            sortedByAge: [...audienceRowsForView].sort((a, b) => (AGE_ORDER[a.range] ?? 99) - (AGE_ORDER[b.range] ?? 99)),
+        };
+    }, [audienceRowsForView]);
+    const instagramAudienceReportSummary = useMemo(() => {
+        if (!isInstagram || !data?.demographics || !instagramAudienceModel) return null;
+
+        const demographics = data.demographics;
+        const genderData = audienceViewMode === "base_engajada"
+            ? instagramAudienceModel.engagedGender
+            : instagramAudienceModel.baseGender;
+        const dominantGender = genderData.femalePct >= genderData.malePct ? "Mulheres" : "Homens";
+        const dominantGenderPct = Math.max(genderData.femalePct, genderData.malePct);
+        const topAge = audienceTotalsForView.topAge;
+        const topAgePct = audienceTotalsForView.topAgePercentage;
+
+        const top3CitiesShare = Number(
+            demographics.cities_data
+                .slice(0, 3)
+                .reduce((acc, item) => acc + item.percentage, 0)
+                .toFixed(1)
+        );
+        const top3CountriesShare = Number(
+            demographics.countries_data
+                .slice(0, 3)
+                .reduce((acc, item) => acc + item.percentage, 0)
+                .toFixed(1)
+        );
+
+        const concentrationLevel = top3CitiesShare >= 60 ? "ALTA" : top3CitiesShare >= 40 ? "MÉDIA" : "BAIXA";
+        const concentrationTone = top3CitiesShare >= 60 ? "text-rose-400" : top3CitiesShare >= 40 ? "text-amber-400" : "text-emerald-400";
+        const recommendation = top3CitiesShare >= 60
+            ? "Expandir conteúdo para regiões secundárias e testar criativos locais por estado."
+            : "Manter cluster principal e abrir testes com públicos lookalike por cidade.";
+
+        return {
+            viewModeLabel: audienceViewMode === "base_engajada" ? "Base Engajada" : "Base Total",
+            dominantGender,
+            dominantGenderPct,
+            topAgeRange: topAge?.range || "—",
+            topAgePct,
+            top3CitiesShare,
+            top3CountriesShare,
+            topLanguage: demographics.top_language,
+            concentrationLevel,
+            concentrationTone,
+            recommendation: `${recommendation} ${instagramAudienceModel.geoAlert.recommendation}`,
+        };
+    }, [audienceTotalsForView.topAge, audienceTotalsForView.topAgePercentage, audienceViewMode, data, instagramAudienceModel, isInstagram]);
     const maxAction = data ? Math.max(data.actions_split.reactions, data.actions_split.comments, data.actions_split.shares) : 1;
 
     if (!data) return <div className="p-20 text-center animate-pulse text-zinc-500">Carregando Insights do {isInstagram ? "Instagram" : "Facebook"}...</div>;
@@ -3211,9 +3571,57 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                 activeTab === "publico" && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
 
+                        {isInstagram && instagramAudienceReportSummary && (
+                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5">
+                                <div className="flex items-center justify-between gap-3 mb-4">
+                                    <div>
+                                        <h3 className="text-sm font-black italic tracking-tight text-blue-500">Resumo para Relatório (Instagram)</h3>
+                                        <p className="text-[11px] text-zinc-500 mt-1">Leitura executiva pronta para apresentação ao cliente.</p>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2 justify-end">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-blue-300 bg-blue-500/10 border border-blue-500/20 rounded-full px-2 py-1">
+                                            {instagramAudienceReportSummary.viewModeLabel}
+                                        </span>
+                                        <span className={`text-[10px] font-black uppercase tracking-widest ${instagramAudienceReportSummary.concentrationTone}`}>
+                                            Concentração {instagramAudienceReportSummary.concentrationLevel}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
+                                        <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Diagnóstico</div>
+                                        <div className="text-sm font-black text-[var(--foreground)] mt-2">
+                                            {instagramAudienceReportSummary.dominantGender} ({instagramAudienceReportSummary.dominantGenderPct}%)
+                                        </div>
+                                        <div className="text-[11px] text-zinc-500 mt-2">
+                                            Faixa dominante: <strong className="text-[var(--foreground)]">{instagramAudienceReportSummary.topAgeRange}</strong> ({instagramAudienceReportSummary.topAgePct}%).
+                                        </div>
+                                    </div>
+                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
+                                        <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Geografia</div>
+                                        <div className="text-[11px] text-zinc-500 mt-2">
+                                            Top 3 cidades concentram <strong className="text-[var(--foreground)]">{instagramAudienceReportSummary.top3CitiesShare}%</strong>.
+                                        </div>
+                                        <div className="text-[11px] text-zinc-500 mt-1">
+                                            Top 3 países concentram <strong className="text-[var(--foreground)]">{instagramAudienceReportSummary.top3CountriesShare}%</strong>.
+                                        </div>
+                                        <div className="text-[11px] text-zinc-500 mt-1">
+                                            Idioma predominante: <strong className="text-[var(--foreground)]">{instagramAudienceReportSummary.topLanguage}</strong>.
+                                        </div>
+                                    </div>
+                                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                                        <div className="text-[10px] uppercase tracking-widest font-bold text-emerald-400">Ação Recomendada</div>
+                                        <div className="text-[11px] text-emerald-100 mt-2 leading-relaxed">
+                                            {instagramAudienceReportSummary.recommendation}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* 1. TOP METRICS CARDS */}
-		                        {data.demographics && (
-		                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+			                        {data.demographics && (
+			                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                                 <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
                                     <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
                                     <div>
@@ -3236,310 +3644,380 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     </div>
                                 </div>
                                 <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
-                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Público Principal</h3>
+                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">{isInstagram ? "Cluster Principal" : "Público Principal"}</h3>
                                     <div>
                                         <div className="text-2xl lg:text-3xl font-black text-[var(--foreground)] tracking-tight break-words leading-none mb-2">{data.demographics.top_audience}</div>
                                         <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
                                     </div>
                                 </div>
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px] col-span-2 lg:col-span-1">
-                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Faixa Etária Principal</h3>
-                                    <div>
-                                        <div className="text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">{data.demographics.top_age_group}</div>
-                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
-                                    </div>
-                                </div>
+	                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px] col-span-2 lg:col-span-1">
+	                                    <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">
+	                                        {isInstagram && audienceViewMode === "base_engajada" ? "Faixa Etária (Engajada)" : "Faixa Etária Principal"}
+	                                    </h3>
+	                                    <div>
+	                                        <div className="text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">
+	                                            {isInstagram ? audienceTotalsForView.topAge?.range ?? data.demographics.top_age_group : data.demographics.top_age_group}
+	                                        </div>
+	                                        {isInstagram && audienceTotalsForView.topAge && (
+	                                            <div className="text-[10px] text-blue-300 font-bold uppercase tracking-wide">
+	                                                {AGE_ECONOMIC_TAGS[audienceTotalsForView.topAge.range] ?? "Cluster"}
+	                                            </div>
+	                                        )}
+	                                        <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
+	                                    </div>
+	                                </div>
 		                            </div>
 		                        )}
 
-	                        {/* 2. DEMOGRAPHIC FUNNEL & SUMMARIES */}
+	                        {/* 2. AUDIENCE INTELLIGENCE */}
 	                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 relative">
-	                            <h3 className="text-lg font-black italic tracking-tight flex items-center gap-2 mb-8">
-	                                <UserGroupIcon className="w-5 h-5 text-blue-500" />
-                                Faixa Etária & Gênero
-                            </h3>
+	                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+	                                <div>
+	                                    <h3 className="text-lg font-black italic tracking-tight flex items-center gap-2">
+	                                        <UserGroupIcon className="w-5 h-5 text-blue-500" />
+	                                        Faixa Etária & Gênero
+	                                    </h3>
+	                                    <p className="text-[11px] text-zinc-500 mt-1">
+	                                        {isInstagram ? "Leitura de volume vs valor para priorizar quem realmente converte." : "Resumo da distribuição demográfica da base."}
+	                                    </p>
+	                                </div>
+	                                {isInstagram && (
+	                                    <div className="inline-flex rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-1">
+	                                        <button
+	                                            onClick={() => setAudienceViewMode("base_total")}
+	                                            className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_total" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+	                                        >
+	                                            Base Total
+	                                        </button>
+	                                        <button
+	                                            onClick={() => setAudienceViewMode("base_engajada")}
+	                                            className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_engajada" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+	                                        >
+	                                            Base Engajada
+	                                        </button>
+	                                    </div>
+	                                )}
+	                            </div>
 
-                            {data.demographics && (() => {
-                                // Calculate Summaries Dynamically
-                                const rawTotalMale = data.demographics.age.reduce((acc, curr) => acc + curr.male, 0);
-                                const rawTotalFemale = data.demographics.age.reduce((acc, curr) => acc + curr.female, 0);
-                                const grandTotal = rawTotalMale + rawTotalFemale;
+	                            {isInstagram && instagramAudienceModel && (
+	                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+	                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
+	                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Quality Score</div>
+	                                        <div className="mt-3 flex items-center gap-4">
+	                                            <div className="relative w-24 h-24 shrink-0">
+	                                                <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+	                                                    <circle cx="60" cy="60" r="44" fill="none" stroke="var(--shell-border)" strokeWidth="12" />
+	                                                    <circle
+	                                                        cx="60"
+	                                                        cy="60"
+	                                                        r="44"
+	                                                        fill="none"
+	                                                        stroke={instagramAudienceModel.qualityColor}
+	                                                        strokeWidth="12"
+	                                                        strokeLinecap="round"
+	                                                        strokeDasharray={`${(instagramAudienceModel.qualityScore / 100) * (2 * Math.PI * 44)} ${2 * Math.PI * 44}`}
+	                                                        className="transition-all duration-700"
+	                                                    />
+	                                                </svg>
+	                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+	                                                    <span className={`text-2xl font-black tracking-tight ${instagramAudienceModel.qualityTone}`}>{instagramAudienceModel.qualityScore}</span>
+	                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">/100</span>
+	                                                </div>
+	                                            </div>
+	                                            <div>
+	                                                <div className={`text-sm font-black ${instagramAudienceModel.qualityTone}`}>{instagramAudienceModel.qualityLabel}</div>
+	                                                <div className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{instagramAudienceModel.qualitySubtitle}</div>
+	                                            </div>
+	                                        </div>
+	                                    </div>
+	                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
+	                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Influenciador vs Decisor</div>
+	                                        <div className="mt-3 flex flex-wrap gap-2">
+	                                            <span className="px-2 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[10px] font-black uppercase tracking-wide">
+	                                                Influenciador {instagramAudienceModel.influencerRange} ({instagramAudienceModel.influencerShare}%)
+	                                            </span>
+	                                            <span className="px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wide">
+	                                                Decisor {instagramAudienceModel.decisorRange} ({instagramAudienceModel.decisorShare}%)
+	                                            </span>
+	                                        </div>
+	                                        <div className="text-[11px] text-zinc-500 mt-3 leading-relaxed">
+	                                            {instagramAudienceModel.conversionInsight}
+	                                        </div>
+	                                    </div>
+	                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
+	                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Botômetro (Prévia)</div>
+	                                        <div className="mt-3 space-y-2">
+	                                            <div className="flex items-center justify-between text-[10px] font-bold">
+	                                                <span className="text-emerald-300 uppercase tracking-wide">Valiosos</span>
+	                                                <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.valuablePct}%</span>
+	                                            </div>
+	                                            <div className="flex items-center justify-between text-[10px] font-bold">
+	                                                <span className="text-amber-300 uppercase tracking-wide">Fantasmas</span>
+	                                                <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.ghostPct}%</span>
+	                                            </div>
+	                                            <div className="flex items-center justify-between text-[10px] font-bold">
+	                                                <span className="text-rose-300 uppercase tracking-wide">Bots/Mass</span>
+	                                                <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.botPct}%</span>
+	                                            </div>
+	                                            <div className="h-2 rounded-full overflow-hidden bg-[var(--shell-border)] flex mt-3">
+	                                                <div className="h-full bg-emerald-500" style={{ width: `${instagramAudienceModel.botometer.valuablePct}%` }} />
+	                                                <div className="h-full bg-amber-400" style={{ width: `${instagramAudienceModel.botometer.ghostPct}%` }} />
+	                                                <div className="h-full bg-rose-500" style={{ width: `${instagramAudienceModel.botometer.botPct}%` }} />
+	                                            </div>
+	                                        </div>
+	                                    </div>
+	                                </div>
+	                            )}
 
-                                // Normalize to 100%
-                                const totalMale = Math.round((rawTotalMale / grandTotal) * 100);
-                                const totalFemale = Math.round((rawTotalFemale / grandTotal) * 100);
+	                            {data.demographics && (() => {
+	                                const topAge = audienceTotalsForView.topAge;
+	                                const topAgePercentage = audienceTotalsForView.topAgePercentage;
+	                                const totalMale = audienceTotalsForView.totalMale;
+	                                const totalFemale = audienceTotalsForView.totalFemale;
+	                                const sortedByAge = audienceTotalsForView.sortedByAge;
+	                                const palette = ["#3b82f6", "#06b6d4", "#14b8a6", "#10b981", "#84cc16", "#eab308", "#f97316"];
 
-                                const sortedByTotal = [...data.demographics.age].sort((a, b) => (b.male + b.female) - (a.male + a.female));
-                                const topAge = sortedByTotal[0];
-                                const topAgePercentage = topAge.male + topAge.female;
+	                                return (
+	                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
+	                                        <div className="flex flex-col p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] h-full relative overflow-hidden">
+	                                            <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-2 tracking-widest z-10 w-full text-center lg:text-left">
+	                                                {isInstagram && audienceViewMode === "base_engajada" ? "Faixa Etária Engajada" : "Total por Faixa Etária"}
+	                                            </h4>
+	                                            <div className="w-full text-left mb-2 z-10 relative">
+	                                                <div className="text-xl font-black text-[var(--foreground)]">
+	                                                    {topAge?.range ?? "—"} anos
+	                                                </div>
+	                                                <div className="text-[10px] text-zinc-500 mt-1">
+	                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{topAgePercentage}%</strong> da leitura atual.
+	                                                </div>
+	                                                {topAge && isInstagram && (
+	                                                    <div className="text-[10px] text-blue-300 mt-1 font-bold uppercase tracking-wide">
+	                                                        {AGE_ECONOMIC_TAGS[topAge.range] ?? "Cluster"}
+	                                                    </div>
+	                                                )}
+	                                            </div>
 
-                                return (
-                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
+	                                            <div className="flex flex-col items-center justify-between h-full gap-4 relative z-10">
+	                                                <div className="relative w-40 h-40 shrink-0">
+	                                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+	                                                        {(() => {
+	                                                            const radius = 40;
+	                                                            const circumference = 2 * Math.PI * radius;
+	                                                            let cumulativePercent = 0;
+	                                                            return sortedByAge.map((item, index) => {
+	                                                                const strokeDasharray = `${(item.total / 100) * circumference} ${circumference}`;
+	                                                                const rotateAngle = (cumulativePercent / 100) * 360;
+	                                                                cumulativePercent += item.total;
+	                                                                return (
+	                                                                    <circle
+	                                                                        key={item.range}
+	                                                                        cx="50"
+	                                                                        cy="50"
+	                                                                        r={radius}
+	                                                                        fill="none"
+	                                                                        stroke={palette[index % palette.length]}
+	                                                                        strokeWidth="20"
+	                                                                        strokeDasharray={strokeDasharray}
+	                                                                        transform={`rotate(${rotateAngle} 50 50)`}
+	                                                                    />
+	                                                                );
+	                                                            });
+	                                                        })()}
+	                                                    </svg>
+	                                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+	                                                        <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
+	                                                            {topAgePercentage}%
+	                                                        </span>
+	                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
+	                                                            {topAge?.range ?? "—"}
+	                                                        </span>
+	                                                    </div>
+	                                                </div>
+	                                                <div className="w-full mt-2 grid grid-cols-1 gap-1.5">
+	                                                    {sortedByAge.map((item, index) => {
+	                                                        const isDecisor = instagramAudienceModel?.decisorRange === item.range;
+	                                                        const isInfluencer = instagramAudienceModel?.influencerRange === item.range && !isDecisor;
+	                                                        return (
+	                                                            <div
+	                                                                key={item.range}
+	                                                                className={`flex items-center justify-between text-[10px] p-1.5 rounded transition-colors ${isDecisor
+	                                                                    ? "bg-emerald-500/10 border border-emerald-500/25"
+	                                                                    : isInfluencer
+	                                                                        ? "bg-blue-500/10 border border-blue-500/25"
+	                                                                        : "hover:bg-[var(--shell-surface)]"
+	                                                                    }`}
+	                                                            >
+	                                                                <div className="flex items-center gap-2 min-w-0">
+	                                                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: palette[index % palette.length] }} />
+	                                                                    <div className="min-w-0">
+	                                                                        <div className="text-zinc-300 font-medium truncate">{item.range} anos</div>
+	                                                                        {isInstagram && (
+	                                                                            <div className="text-[9px] text-zinc-500 truncate">{AGE_ECONOMIC_TAGS[item.range] ?? "Cluster"}</div>
+	                                                                        )}
+	                                                                    </div>
+	                                                                </div>
+	                                                                <span className="font-mono font-black text-[var(--foreground)] px-1.5 py-0.5 rounded">
+	                                                                    {Math.round(item.total)}%
+	                                                                </span>
+	                                                            </div>
+	                                                        );
+	                                                    })}
+	                                                </div>
+	                                            </div>
+	                                        </div>
 
-                                        {/* LEFT: Age Summary (NOW CHART) */}
-                                        <div className="flex flex-col p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] h-full relative overflow-hidden">
-                                            <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-2 tracking-widest z-10 w-full text-center lg:text-left">Total por Faixa Etária</h4>
+	                                        <div className="lg:col-span-2 flex flex-col gap-3">
+	                                            {isInstagram && instagramAudienceModel && (
+	                                                <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
+	                                                    <div className="flex flex-wrap items-center gap-2">
+	                                                        <span className="px-2 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/25 text-[10px] font-black uppercase tracking-wide">
+	                                                            Influenciador: {instagramAudienceModel.influencerRange}
+	                                                        </span>
+	                                                        <span className="px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 text-[10px] font-black uppercase tracking-wide">
+	                                                            Decisor: {instagramAudienceModel.decisorRange}
+	                                                        </span>
+	                                                    </div>
+	                                                    <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed">
+	                                                        {instagramAudienceModel.conversionInsight}
+	                                                    </p>
+	                                                </div>
+	                                            )}
+	                                            <PopulationPyramid
+	                                                data={sortedByAge.map((item) => ({
+	                                                    range: item.range,
+	                                                    male: Number(item.male.toFixed(1)),
+	                                                    female: Number(item.female.toFixed(1)),
+	                                                }))}
+	                                                influencerRange={isInstagram ? instagramAudienceModel?.influencerRange : undefined}
+	                                                decisorRange={isInstagram ? instagramAudienceModel?.decisorRange : undefined}
+	                                            />
+	                                        </div>
 
-                                            {/* Winner Text Block */}
-                                            {(() => {
-                                                const topGroup = [...data.demographics.age].sort((a, b) => (b.male + b.female) - (a.male + a.female))[0];
-                                                const topPercentage = Math.round((topGroup.male + topGroup.female) / (rawTotalMale + rawTotalFemale) * 100);
-                                                return (
-                                                    <div className="w-full text-left mb-2 z-10 relative">
-                                                        <div className="text-xl font-black text-[var(--foreground)]">
-                                                            {topGroup.range} anos
-                                                        </div>
-                                                        <div className="text-[10px] text-zinc-500 mt-1">
-                                                            são a maioria, representando <strong className="text-[var(--foreground)]">{topPercentage}%</strong> do total.
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })()}
+	                                        <div className="flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] h-full relative">
+	                                            <div className="w-full text-left">
+	                                                <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-1 tracking-widest">
+	                                                    {isInstagram && audienceViewMode === "base_engajada" ? "Gênero da Base Engajada" : "Resumo de Gênero"}
+	                                                </h4>
+	                                                <div className="text-xl font-black text-[var(--foreground)]">
+	                                                    {totalFemale > totalMale ? "Mulheres" : "Homens"}
+	                                                </div>
+	                                                <div className="text-[10px] text-zinc-500 mt-1">
+	                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{Math.max(totalFemale, totalMale)}%</strong> da leitura atual.
+	                                                </div>
+	                                            </div>
 
-                                            <div className="flex flex-col items-center justify-between h-full gap-4 relative z-10">
-                                                {/* Single Ring Donut Chart */}
-                                                <div className="relative w-40 h-40 shrink-0">
-                                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                                                        {(() => {
-                                                            const radius = 40;
-                                                            const circumference = 2 * Math.PI * radius;
-                                                            let cumulativePercent = 0;
+	                                            <div className="relative w-40 h-40 flex items-center justify-center">
+	                                                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+	                                                    <circle cx="50" cy="50" r="40" fill="none" stroke="var(--shell-surface)" strokeWidth="20" />
+	                                                    <circle
+	                                                        cx="50"
+	                                                        cy="50"
+	                                                        r="40"
+	                                                        fill="none"
+	                                                        stroke="#fb923c"
+	                                                        strokeWidth="20"
+	                                                        strokeDasharray={`${(totalFemale / 100) * 251.2} 251.2`}
+	                                                        strokeLinecap="round"
+	                                                        className="transition-all duration-700"
+	                                                    />
+	                                                    <circle
+	                                                        cx="50"
+	                                                        cy="50"
+	                                                        r="40"
+	                                                        fill="none"
+	                                                        stroke="#0ea5e9"
+	                                                        strokeWidth="20"
+	                                                        strokeDasharray={`${(totalMale / 100) * 251.2} 251.2`}
+	                                                        strokeDashoffset={-((totalFemale / 100) * 251.2)}
+	                                                        strokeLinecap="round"
+	                                                        className="transition-all duration-700"
+	                                                    />
+	                                                </svg>
+	                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+	                                                    <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
+	                                                        {Math.max(totalFemale, totalMale)}%
+	                                                    </span>
+	                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
+	                                                        {totalFemale > totalMale ? "Mulheres" : "Homens"}
+	                                                    </span>
+	                                                </div>
+	                                            </div>
 
-                                                            // Sort by Age Logic
-                                                            const ageOrder = { '13-17': 1, '18-24': 2, '25-34': 3, '35-44': 4, '45-54': 5, '55-64': 6, '65+': 7 };
-                                                            const sortedByAge = [...data.demographics.age].sort((a, b) => {
-                                                                const orderA = ageOrder[a.range as keyof typeof ageOrder] || 99;
-                                                                const orderB = ageOrder[b.range as keyof typeof ageOrder] || 99;
-                                                                return orderA - orderB;
-                                                            });
+	                                            <div className="w-full space-y-2">
+	                                                <div className="flex justify-between items-center text-[10px] font-bold">
+	                                                    <span className="flex items-center gap-1.5 text-zinc-500 uppercase tracking-wide">
+	                                                        <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+	                                                        Mulheres
+	                                                    </span>
+	                                                    <span className="text-[var(--foreground)]">{totalFemale}%</span>
+	                                                </div>
+	                                                <div className="flex justify-between items-center text-[10px] font-bold">
+	                                                    <span className="flex items-center gap-1.5 text-zinc-500 uppercase tracking-wide">
+	                                                        <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+	                                                        Homens
+	                                                    </span>
+	                                                    <span className="text-[var(--foreground)]">{totalMale}%</span>
+	                                                </div>
+	                                                <div className="w-full h-1.5 bg-[var(--shell-surface)] rounded-full overflow-hidden flex mt-2">
+	                                                    <div className="h-full bg-orange-400" style={{ width: `${totalFemale}%` }} />
+	                                                    <div className="h-full bg-sky-500" style={{ width: `${totalMale}%` }} />
+	                                                </div>
+	                                            </div>
+	                                        </div>
+	                                    </div>
+	                                );
+	                            })()}
+	                        </div>
 
-                                                            // Extended Palette
-                                                            const palette = [
-                                                                '#3b82f6', // blue-500
-                                                                '#06b6d4', // cyan-500
-                                                                '#14b8a6', // teal-500
-                                                                '#10b981', // emerald-500
-                                                                '#84cc16', // lime-500
-                                                                '#eab308', // yellow-500
-                                                                '#f97316', // orange-500
-                                                            ];
-
-                                                            // Render Chart Segments
-                                                            const segments = sortedByAge.map((item, index) => {
-                                                                const totalVal = ((item.male + item.female) / (rawTotalMale + rawTotalFemale) * 100);
-                                                                const strokeDasharray = `${(totalVal / 100) * circumference} ${circumference}`;
-                                                                const rotateAngle = (cumulativePercent / 100) * 360;
-
-                                                                cumulativePercent += totalVal;
-                                                                const color = palette[index % palette.length];
-
-                                                                return (
-                                                                    <circle
-                                                                        key={item.range}
-                                                                        cx="50"
-                                                                        cy="50"
-                                                                        r={radius}
-                                                                        fill="none"
-                                                                        stroke={color}
-                                                                        strokeWidth="20"
-                                                                        strokeDasharray={strokeDasharray}
-                                                                        strokeDashoffset={0}
-                                                                        transform={`rotate(${rotateAngle} 50 50)`}
-                                                                        className="hover:opacity-80 transition-opacity duration-300"
-                                                                    />
-                                                                );
-                                                            });
-
-                                                            return <>{segments}</>;
-                                                        })()}
-                                                    </svg>
-
-                                                    {/* Center Total Label (Absolute over SVG) */}
-                                                    {(() => {
-                                                        const topGroup = [...data.demographics.age].sort((a, b) => (b.male + b.female) - (a.male + a.female))[0];
-                                                        const topPercentage = Math.round((topGroup.male + topGroup.female) / (rawTotalMale + rawTotalFemale) * 100);
-                                                        return (
-                                                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                                <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
-                                                                    {topPercentage}%
-                                                                </span>
-                                                                <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
-                                                                    {topGroup.range}
-                                                                </span>
-                                                            </div>
-                                                        );
-                                                    })()}
-                                                </div>
-
-                                                {/* Detailed Legend List - Two Columns with Separator */}
-                                                <div className="w-full mt-2 flex items-start gap-4">
-                                                    {(() => {
-                                                        // Re-sort for list rendering (Chronological)
-                                                        const ageOrder = { '13-17': 1, '18-24': 2, '25-34': 3, '35-44': 4, '45-54': 5, '55-64': 6, '65+': 7 };
-                                                        const sortedByAge = [...data.demographics.age].sort((a, b) => {
-                                                            const orderA = ageOrder[a.range as keyof typeof ageOrder] || 99;
-                                                            const orderB = ageOrder[b.range as keyof typeof ageOrder] || 99;
-                                                            return orderA - orderB;
-                                                        });
-
-                                                        const palette = [
-                                                            'bg-blue-500',
-                                                            'bg-cyan-500',
-                                                            'bg-teal-500',
-                                                            'bg-emerald-500',
-                                                            'bg-lime-500',
-                                                            'bg-yellow-500',
-                                                            'bg-orange-500',
-                                                        ];
-
-                                                        const renderItem = (item: { range: string; male: number; female: number }, index: number) => {
-                                                            const totalVal = Math.round((item.male + item.female) / (rawTotalMale + rawTotalFemale) * 100);
-                                                            return (
-                                                                <div key={item.range} className="flex items-center justify-between text-[10px] w-full group hover:bg-[var(--shell-surface)] p-1 rounded transition-colors cursor-default">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className={`w-2.5 h-2.5 rounded-full ${palette[index % palette.length]} shadow-sm`}></div>
-                                                                        <span className="text-zinc-400 font-medium group-hover:text-[var(--foreground)] transition-colors">{item.range} anos</span>
-                                                                    </div>
-                                                                    <span className="font-mono font-black text-[var(--foreground)] bg-[var(--shell-surface)] group-hover:bg-[var(--shell-side)] px-1.5 py-0.5 rounded transition-colors">
-                                                                        {totalVal}%
-                                                                    </span>
-                                                                </div>
-                                                            );
-                                                        };
-
-                                                        return (
-                                                            <>
-                                                                {/* Column 1 (First 4) */}
-                                                                <div className="flex-1 flex flex-col gap-1.5">
-                                                                    {sortedByAge.slice(0, 4).map((item, i) => renderItem(item, i))}
-                                                                </div>
-
-                                                                {/* Separator Line */}
-                                                                <div className="w-px bg-zinc-800 self-stretch my-1"></div>
-
-                                                                {/* Column 2 (Last 3) */}
-                                                                <div className="flex-1 flex flex-col gap-1.5">
-                                                                    {sortedByAge.slice(4).map((item, i) => renderItem(item, i + 4))}
-                                                                </div>
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* CENTER: Pyramid */}
-                                        <div className="lg:col-span-2">
-                                            <PopulationPyramid data={data.demographics.age} />
-                                        </div>
-
-                                        {/* RIGHT: Gender Summary */}
-                                        <div className="flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] h-full relative">
-                                            <div className="w-full text-left">
-                                                <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-1 tracking-widest">Resumo de Gênero</h4>
-                                                <div className="text-xl font-black text-[var(--foreground)]">
-                                                    {totalFemale > totalMale ? 'Mulheres' : 'Homens'}
-                                                </div>
-                                                <div className="text-[10px] text-zinc-500 mt-1">
-                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{Math.max(totalFemale, totalMale)}%</strong> do total.
-                                                </div>
-                                            </div>
-
-                                            {/* DONUT CHART */}
-                                            <div className="relative w-40 h-40 flex items-center justify-center">
-                                                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                                                    {/* Background Circle */}
-                                                    <circle
-                                                        cx="50"
-                                                        cy="50"
-                                                        r="40"
-                                                        fill="none"
-                                                        stroke="var(--shell-surface)"
-                                                        strokeWidth="20"
-                                                    />
-                                                    {/* Female Segment (Orange) */}
-                                                    <circle
-                                                        cx="50"
-                                                        cy="50"
-                                                        r="40"
-                                                        fill="none"
-                                                        stroke="#fb923c" // orange-400
-                                                        strokeWidth="20"
-                                                        strokeDasharray={`${(totalFemale / 100) * 251.2} 251.2`}
-                                                        strokeLinecap="round"
-                                                        className="transition-all duration-1000 ease-out"
-                                                    />
-                                                    {/* Male Segment (Blue) - Starts where Female ends via stroke-dashoffset */}
-                                                    <circle
-                                                        cx="50"
-                                                        cy="50"
-                                                        r="40"
-                                                        fill="none"
-                                                        stroke="#0ea5e9" // sky-500
-                                                        strokeWidth="20"
-                                                        strokeDasharray={`${(totalMale / 100) * 251.2} 251.2`}
-                                                        strokeDashoffset={-((totalFemale / 100) * 251.2)}
-                                                        strokeLinecap="round"
-                                                        className="transition-all duration-1000 ease-out"
-                                                    />
-                                                </svg>
-                                                {/* Center Text */}
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                    <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
-                                                        {Math.max(totalFemale, totalMale)}%
-                                                    </span>
-                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
-                                                        {totalFemale > totalMale ? 'Mulheres' : 'Homens'}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* Legend */}
-                                            <div className="w-full space-y-2">
-                                                <div className="flex justify-between items-center text-[10px] font-bold">
-                                                    <span className="flex items-center gap-1.5 text-zinc-500 uppercase tracking-wide">
-                                                        <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                                                        Mulheres
-                                                    </span>
-                                                    <span className="text-[var(--foreground)]">{totalFemale}%</span>
-                                                </div>
-
-                                                <div className="flex justify-between items-center text-[10px] font-bold">
-                                                    <span className="flex items-center gap-1.5 text-zinc-500 uppercase tracking-wide">
-                                                        <div className="w-2 h-2 rounded-full bg-sky-500"></div>
-                                                        Homens
-                                                    </span>
-                                                    <span className="text-[var(--foreground)]">{totalMale}%</span>
-                                                </div>
-                                                {/* Custom Progress Bar for Secondary Visual */}
-                                                <div className="w-full h-1.5 bg-[var(--shell-surface)] rounded-full overflow-hidden flex mt-2">
-                                                    <div className="h-full bg-orange-400" style={{ width: `${totalFemale}%` }}></div>
-                                                    <div className="h-full bg-sky-500" style={{ width: `${totalMale}%` }}></div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                );
-                            })()}
-                        </div>
-
-                        {/* 3. GEOGRAPHY & HEATMAP */}
-                        {data.demographics && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
-                                {/* Countries Table */}
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+	                        {/* 3. GEOGRAPHY & HEATMAP */}
+	                        {data.demographics && (
+	                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
+	                                {isInstagram && instagramAudienceModel && (
+	                                    <div className="lg:col-span-3 rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-5">
+	                                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+	                                            <div>
+	                                                <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Alerta Logístico (Geo-Strategy)</div>
+	                                                <div className="text-sm font-black text-[var(--foreground)] mt-1">
+	                                                    {instagramAudienceModel.geoAlert.message}
+	                                                </div>
+	                                            </div>
+	                                            <span className={`text-[10px] font-black uppercase tracking-widest ${instagramAudienceModel.geoAlert.tone}`}>
+	                                                Risco {instagramAudienceModel.geoAlert.level}
+	                                            </span>
+	                                        </div>
+	                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+	                                            <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-3">
+	                                                <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Audiência fora da malha base</div>
+	                                                <div className="text-2xl font-black text-[var(--foreground)] mt-1">{instagramAudienceModel.geoAlert.outsideShare}%</div>
+	                                            </div>
+	                                            <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-3">
+	                                                <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Cidade crítica</div>
+	                                                <div className="text-sm font-black text-[var(--foreground)] mt-2">
+	                                                    {instagramAudienceModel.geoAlert.topOutsideCity || "Sem concentração fora da malha"}
+	                                                </div>
+	                                            </div>
+	                                            <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-3">
+	                                                <div className="text-[10px] uppercase tracking-widest text-amber-300 font-bold">Ação sugerida</div>
+	                                                <div className="text-[11px] text-amber-100 mt-2 leading-relaxed">
+	                                                    {instagramAudienceModel.geoAlert.recommendation}
+	                                                </div>
+	                                            </div>
+	                                        </div>
+	                                    </div>
+	                                )}
+	                                {/* Countries Table */}
+	                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)]">
-                                        <h3 className="text-lg font-black italic tracking-tight text-blue-500">Fãs por Geografia - País</h3>
-                                        <p className="text-xs text-zinc-500 mt-1">De onde vêm os seus fãs</p>
+                                        <h3 className="text-lg font-black italic tracking-tight text-blue-500">{isInstagram ? "Audiência por Geografia - País" : "Fãs por Geografia - País"}</h3>
+                                        <p className="text-xs text-zinc-500 mt-1">{isInstagram ? "De onde vem a audiência que o conteúdo alcança." : "De onde vêm os seus fãs"}</p>
                                     </div>
                                     <div className="overflow-x-auto flex-1">
                                         <table className="w-full text-left text-xs whitespace-nowrap">
                                             <thead className="bg-[var(--shell-surface)] border-b border-[var(--shell-border)]">
                                                 <tr className="text-zinc-500 font-bold uppercase tracking-wider">
                                                     <th className="px-6 py-3">País</th>
-                                                    <th className="px-6 py-3 text-right">Curtidas da Pág.</th>
-                                                    <th className="px-6 py-3 text-right">Cresc. Absoluto</th>
+                                                    <th className="px-6 py-3 text-right">{isInstagram ? "Contas Alcançadas" : "Curtidas da Pág."}</th>
+                                                    <th className="px-6 py-3 text-right">{isInstagram ? "Variação" : "Cresc. Absoluto"}</th>
                                                     <th className="px-6 py-3 text-right">% do Total</th>
                                                 </tr>
                                             </thead>
@@ -3586,8 +4064,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-start">
                                         <div>
-                                            <h3 className="text-lg font-black italic tracking-tight text-blue-500">Fãs por Geografia - Cidade</h3>
-                                            <p className="text-xs text-zinc-500 mt-1">Cidades onde seus fãs vivem</p>
+                                            <h3 className="text-lg font-black italic tracking-tight text-blue-500">{isInstagram ? "Audiência por Geografia - Cidade" : "Fãs por Geografia - Cidade"}</h3>
+                                            <p className="text-xs text-zinc-500 mt-1">{isInstagram ? "Cidades com maior concentração de audiência ativa." : "Cidades onde seus fãs vivem"}</p>
                                         </div>
                                         <select
                                             value={selectedStateFilter}
@@ -3619,8 +4097,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                             <thead className="bg-[var(--shell-surface)] border-b border-[var(--shell-border)]">
                                                 <tr className="text-zinc-500 font-bold uppercase tracking-wider">
                                                     <th className="px-6 py-3">Cidade</th>
-                                                    <th className="px-6 py-3 text-right">Curtidas da Pág.</th>
-                                                    <th className="px-6 py-3 text-right">Cresc. Absoluto</th>
+                                                    <th className="px-6 py-3 text-right">{isInstagram ? "Contas Alcançadas" : "Curtidas da Pág."}</th>
+                                                    <th className="px-6 py-3 text-right">{isInstagram ? "Variação" : "Cresc. Absoluto"}</th>
                                                     <th className="px-6 py-3 text-right">% do Total</th>
                                                 </tr>
                                             </thead>
@@ -3722,8 +4200,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-center">
                                         <div>
-                                            <h3 className="text-sm font-black italic tracking-tight text-blue-500">Cidades por Idade</h3>
-                                            <p className="text-[10px] text-zinc-500 mt-1">Fãs por faixa etária</p>
+                                            <h3 className="text-sm font-black italic tracking-tight text-blue-500">{isInstagram ? "Cidades por Faixa Etária" : "Cidades por Idade"}</h3>
+                                            <p className="text-[10px] text-zinc-500 mt-1">{isInstagram ? "Contas por faixa etária" : "Fãs por faixa etária"}</p>
                                         </div>
                                         {/* Age Group Selector */}
                                         <div className="flex items-center gap-2 bg-[var(--shell-surface)] rounded-lg p-1 border border-[var(--shell-border)]">
@@ -3757,7 +4235,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                             {/* Column Headers */}
                                             <div className="flex justify-between text-[9px] font-bold text-zinc-500 uppercase px-2 mb-2">
                                                 <span>Cidade</span>
-                                                <span>Fãs</span>
+                                                <span>{isInstagram ? "Contas" : "Fãs"}</span>
                                             </div>
                                             {/* Rows */}
                                             {data.demographics.cities_by_age &&
@@ -3968,19 +4446,39 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 	                                            <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Novos Seguidores</div>
 	                                            <div className="text-3xl font-black tracking-tight text-emerald-400 mt-2">+{formatNumber(followersSummary.totalNew)}</div>
 	                                        </div>
-	                                        <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4 flex items-end justify-between">
-	                                            <div>
-	                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Crescimento</div>
-	                                                <div className={`text-2xl font-black tracking-tight mt-2 ${followersSummary.growthPct >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-	                                                    {followersSummary.growthPct >= 0 ? "+" : ""}{followersSummary.growthPct.toFixed(1)}%
+	                                        <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4 space-y-4">
+	                                            <div className="flex items-end justify-between">
+	                                                <div>
+	                                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Crescimento</div>
+	                                                    <div className={`text-2xl font-black tracking-tight mt-2 ${followersSummary.growthPct >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+	                                                        {followersSummary.growthPct >= 0 ? "+" : ""}{followersSummary.growthPct.toFixed(1)}%
+	                                                    </div>
+	                                                </div>
+	                                                <div className="text-right">
+	                                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Saldo Líquido</div>
+	                                                    <div className={`text-sm font-black mt-2 ${followersSummary.net >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+	                                                        {followersSummary.net >= 0 ? "+" : ""}{formatNumber(followersSummary.net)}
+	                                                    </div>
 	                                                </div>
 	                                            </div>
-	                                            <div className="text-right">
-	                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Saldo Líquido</div>
-	                                                <div className={`text-sm font-black mt-2 ${followersSummary.net >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-	                                                    {followersSummary.net >= 0 ? "+" : ""}{formatNumber(followersSummary.net)}
+	                                            {isInstagram && instagramAudienceModel && (
+	                                                <div className="border-t border-[var(--shell-border)] pt-3 space-y-2">
+	                                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Botômetro (Audience Hygiene)</div>
+	                                                    <div className="flex justify-between items-center text-[10px] font-bold">
+	                                                        <span className="text-emerald-300">Valiosos {instagramAudienceModel.botometer.valuablePct}%</span>
+	                                                        <span className="text-amber-300">Fantasmas {instagramAudienceModel.botometer.ghostPct}%</span>
+	                                                        <span className="text-rose-300">Bots {instagramAudienceModel.botometer.botPct}%</span>
+	                                                    </div>
+	                                                    <div className="h-2 rounded-full overflow-hidden bg-[var(--shell-border)] flex">
+	                                                        <div className="h-full bg-emerald-500" style={{ width: `${instagramAudienceModel.botometer.valuablePct}%` }} />
+	                                                        <div className="h-full bg-amber-400" style={{ width: `${instagramAudienceModel.botometer.ghostPct}%` }} />
+	                                                        <div className="h-full bg-rose-500" style={{ width: `${instagramAudienceModel.botometer.botPct}%` }} />
+	                                                    </div>
+	                                                    <button className="mt-1 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wide bg-blue-500/10 text-blue-300 border border-blue-500/25 hover:bg-blue-500/20 transition-colors">
+	                                                        Ver plano de limpeza
+	                                                    </button>
 	                                                </div>
-	                                            </div>
+	                                            )}
 	                                        </div>
 	                                    </div>
 	                                </div>
