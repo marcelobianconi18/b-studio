@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDownIcon, CalendarDaysIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
 
 const OPTIONS = [
@@ -13,18 +13,40 @@ const OPTIONS = [
     { label: "Todo o período", value: "all" },
 ];
 
-export default function PeriodSelector() {
-    const [selected, setSelected] = useState(OPTIONS[2]); // Default: Últimos 30 dias
+export type PeriodValue = "7d" | "14d" | "30d" | "this_month" | "last_month" | "this_year" | "all" | "custom";
+
+type PeriodOption = { label: string; value: PeriodValue };
+
+type PeriodSelectorProps = {
+    value?: PeriodValue;
+    onChange?: (value: PeriodValue, label: string) => void;
+    variant?: "default" | "flat-red" | "shell-brand";
+};
+
+export default function PeriodSelector({ value = "30d", onChange, variant = "default" }: PeriodSelectorProps) {
+    const initialOption = OPTIONS.find((option) => option.value === value) || OPTIONS[2];
+    const [selected, setSelected] = useState<PeriodOption>(initialOption as PeriodOption); // Default: Últimos 30 dias
     const [isOpen, setIsOpen] = useState(false);
     const [view, setView] = useState<"list" | "custom">("list");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const isFlatRed = variant === "flat-red";
+    const isShellBrand = variant === "shell-brand";
+    const flatRedLabel = `DE: ${selected.label.replace(" - ", " À ").toUpperCase()}`;
+
+    useEffect(() => {
+        const synced = OPTIONS.find((option) => option.value === value);
+        if (synced && synced.value !== selected.value) {
+            setSelected(synced as PeriodOption);
+        }
+    }, [value, selected.value]);
 
     const handleApplyCustom = () => {
         if (startDate && endDate) {
             const start = new Date(startDate).toLocaleDateString('pt-BR');
             const end = new Date(endDate).toLocaleDateString('pt-BR');
             setSelected({ label: `${start} - ${end}`, value: "custom" });
+            onChange?.("custom", `${start} - ${end}`);
             setIsOpen(false);
             setView("list");
         }
@@ -37,13 +59,19 @@ export default function PeriodSelector() {
                     setIsOpen(!isOpen);
                     if (!isOpen) setView("list");
                 }}
-                className="flex items-center gap-2 bg-[var(--shell-side)] hover:bg-[var(--shell-border)] border border-[var(--shell-border)] rounded-full pl-3 pr-4 py-1.5 transition-all text-sm font-medium text-[var(--foreground)] min-w-[160px] justify-between"
+                className={isFlatRed
+                    ? "w-[220px] h-[34px] flex items-center gap-2 bg-white/90 hover:bg-white border-2 border-red-600 rounded-none px-3 transition-all text-black justify-between"
+                    : isShellBrand
+                        ? "w-[264px] h-[38px] flex items-center gap-2 bg-[var(--shell-side)] hover:bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-xl px-3 transition-all text-[var(--foreground)] justify-between shadow-sm"
+                    : "flex items-center gap-2 bg-[var(--shell-side)] hover:bg-[var(--shell-border)] border border-[var(--shell-border)] rounded-full pl-3 pr-4 py-1.5 transition-all text-sm font-medium text-[var(--foreground)] min-w-[160px] justify-between"}
             >
                 <div className="flex items-center gap-2">
-                    <CalendarDaysIcon className="w-4 h-4 text-zinc-500" />
-                    <span className="text-xs font-bold whitespace-nowrap">{selected.label}</span>
+                    {!isFlatRed && <CalendarDaysIcon className={`w-4 h-4 ${isShellBrand ? "text-blue-400" : "text-zinc-500"}`} />}
+                    <span className={isFlatRed ? "text-[14px] font-black tracking-tight whitespace-nowrap" : isShellBrand ? "text-[12px] font-black tracking-wide whitespace-nowrap" : "text-xs font-bold whitespace-nowrap"} style={isFlatRed ? { fontFamily: "Georgia, Times New Roman, serif" } : undefined}>
+                        {isFlatRed ? flatRedLabel : isShellBrand ? selected.label.toUpperCase() : selected.label}
+                    </span>
                 </div>
-                <ChevronDownIcon className={`w-3 h-3 text-zinc-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                <ChevronDownIcon className={`w-3 h-3 ${isFlatRed ? "text-zinc-700" : "text-zinc-500"} transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
 
             {isOpen && (
@@ -56,7 +84,8 @@ export default function PeriodSelector() {
                                     <button
                                         key={option.value}
                                         onClick={() => {
-                                            setSelected(option);
+                                            setSelected(option as PeriodOption);
+                                            onChange?.(option.value as PeriodValue, option.label);
                                             setIsOpen(false);
                                         }}
                                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors text-xs font-medium ${selected.value === option.value ? "bg-blue-500/10 text-blue-500" : "hover:bg-[var(--shell-side)] text-zinc-400 hover:text-zinc-200"}`}

@@ -10,8 +10,10 @@ import Dashboard from "./page";
 import UnifiedInbox from "@/components/UnifiedInbox";
 import Sidebar from "@/components/Sidebar";
 import LiquidShell from "@/components/LiquidShell";
-import SocialInsights from "@/components/social/SocialInsights";
-import ProfileSelector from "@/components/ProfileSelector";
+import FacebookInsightsAnalysis from "@/components/social/FacebookInsightsAnalysis";
+import InstagramInsightsAnalysis from "@/components/social/InstagramInsightsAnalysis";
+import ProfileSelector, { type InsightProfile } from "@/components/ProfileSelector";
+import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 
 const TOP_MENU_ITEMS = [
     "Institucional",
@@ -25,11 +27,66 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const [activeTab, setActiveTab] = useState("home");
     const [collapsed, setCollapsed] = useState(false);
     const [theme, setTheme] = useState<"light" | "dark">("light");
+    const [selectedPeriod, setSelectedPeriod] = useState<PeriodValue>("30d");
+    const [selectedInsightProfile, setSelectedInsightProfile] = useState<InsightProfile>({
+        id: "facebook-client-1",
+        name: "clientedeteste1",
+        role: "Facebook Insight",
+        platform: "facebook",
+    });
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
         window.localStorage.setItem("bstudio-theme", theme);
     }, [theme]);
+
+    const getContextLabel = () => {
+        if (activeTab === "social") return "Insight";
+        if (activeTab === "ads_metrics") return "Ads Insight";
+        if (activeTab === "ads") return "Ads";
+        return "Insight";
+    };
+
+    const renderSystemSelectors = (
+        <div className="pointer-events-auto w-full max-w-[720px] ml-auto h-full py-2 flex items-end justify-between gap-4">
+            <div className="hidden md:flex items-center gap-2 pr-1 min-w-0 self-end translate-x-[-10px]">
+                {selectedInsightProfile.platform === "facebook" ? (
+                    <div className="w-9 h-9 rounded-lg bg-[#1877F2] flex items-center justify-center shadow-sm shrink-0">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
+                    </div>
+                ) : (
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#515BD4] flex items-center justify-center shadow-sm shrink-0">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <rect x="4.5" y="4.5" width="15" height="15" rx="4.5" stroke="#fff" strokeWidth="2" />
+                            <circle cx="12" cy="12" r="3.4" stroke="#fff" strokeWidth="2" />
+                            <circle cx="17.5" cy="6.7" r="1.2" fill="#fff" />
+                        </svg>
+                    </div>
+                )}
+                <div className="flex flex-col leading-none min-w-0">
+                    <span className="text-[32px] font-black tracking-tight text-[var(--foreground)] truncate">
+                        {selectedInsightProfile.platform === "facebook" ? "Facebook" : "Instagram"}
+                    </span>
+                    <span className="text-[21px] font-normal -mt-1 text-[var(--foreground)]">
+                        {getContextLabel()}
+                    </span>
+                </div>
+            </div>
+
+            <div className="flex flex-col gap-1 self-end translate-y-12 md:translate-y-12">
+                <div className="flex flex-col gap-0.5">
+                    <span className="text-[11px] leading-none font-normal uppercase text-[var(--foreground)]">Cliente:</span>
+                    <ProfileSelector variant="shell-brand" selectedProfile={selectedInsightProfile} onChange={setSelectedInsightProfile} />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                    <span className="text-[11px] leading-none font-normal uppercase text-[var(--foreground)]">Período:</span>
+                    <PeriodSelector variant="shell-brand" value={selectedPeriod} onChange={(value) => setSelectedPeriod(value)} />
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}>
@@ -98,46 +155,35 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <main className="p-1 md:p-2 min-h-[calc(100vh-96px)] flex flex-col">
                     {activeTab === "home" && <Dashboard />}
                     {activeTab === "ads_metrics" && (
-                        <LiquidShell title="MÉTRICA ADS" subtitle="ANÁLISE DE PERFORMANCE">
+                        <LiquidShell title="MÉTRICA ADS" subtitle="ANÁLISE DE PERFORMANCE" action={renderSystemSelectors}>
                             <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
                                 Módulo de Métrica Ads em breve.
                             </div>
                         </LiquidShell>
                     )}
                     {activeTab === "ads" && (
-                        <LiquidShell title="TRÁFEGO PAGO" subtitle="GESTÃO DE CAMPANHAS E ROI">
+                        <LiquidShell title="TRÁFEGO PAGO" subtitle="GESTÃO DE CAMPANHAS E ROI" action={renderSystemSelectors}>
                             <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
                                 Módulo de Tráfego Pago em breve.
                             </div>
                         </LiquidShell>
                     )}
                     {activeTab === "social" && (
-                        <LiquidShell title="MÉTRICA SOCIAL" subtitle="Facebook Insights & Crescimento" action={
-                            <div className="flex items-center gap-6">
-                                <div className="flex flex-col items-end mr-2">
-                                    <span className="text-[10px] font-bold uppercase text-zinc-500 leading-none mb-1">Cliente:</span>
-                                    <div className="flex items-center gap-2">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2">
-                                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                        </svg>
-                                        <div className="flex flex-col leading-none">
-                                            <span className="text-[11px] font-black text-[var(--foreground)] uppercase tracking-wide">Facebook Insight</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <ProfileSelector />
-                            </div>
-                        }>
-                            <SocialInsights />
+                        <LiquidShell
+                            title="MÉTRICA SOCIAL"
+                            subtitle={selectedInsightProfile.platform === "facebook" ? "Facebook Insights & Crescimento" : "Instagram Insights & Crescimento"}
+                            action={renderSystemSelectors}
+                        >
+                            {selectedInsightProfile.platform === "facebook" ? <FacebookInsightsAnalysis /> : <InstagramInsightsAnalysis />}
                         </LiquidShell>
                     )}
                     {activeTab === "inbox" && (
-                        <LiquidShell title="MESA DE VENDAS" subtitle="INBOX PRIORITÁRIO">
+                        <LiquidShell title="MESA DE VENDAS" subtitle="INBOX PRIORITÁRIO" action={renderSystemSelectors}>
                             <UnifiedInbox />
                         </LiquidShell>
                     )}
                     {activeTab === "profile" && (
-                        <LiquidShell title="PERFIL" subtitle="GERENCIAMENTO DE CONTA">
+                        <LiquidShell title="PERFIL" subtitle="GERENCIAMENTO DE CONTA" action={renderSystemSelectors}>
                             <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
                                 Módulo de Perfil em breve.
                             </div>

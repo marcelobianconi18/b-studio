@@ -1,265 +1,446 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Scene, HeatmapLayer, PointLayer, PolygonLayer } from '@antv/l7';
-import { Map } from '@antv/l7-maps';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import maplibregl, { type Map as MapLibreMap, type GeoJSONSource } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
-// Approximate coordinates for Brazil's major state centers to anchor the heatmap
 const STATE_LOCATIONS: Record<string, { lat: number; lng: number; intensity: number }> = {
-    'SP': { lat: -23.55, lng: -46.63, intensity: 10 },
-    'RJ': { lat: -22.90, lng: -43.17, intensity: 9 },
-    'MG': { lat: -19.91, lng: -43.93, intensity: 8 },
-    'DF': { lat: -15.78, lng: -47.92, intensity: 7 },
-    'BA': { lat: -12.97, lng: -38.50, intensity: 6 },
-    'RS': { lat: -30.03, lng: -51.22, intensity: 5 },
-    'PE': { lat: -8.04, lng: -34.87, intensity: 5 },
-    'CE': { lat: -3.71, lng: -38.54, intensity: 4 },
-    'PA': { lat: -1.45, lng: -48.50, intensity: 4 },
-    'AM': { lat: -3.10, lng: -60.02, intensity: 3 },
-    'GO': { lat: -16.68, lng: -49.26, intensity: 5 },
-    'PR': { lat: -25.42, lng: -49.27, intensity: 5 },
-    'SC': { lat: -27.59, lng: -48.54, intensity: 4 },
-    'ES': { lat: -20.31, lng: -40.33, intensity: 4 },
-    'MA': { lat: -2.53, lng: -44.30, intensity: 3 },
-    'MT': { lat: -15.60, lng: -56.09, intensity: 3 },
-    'MS': { lat: -20.46, lng: -54.62, intensity: 3 },
-    'RN': { lat: -5.79, lng: -35.20, intensity: 3 },
-    'PB': { lat: -7.11, lng: -34.86, intensity: 3 },
-    'AL': { lat: -9.66, lng: -35.73, intensity: 2 },
-    'SE': { lat: -10.94, lng: -37.07, intensity: 2 },
-    'PI': { lat: -5.09, lng: -42.80, intensity: 2 },
-    'TO': { lat: -10.17, lng: -48.33, intensity: 2 },
-    'RO': { lat: -8.76, lng: -63.90, intensity: 2 },
-    'AC': { lat: -9.97, lng: -67.82, intensity: 1 },
-    'AP': { lat: 0.03, lng: -51.06, intensity: 1 },
-    'RR': { lat: 2.82, lng: -60.67, intensity: 1 },
+    SP: { lat: -23.55, lng: -46.63, intensity: 10 },
+    RJ: { lat: -22.9, lng: -43.17, intensity: 9 },
+    MG: { lat: -19.91, lng: -43.93, intensity: 8 },
+    DF: { lat: -15.78, lng: -47.92, intensity: 7 },
+    BA: { lat: -12.97, lng: -38.5, intensity: 6 },
+    RS: { lat: -30.03, lng: -51.22, intensity: 5 },
+    PE: { lat: -8.04, lng: -34.87, intensity: 5 },
+    CE: { lat: -3.71, lng: -38.54, intensity: 4 },
+    PA: { lat: -1.45, lng: -48.5, intensity: 4 },
+    AM: { lat: -3.1, lng: -60.02, intensity: 3 },
+    GO: { lat: -16.68, lng: -49.26, intensity: 5 },
+    PR: { lat: -25.42, lng: -49.27, intensity: 5 },
+    SC: { lat: -27.59, lng: -48.54, intensity: 4 },
+    ES: { lat: -20.31, lng: -40.33, intensity: 4 },
+    MA: { lat: -2.53, lng: -44.3, intensity: 3 },
+    MT: { lat: -15.6, lng: -56.09, intensity: 3 },
+    MS: { lat: -20.46, lng: -54.62, intensity: 3 },
+    RN: { lat: -5.79, lng: -35.2, intensity: 3 },
+    PB: { lat: -7.11, lng: -34.86, intensity: 3 },
+    AL: { lat: -9.66, lng: -35.73, intensity: 2 },
+    SE: { lat: -10.94, lng: -37.07, intensity: 2 },
+    PI: { lat: -5.09, lng: -42.8, intensity: 2 },
+    TO: { lat: -10.17, lng: -48.33, intensity: 2 },
+    RO: { lat: -8.76, lng: -63.9, intensity: 2 },
+    AC: { lat: -9.97, lng: -67.82, intensity: 1 },
+    AP: { lat: 0.03, lng: -51.06, intensity: 1 },
+    RR: { lat: 2.82, lng: -60.67, intensity: 1 },
 };
 
-const BrazilFollowersMap = () => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const sceneRef = useRef<Scene | null>(null);
-    const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark, will update on mount
+type FeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Geometry, { value: number; state: string }>;
+type ViewMode = 'gender' | 'age';
+type GenderFilter = 'all' | 'female' | 'male';
+type AgeFilter = '-18' | '18-24' | '25-34' | '35-44' | '45-54' | '55-64' | '65+';
+type StateProfile = Record<string, number>;
 
-    // Theme Detection
+const buildFollowersGeoJSON = (): FeatureCollection => {
+    const points: Array<{ lat: number; lng: number; value: number; state: string }> = [];
+
+    Object.entries(STATE_LOCATIONS).forEach(([state, location]) => {
+        points.push({ lat: location.lat, lng: location.lng, value: location.intensity * 10, state });
+
+        const count = location.intensity * 20;
+        for (let i = 0; i < count; i++) {
+            const radius = Math.random() * 2.5;
+            const spread = (radius * (Math.random() + Math.random())) / 2;
+
+            points.push({
+                lat: location.lat + (Math.random() - 0.5) * spread,
+                lng: location.lng + (Math.random() - 0.5) * spread,
+                value: Math.random() * location.intensity * 10,
+                state,
+            });
+        }
+    });
+
+    return {
+        type: 'FeatureCollection',
+        features: points.map((point) => ({
+            type: 'Feature',
+            properties: { value: point.value, state: point.state },
+            geometry: { type: 'Point', coordinates: [point.lng, point.lat] },
+        })),
+    };
+};
+
+const getStateBias = (state: string, key: string) => {
+    const hash = Array.from(`${state}-${key}`).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return 0.85 + (hash % 30) / 100;
+};
+
+const createBaseProfile = (value: number): StateProfile =>
+    Object.keys(STATE_LOCATIONS).reduce((acc, state) => {
+        acc[state] = value;
+        return acc;
+    }, {} as StateProfile);
+
+const createProfileFromHighlights = (highlights: string[], strong = 2.8, base = 0.08): StateProfile => {
+    const profile = createBaseProfile(base);
+    highlights.forEach((state) => {
+        profile[state] = strong;
+    });
+    return profile;
+};
+
+const FEMALE_PROFILE = createProfileFromHighlights(['SP', 'RJ', 'MG', 'ES', 'PR', 'SC', 'RS', 'BA', 'PE', 'DF'], 2.9, 0.07);
+const MALE_PROFILE = createProfileFromHighlights(['PA', 'AM', 'MT', 'MS', 'GO', 'RO', 'TO', 'RR', 'MA', 'CE'], 2.9, 0.07);
+
+const AGE_PROFILES: Record<AgeFilter, StateProfile> = {
+    '-18': createProfileFromHighlights(['PE', 'CE', 'BA', 'PA', 'AM', 'MA', 'PB', 'RN', 'AL'], 3.0, 0.06),
+    '18-24': createProfileFromHighlights(['RJ', 'SP', 'BA', 'PE', 'CE', 'DF', 'GO', 'MG'], 3.0, 0.06),
+    '25-34': createProfileFromHighlights(['SP', 'MG', 'PR', 'SC', 'RS', 'DF', 'ES', 'RJ'], 3.0, 0.06),
+    '35-44': createProfileFromHighlights(['MG', 'GO', 'BA', 'PR', 'RS', 'MS', 'MT', 'SP'], 3.0, 0.06),
+    '45-54': createProfileFromHighlights(['RS', 'SC', 'PR', 'SP', 'MG', 'RJ', 'ES'], 3.0, 0.06),
+    '55-64': createProfileFromHighlights(['RS', 'SC', 'PR', 'MG', 'SP', 'RJ'], 3.0, 0.06),
+    '65+': createProfileFromHighlights(['RS', 'SC', 'PR', 'MG', 'RJ', 'ES'], 3.0, 0.06),
+};
+
+const loadBrazilGeoJSON = async () => {
+    const cacheKey = 'brazil-states-geojson';
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+        return JSON.parse(cached);
+    }
+
+    const response = await fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson');
+    const geojson = await response.json();
+    sessionStorage.setItem(cacheKey, JSON.stringify(geojson));
+    return geojson;
+};
+
+interface BrazilFollowersMapProps {
+    title?: string;
+    subtitle?: string;
+    spanTwoRows?: boolean;
+}
+
+const BrazilFollowersMap = ({
+    title = "Mapa de Calor",
+    subtitle = "Concentração de seguidores por região",
+    spanTwoRows = true,
+}: BrazilFollowersMapProps) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const mapRef = useRef<MapLibreMap | null>(null);
+    const [isDarkMode, setIsDarkMode] = useState(true);
+    const [viewMode, setViewMode] = useState<ViewMode>('gender');
+    const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
+    const [ageFilter, setAgeFilter] = useState<AgeFilter>('25-34');
+
+    const baseMapData = useMemo(() => buildFollowersGeoJSON(), []);
+    const mapData = useMemo(() => {
+        const modeKey = viewMode === 'gender' ? `gender-${genderFilter}` : `age-${ageFilter}`;
+        const profile = viewMode === 'gender'
+            ? genderFilter === 'female'
+                ? FEMALE_PROFILE
+                : genderFilter === 'male'
+                    ? MALE_PROFILE
+                    : createBaseProfile(1)
+            : AGE_PROFILES[ageFilter];
+
+        return {
+            type: 'FeatureCollection',
+            features: baseMapData.features.map((feature) => {
+                const state = feature.properties.state;
+                const bias = getStateBias(state, modeKey);
+                const profileMultiplier = profile[state] ?? 1;
+                const nextValue = feature.properties.value * profileMultiplier * bias;
+                return {
+                    ...feature,
+                    properties: {
+                        ...feature.properties,
+                        value: nextValue,
+                    },
+                };
+            }),
+        } as FeatureCollection;
+    }, [ageFilter, baseMapData, genderFilter, viewMode]);
+
     useEffect(() => {
-        // Function to check theme
         const checkTheme = () => {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            setIsDarkMode(isDark);
+            const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+            setIsDarkMode(dark);
         };
 
-        // Initial check
         checkTheme();
-
-        // Observer for theme changes
         const observer = new MutationObserver(checkTheme);
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
         return () => observer.disconnect();
-    }, []);
-
-    // Generate heatmap data points based on state intensity
-    const mapData = useMemo(() => {
-        const points: Array<{ lat: number; lng: number; value: number }> = [];
-
-        Object.values(STATE_LOCATIONS).forEach(loc => {
-            // Add core point
-            points.push({ ...loc, value: loc.intensity * 10 });
-
-            // Add scattered points around the center for heatmap spread
-            const count = loc.intensity * 20; // More points for higher intensity
-            for (let i = 0; i < count; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const radius = Math.random() * 2.5; // Spread radius in degrees approx
-                // Gaussian-like distribution (center weighted)
-                const r = radius * (Math.random() + Math.random()) / 2;
-
-                points.push({
-                    lat: loc.lat + (Math.random() - 0.5) * r,
-                    lng: loc.lng + (Math.random() - 0.5) * r,
-                    value: Math.random() * loc.intensity
-                });
-            }
-        });
-        return {
-            type: 'FeatureCollection', features: points.map(p => ({
-                type: 'Feature',
-                properties: { value: p.value },
-                geometry: { type: 'Point', coordinates: [p.lng, p.lat] }
-            }))
-        };
-    }, []);
+    }, [baseMapData]);
 
     useEffect(() => {
-        if (!containerRef.current) return;
+        if (!containerRef.current || mapRef.current) return;
 
-        // Cleanup previous scene if exists to allow full re-render with new theme colors
-        if (sceneRef.current) {
-            sceneRef.current.destroy();
-        }
+        const container = containerRef.current;
+        container.innerHTML = '';
 
-        // Define colors based on theme
-        // Light Mode: Light Gray states, Darker Gray borders
-        // Dark Mode: Dark Gray states, Zinc borders
-        const stateFillColor = isDarkMode ? '#1e1e1e' : '#e4e4e7';
-        const stateStrokeColor = isDarkMode ? '#3f3f46' : '#d4d4d8';
-        const stateHoverColor = isDarkMode ? '#27272a' : '#d4d4d8';
+        const initialDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-        // Initialize Scene with a Blank Map (we will draw GeoJSON)
-        const scene = new Scene({
-            id: containerRef.current.id,
-            map: new Map({
-                center: [-50, -15], // Approximate center of Brazil
-                pitch: 0,
-                style: 'blank', // No tiles, we draw our own world
-                zoom: 3,
-                minZoom: 2,
-                maxZoom: 10,
-                // Using style: 'blank' avoids the need for external tiles.
-                // If tiles are needed, provide a token via env or props.
-                // token: '...' 
-            }),
-            logoVisible: false,
+        const map = new maplibregl.Map({
+            container,
+            style: {
+                version: 8,
+                sources: {},
+                layers: [
+                    {
+                        id: 'background',
+                        type: 'background',
+                        paint: {
+                            'background-color': initialDark ? '#18181b' : '#f4f4f5',
+                        },
+                    },
+                ],
+            },
+            center: [-52, -15],
+            zoom: 3.1,
+            minZoom: 2,
+            maxZoom: 8,
+            dragRotate: false,
+            pitchWithRotate: false,
+            touchPitch: false,
+            attributionControl: false,
+            antialias: true,
+            preserveDrawingBuffer: false,
         });
 
-        sceneRef.current = scene;
+        mapRef.current = map;
 
-        scene.on('loaded', async () => {
-            // 0. Fetch Brazil GeoJSON for the Base Map
+        map.on('load', async () => {
             try {
-                // Check if we have cached data to avoid refetching
-                let brazilGeoJSON;
-                const cachedData = sessionStorage.getItem('brazil-states-geojson');
-                if (cachedData) {
-                    brazilGeoJSON = JSON.parse(cachedData);
-                } else {
-                    const response = await fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson');
-                    brazilGeoJSON = await response.json();
-                    sessionStorage.setItem('brazil-states-geojson', JSON.stringify(brazilGeoJSON));
-                }
+                const brazilGeoJSON = await loadBrazilGeoJSON();
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-                // 1. Base Layer: Brazil States Shapes
-                const brazilLayer = new PolygonLayer({})
-                    .source(brazilGeoJSON)
-                    .shape('fill')
-                    .color(stateFillColor)
-                    .style({
-                        opacity: 1,
-                        stroke: stateStrokeColor,
-                        strokeWidth: 1
-                    });
+                map.addSource('brazil-states', {
+                    type: 'geojson',
+                    data: brazilGeoJSON,
+                });
 
-                scene.addLayer(brazilLayer);
+                map.addLayer({
+                    id: 'brazil-fill',
+                    type: 'fill',
+                    source: 'brazil-states',
+                    paint: {
+                        'fill-color': isDark ? '#1e1e1e' : '#d4d4d8',
+                        'fill-opacity': 1,
+                    },
+                });
 
-                // 1.1 Highlight/Hover Layer
-                const highlightLayer = new PolygonLayer({})
-                    .source(brazilGeoJSON)
-                    .shape('line')
-                    .color(stateHoverColor)
-                    .style({
-                        opacity: 0.5
-                    });
-                scene.addLayer(highlightLayer);
+                map.addLayer({
+                    id: 'brazil-border',
+                    type: 'line',
+                    source: 'brazil-states',
+                    paint: {
+                        'line-color': isDark ? '#3f3f46' : '#c4c4ce',
+                        'line-width': 1.2,
+                    },
+                });
 
-                // 2. Heatmap Layer using parsed data
-                const heatmapLayer = new HeatmapLayer({})
-                    .source(mapData)
-                    .shape('heatmap')
-                    .size('value', [0, 1.0]) // Size scaling based on value
-                    .style({
-                        intensity: 3,
-                        radius: 20,
-                        opacity: 0.8, // Slightly less opaque to see states better
-                        rampColors: {
-                            colors: [
-                                'rgba(46, 138, 230, 0)', // Transparent start
-                                '#2E8AE6', // Light Blue (Low)
-                                '#69D1AB', // Cyan/Green
-                                '#DAF291', // Yellow-Green
-                                '#FFD85C', // Orange
-                                '#FF9D4D', // Red-Orange
-                                '#FF6B3B', // Red (High)
-                            ],
-                            positions: [0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0],
-                        },
-                    });
+                map.addSource('followers', {
+                    type: 'geojson',
+                    data: mapData,
+                });
 
-                scene.addLayer(heatmapLayer);
-
-                // 3. Point Layer for Major Cities (Pulsing Effect)
-                const cityData = [
-                    { name: 'São Paulo', lat: -23.55, lng: -46.63, value: 100 },
-                    { name: 'Rio de Janeiro', lat: -22.90, lng: -43.17, value: 80 },
-                    { name: 'Brasília', lat: -15.78, lng: -47.92, value: 60 }
-                ];
-
-                const pointLayer = new PointLayer()
-                    .source(cityData, {
-                        parser: {
-                            type: 'json',
-                            x: 'lng',
-                            y: 'lat'
-                        }
-                    })
-                    .shape('circle')
-                    .size('value', [10, 20])
-                    .color('#3b82f6')
-                    .style({
-                        opacity: 0.6,
-                        strokeWidth: 2,
-                        stroke: isDarkMode ? '#fff' : '#fff' // Always white stroke for contrast against blue dot
-                    })
-                    .animate(true);
-
-                scene.addLayer(pointLayer);
-
+                map.addLayer({
+                    id: 'followers-heat',
+                    type: 'heatmap',
+                    source: 'followers',
+                    maxzoom: 8,
+                    paint: {
+                        'heatmap-weight': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'value'],
+                            0, 0,
+                            100, 1,
+                        ],
+                        'heatmap-intensity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            2, 0.8,
+                            8, 1.8,
+                        ],
+                        'heatmap-radius': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            2, 12,
+                            8, 34,
+                        ],
+                        'heatmap-opacity': 0.92,
+                        'heatmap-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['heatmap-density'],
+                            0, 'rgba(46, 138, 230, 0)',
+                            0.2, '#2E8AE6',
+                            0.4, '#69D1AB',
+                            0.6, '#DAF291',
+                            0.75, '#FFD85C',
+                            0.9, '#FF9D4D',
+                            1, '#FF6B3B',
+                        ],
+                    },
+                });
             } catch (error) {
-                console.error("Failed to fetch Brazil GeoJSON:", error);
+                console.error('Failed to initialize Brazil followers map:', error);
             }
         });
 
         return () => {
-            if (sceneRef.current) {
-                sceneRef.current.destroy();
-                sceneRef.current = null;
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
             }
+            container.innerHTML = '';
         };
-    }, [mapData, isDarkMode]); // Re-run when detection changes
+    }, []);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const observer = new ResizeObserver(() => {
+            mapRef.current?.resize();
+        });
+
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map || !map.isStyleLoaded()) return;
+
+        const bg = isDarkMode ? '#18181b' : '#f4f4f5';
+        const fill = isDarkMode ? '#1e1e1e' : '#d4d4d8';
+        const border = isDarkMode ? '#3f3f46' : '#c4c4ce';
+
+        if (map.getLayer('background')) {
+            map.setPaintProperty('background', 'background-color', bg);
+        }
+        if (map.getLayer('brazil-fill')) {
+            map.setPaintProperty('brazil-fill', 'fill-color', fill);
+        }
+        if (map.getLayer('brazil-border')) {
+            map.setPaintProperty('brazil-border', 'line-color', border);
+        }
+    }, [isDarkMode]);
+
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!map || !map.getSource('followers')) return;
+
+        const source = map.getSource('followers') as GeoJSONSource;
+        source.setData(mapData);
+    }, [mapData]);
 
     return (
-        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full relative lg:row-span-2 min-h-[400px]">
-            {/* Header */}
+        <div className={`bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full relative min-h-[400px] ${spanTwoRows ? "lg:row-span-2" : ""}`}>
             <div className="absolute top-0 left-0 w-full p-6 z-10 bg-gradient-to-b from-[var(--shell-surface)] to-transparent pointer-events-none">
-                <h3 className="text-lg font-black italic tracking-tight text-blue-500">Mapa de Calor</h3>
-                <p className="text-xs text-zinc-500 mt-1">Concentração de seguidores por região</p>
+                <div className="flex items-start justify-between gap-4">
+                    <div className="max-w-[320px]">
+                        <h3 className="text-lg font-black italic tracking-tight text-blue-500">{title}</h3>
+                        <p className="text-xs text-zinc-500 mt-1">{subtitle}</p>
+                        <p className="text-[10px] text-zinc-400 mt-1">Visualização com dados simulados por perfil</p>
+                    </div>
 
-                {/* Stats Overlay */}
-                <div className="flex gap-4 mt-4">
-                    <div className="flex flex-col">
+                    <div className="hidden md:flex items-stretch justify-end gap-3 pointer-events-auto ml-auto min-w-[320px]">
+                        <div className="px-4 py-3 rounded-xl border border-blue-500/35 bg-gradient-to-r from-blue-500/20 to-blue-500/5 shadow-[0_0_0_1px_rgba(59,130,246,0.15)] min-w-[170px]">
+                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Top Região</span>
+                            <div className="text-base font-black text-blue-500 leading-tight mt-1">Sudeste (48%)</div>
+                        </div>
+                        <div className="px-4 py-3 rounded-xl border border-emerald-500/35 bg-gradient-to-r from-emerald-500/20 to-emerald-500/5 shadow-[0_0_0_1px_rgba(16,185,129,0.15)] min-w-[160px]">
+                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Top Estado</span>
+                            <div className="text-base font-black text-emerald-500 leading-tight mt-1">São Paulo</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-3 md:hidden flex items-stretch gap-2 pointer-events-auto">
+                    <div className="px-3 py-2 rounded-xl border border-blue-500/35 bg-blue-500/10 min-w-[140px]">
                         <span className="text-[10px] text-zinc-500 uppercase font-bold">Top Região</span>
-                        <span className="text-sm font-black text-[var(--foreground)]">Sudeste (48%)</span>
+                        <div className="text-sm font-black text-blue-500 leading-tight mt-0.5">Sudeste (48%)</div>
                     </div>
-                    <div className="flex flex-col">
+                    <div className="px-3 py-2 rounded-xl border border-emerald-500/35 bg-emerald-500/10 min-w-[130px]">
                         <span className="text-[10px] text-zinc-500 uppercase font-bold">Top Estado</span>
-                        <span className="text-sm font-black text-[var(--foreground)]">São Paulo</span>
+                        <div className="text-sm font-black text-emerald-500 leading-tight mt-0.5">São Paulo</div>
                     </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2 pointer-events-auto">
+                    <button
+                        type="button"
+                        onClick={() => setViewMode('gender')}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${viewMode === 'gender'
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-[var(--shell-surface)] text-zinc-500 border-[var(--shell-border)] hover:border-blue-400/60'
+                            }`}
+                    >
+                        Gênero
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setViewMode('age')}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${viewMode === 'age'
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-[var(--shell-surface)] text-zinc-500 border-[var(--shell-border)] hover:border-blue-400/60'
+                            }`}
+                    >
+                        Faixa etária
+                    </button>
+
+                    {viewMode === 'gender' && (
+                        <>
+                            {(['all', 'female', 'male'] as const).map((option) => (
+                                <button
+                                    key={option}
+                                    type="button"
+                                    onClick={() => setGenderFilter(option)}
+                                    className={`px-2 py-1 rounded-full text-[10px] font-bold border transition-colors ${genderFilter === option
+                                        ? 'bg-zinc-800 text-white border-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100'
+                                        : 'bg-[var(--shell-surface)] text-zinc-500 border-[var(--shell-border)] hover:border-zinc-500/60'
+                                        }`}
+                                >
+                                    {option === 'all' ? 'Todos' : option === 'female' ? 'Feminino' : 'Masculino'}
+                                </button>
+                            ))}
+                        </>
+                    )}
+
+                    {viewMode === 'age' && (
+                        <>
+                            {(['-18', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'] as const).map((option) => (
+                                <button
+                                    key={option}
+                                    type="button"
+                                    onClick={() => setAgeFilter(option)}
+                                    className={`px-2 py-1 rounded-full text-[10px] font-bold border transition-colors ${ageFilter === option
+                                        ? 'bg-zinc-800 text-white border-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100'
+                                        : 'bg-[var(--shell-surface)] text-zinc-500 border-[var(--shell-border)] hover:border-zinc-500/60'
+                                        }`}
+                                >
+                                    {option}
+                                </button>
+                            ))}
+                        </>
+                    )}
                 </div>
             </div>
 
-            {/* Map Container */}
             <div
-                id="l7-map-container"
                 ref={containerRef}
                 className="w-full h-full flex-1 relative z-0"
-                style={{
-                    minHeight: '400px',
-                    // Transparent bg to show parent color, but fallback if needed
-                    backgroundColor: 'transparent'
-                }}
+                style={{ minHeight: '400px' }}
             />
 
-            {/* Legend */}
             <div className="absolute bottom-6 right-6 bg-[var(--shell-surface)]/90 backdrop-blur border border-[var(--shell-border)] p-2 rounded-lg text-[10px] z-10 pointer-events-none">
                 <div className="flex items-center gap-2 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-[#FF6B3B] animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-[#FF6B3B]"></span>
                     <span className="text-zinc-400">Alta Densidade</span>
                 </div>
                 <div className="flex items-center gap-2">

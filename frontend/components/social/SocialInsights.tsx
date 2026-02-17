@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import PeriodSelector from "@/components/PeriodSelector";
+import { useEffect, useState, useMemo, type MouseEvent as ReactMouseEvent } from "react";
+import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 import dynamic from 'next/dynamic';
 
 const BrazilFollowersMap = dynamic(() => import('./BrazilFollowersMap'), {
@@ -76,6 +76,114 @@ const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
     if (num >= 1000) return (num / 1000).toFixed(0) + " mil";
     return num.toString();
+};
+
+type FollowersInterval = "daily" | "weekly" | "monthly";
+
+type FollowersSeriesPoint = {
+    label: string;
+    gained: number;
+    lost: number;
+    net: number;
+    cumulative: number;
+};
+
+type PeriodFollowersSnapshot = {
+    newFollowers: number;
+    net: number;
+    growthPct: number;
+};
+
+const mulberry32 = (seed: number) => {
+    return () => {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+};
+
+const formatShortPtBr = (date: Date) => {
+    const raw = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+    return raw.replace(".", "").toUpperCase();
+};
+
+const startOfWeekMonday = (d: Date) => {
+    const date = new Date(d);
+    const day = date.getDay(); // 0..6 (Sun..Sat)
+    const diff = (day === 0 ? -6 : 1) - day; // move to Monday
+    date.setDate(date.getDate() + diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+};
+
+const makeFollowersSeries = (interval: FollowersInterval, seedBase: number): FollowersSeriesPoint[] => {
+    const now = new Date();
+    const seed = Math.floor(seedBase % 1_000_000) + (interval === "daily" ? 11 : interval === "weekly" ? 22 : 33);
+    const rand = mulberry32(seed);
+
+    const pointsCount = interval === "daily" ? 7 : 12;
+    const labels: string[] = [];
+
+    if (interval === "daily") {
+        for (let i = pointsCount - 1; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(d.getDate() - i);
+            labels.push(formatShortPtBr(d));
+        }
+    } else if (interval === "weekly") {
+        const base = startOfWeekMonday(now);
+        for (let i = pointsCount - 1; i >= 0; i--) {
+            const d = new Date(base);
+            d.setDate(d.getDate() - i * 7 + 6); // week end (Sun)
+            labels.push(`SEM ${formatShortPtBr(d)}`);
+        }
+    } else {
+        for (let i = pointsCount - 1; i >= 0; i--) {
+            const d = new Date(now);
+            d.setMonth(d.getMonth() - i, 1);
+            labels.push(d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "").toUpperCase());
+        }
+    }
+
+    const baseGained = interval === "daily" ? 70 : interval === "weekly" ? 380 : 1650;
+    const baseLost = interval === "daily" ? 28 : interval === "weekly" ? 140 : 620;
+
+    let cumulative = 0;
+    return labels.map((label, idx) => {
+        const wave = Math.sin((idx / Math.max(1, labels.length - 1)) * Math.PI * 1.2);
+        const noiseA = rand() * 0.8 + 0.6;
+        const noiseB = rand() * 0.8 + 0.6;
+
+        const gained = Math.max(0, Math.round((baseGained * (0.8 + wave * 0.35)) * noiseA));
+        const lost = Math.max(0, Math.round((baseLost * (0.85 - wave * 0.25)) * noiseB));
+        const net = gained - lost;
+        cumulative += net;
+
+        return { label, gained, lost, net, cumulative };
+    });
+};
+
+const makePeriodFollowersSnapshot = (period: PeriodValue, totalFollowers: number): PeriodFollowersSnapshot => {
+    const factors: Record<PeriodValue, number> = {
+        "7d": 0.0016,
+        "14d": 0.0029,
+        "30d": 0.0048,
+        "this_month": 0.0052,
+        "last_month": 0.0041,
+        "this_year": 0.028,
+        "all": 0.11,
+        "custom": 0.0045,
+    };
+
+    const factor = factors[period] ?? factors["30d"];
+    const newFollowers = Math.max(1, Math.round(totalFollowers * factor));
+    const churn = Math.round(newFollowers * 0.27);
+    const net = newFollowers - churn;
+    const previousBase = Math.max(1, totalFollowers - net);
+    const growthPct = (net / previousBase) * 100;
+
+    return { newFollowers, net, growthPct };
 };
 
 const KPICard = ({ title, value, change, icon: Icon }: any) => (
@@ -291,10 +399,130 @@ const TAB_ITEMS = [
     { id: "publico", label: "Público" },
 ];
 
-export default function SocialInsights() {
+type GeneralLayoutZone = "left" | "right";
+type GeneralLayoutState = {
+    left: Array<"mapa_calor" | "publicacoes">;
+    right: Array<"demografia" | "publico" | "seguidores_periodo">;
+};
+
+type EditorBoxId =
+    | "mapa_calor"
+    | "publicacoes"
+    | "demografia"
+    | "publico"
+    | "seguidores_periodo"
+    | `custom_${number}`;
+
+type EditorBoxConfig = {
+    bgColor: string;
+    minHeight: number;
+    widthSpan: 1 | 2;
+    hidden: boolean;
+    title?: string;
+    subtitle?: string;
+};
+
+type ResizeState = {
+    boxId: EditorBoxId;
+    startX: number;
+    startY: number;
+    startMinHeight: number;
+    startWidthSpan: 1 | 2;
+};
+
+const GENERAL_LAYOUT_STORAGE_KEY = "social-insights:geral-layout:v1";
+const GENERAL_EDITOR_STORAGE_KEY = "social-insights:geral-editor:v1";
+const GENERAL_EDITOR_CUSTOM_BOXES_KEY = "social-insights:geral-editor:custom-boxes:v1";
+const DEFAULT_GENERAL_LAYOUT: GeneralLayoutState = {
+    left: ["mapa_calor", "publicacoes"],
+    right: ["demografia", "publico", "seguidores_periodo"],
+};
+
+const DEFAULT_EDITOR_CONFIG: Record<Exclude<EditorBoxId, `custom_${number}`>, EditorBoxConfig> = {
+    mapa_calor: { bgColor: "transparent", minHeight: 400, widthSpan: 1, hidden: false, title: "Mapa de Calor", subtitle: "Concentração de seguidores por região" },
+    publicacoes: { bgColor: "transparent", minHeight: 300, widthSpan: 1, hidden: false, title: "Publicações", subtitle: "Destaques e resumo do desempenho do período." },
+    demografia: { bgColor: "transparent", minHeight: 260, widthSpan: 1, hidden: false, title: "Demografia", subtitle: "Resumo por faixa etária e gênero." },
+    publico: { bgColor: "transparent", minHeight: 260, widthSpan: 1, hidden: false, title: "Público", subtitle: "Principais dados de audiência e distribuição." },
+    seguidores_periodo: { bgColor: "transparent", minHeight: 220, widthSpan: 1, hidden: false, title: "Seguidores no Período", subtitle: "Indicadores do período selecionado." },
+};
+
+const parseGeneralLayout = (raw: string | null): GeneralLayoutState => {
+    if (!raw) return DEFAULT_GENERAL_LAYOUT;
+    try {
+        const parsed = JSON.parse(raw) as Partial<GeneralLayoutState>;
+        const nextLeft = parsed.left?.filter((item): item is GeneralLayoutState["left"][number] =>
+            item === "mapa_calor" || item === "publicacoes"
+        ) ?? [];
+        const nextRight = parsed.right?.filter((item): item is GeneralLayoutState["right"][number] =>
+            item === "demografia" || item === "publico" || item === "seguidores_periodo"
+        ) ?? [];
+        if (nextLeft.length === 2 && nextRight.length === 3) {
+            return { left: nextLeft, right: nextRight };
+        }
+        return DEFAULT_GENERAL_LAYOUT;
+    } catch {
+        return DEFAULT_GENERAL_LAYOUT;
+    }
+};
+
+const parseEditorConfigMap = (raw: string | null) => {
+    const fallback: Record<string, EditorBoxConfig> = { ...DEFAULT_EDITOR_CONFIG };
+    if (!raw) return fallback;
+    try {
+        const parsed = JSON.parse(raw) as Record<string, Partial<EditorBoxConfig>>;
+        const result: Record<string, EditorBoxConfig> = { ...fallback };
+        Object.entries(parsed).forEach(([id, config]) => {
+            result[id] = {
+                bgColor: typeof config.bgColor === "string" ? config.bgColor : "transparent",
+                minHeight: typeof config.minHeight === "number" ? Math.max(160, config.minHeight) : 220,
+                widthSpan: config.widthSpan === 2 ? 2 : 1,
+                hidden: Boolean(config.hidden),
+                title: typeof config.title === "string" ? config.title : fallback[id]?.title,
+                subtitle: typeof config.subtitle === "string" ? config.subtitle : fallback[id]?.subtitle,
+            };
+        });
+        return result;
+    } catch {
+        return fallback;
+    }
+};
+
+type SocialInsightsProps = {
+    hideTopPeriodSelector?: boolean;
+};
+
+export default function SocialInsights({ hideTopPeriodSelector = false }: SocialInsightsProps) {
     const [activeTab, setActiveTab] = useState("geral");
-    const [period, setPeriod] = useState("30d");
+    const [period, setPeriod] = useState<PeriodValue>("30d");
+    const [isGeneralArrangeMode, setIsGeneralArrangeMode] = useState(false);
+    const [isTextEditMode, setIsTextEditMode] = useState(false);
+    const [selectedBoxId, setSelectedBoxId] = useState<EditorBoxId | null>(null);
+    const [resizeState, setResizeState] = useState<ResizeState | null>(null);
+    const [generalLayout, setGeneralLayout] = useState<GeneralLayoutState>(() => {
+        if (typeof window === "undefined") return DEFAULT_GENERAL_LAYOUT;
+        return parseGeneralLayout(window.localStorage.getItem(GENERAL_LAYOUT_STORAGE_KEY));
+    });
+    const [editorBoxConfig, setEditorBoxConfig] = useState<Record<string, EditorBoxConfig>>(() => {
+        if (typeof window === "undefined") return { ...DEFAULT_EDITOR_CONFIG };
+        return parseEditorConfigMap(window.localStorage.getItem(GENERAL_EDITOR_STORAGE_KEY));
+    });
+    const [customBoxes, setCustomBoxes] = useState<Array<{ id: `custom_${number}`; zone: GeneralLayoutZone }>>(() => {
+        if (typeof window === "undefined") return [];
+        try {
+            const raw = window.localStorage.getItem(GENERAL_EDITOR_CUSTOM_BOXES_KEY);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw) as Array<{ id: string; zone: string }>;
+            return parsed
+                .filter((item): item is { id: `custom_${number}`; zone: GeneralLayoutZone } =>
+                    /^custom_\d+$/.test(item.id) && (item.zone === "left" || item.zone === "right")
+                );
+        } catch {
+            return [];
+        }
+    });
+    const [draggingGeneralCard, setDraggingGeneralCard] = useState<{ zone: GeneralLayoutZone; id: string } | null>(null);
     const [data, setData] = useState<InsightsData | null>(null);
+    const [followersInterval, setFollowersInterval] = useState<FollowersInterval>("daily");
     const [heatmapMetric, setHeatmapMetric] = useState<'interactions' | 'reach'>('interactions');
     const [heatmapMode, setHeatmapMode] = useState<'best' | 'worst'>('best');
     const [countryPage, setCountryPage] = useState(1);
@@ -305,6 +533,146 @@ export default function SocialInsights() {
     const [citiesAgePage, setCitiesAgePage] = useState(1);
     const [selectedStateFilter, setSelectedStateFilter] = useState<string>('todos');
     const PAGE_SIZE = 5;
+    const isLocalEditor = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        window.localStorage.setItem(GENERAL_LAYOUT_STORAGE_KEY, JSON.stringify(generalLayout));
+    }, [generalLayout]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        window.localStorage.setItem(GENERAL_EDITOR_STORAGE_KEY, JSON.stringify(editorBoxConfig));
+    }, [editorBoxConfig]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        window.localStorage.setItem(GENERAL_EDITOR_CUSTOM_BOXES_KEY, JSON.stringify(customBoxes));
+    }, [customBoxes]);
+
+    const moveGeneralCard = (zone: GeneralLayoutZone, draggedId: string, targetId: string) => {
+        if (draggedId === targetId) return;
+        setGeneralLayout((prev) => {
+            const list = [...prev[zone]];
+            const fromIndex = list.findIndex((item) => item === draggedId);
+            const toIndex = list.findIndex((item) => item === targetId);
+            if (fromIndex < 0 || toIndex < 0) return prev;
+            const [moved] = list.splice(fromIndex, 1);
+            list.splice(toIndex, 0, moved);
+            return { ...prev, [zone]: list } as GeneralLayoutState;
+        });
+    };
+
+    const getGeneralCardOrder = (zone: GeneralLayoutZone, cardId: string) => {
+        const index = generalLayout[zone].findIndex((item) => item === cardId);
+        return index >= 0 ? index : 0;
+    };
+
+    const getEditorConfig = (boxId: EditorBoxId): EditorBoxConfig => {
+        return editorBoxConfig[boxId] ?? {
+            bgColor: "transparent",
+            minHeight: 220,
+            widthSpan: 1,
+            hidden: false,
+            title: "Nova Caixa",
+            subtitle: "Clique para editar o texto",
+        };
+    };
+
+    const updateBoxConfig = (boxId: EditorBoxId, patch: Partial<EditorBoxConfig>) => {
+        setEditorBoxConfig((prev) => ({
+            ...prev,
+            [boxId]: {
+                ...(prev[boxId] ?? {
+                    bgColor: "transparent",
+                    minHeight: 220,
+                    widthSpan: 1,
+                    hidden: false,
+                    title: "Nova Caixa",
+                    subtitle: "Clique para editar o texto",
+                }),
+                ...patch,
+            },
+        }));
+    };
+
+    const updateSelectedBoxConfig = (patch: Partial<EditorBoxConfig>) => {
+        if (!selectedBoxId) return;
+        updateBoxConfig(selectedBoxId, patch);
+    };
+
+    const startBoxResize = (event: ReactMouseEvent, boxId: EditorBoxId) => {
+        if (!isLocalEditor) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const current = getEditorConfig(boxId);
+        setResizeState({
+            boxId,
+            startX: event.clientX,
+            startY: event.clientY,
+            startMinHeight: current.minHeight,
+            startWidthSpan: current.widthSpan,
+        });
+    };
+
+    const addCustomBox = () => {
+        const newId = `custom_${Date.now()}` as const;
+        const zone: GeneralLayoutZone = "right";
+        setCustomBoxes((prev) => [...prev, { id: newId, zone }]);
+        setEditorBoxConfig((prev) => ({
+            ...prev,
+            [newId]: {
+                bgColor: "rgba(59,130,246,0.08)",
+                minHeight: 220,
+                widthSpan: 1,
+                hidden: false,
+                title: "Nova Caixa",
+                subtitle: "Edite este conteúdo",
+            },
+        }));
+        setSelectedBoxId(newId);
+    };
+
+    const deleteSelectedBox = () => {
+        if (!selectedBoxId) return;
+        const isCustom = selectedBoxId.startsWith("custom_");
+        if (isCustom) {
+            setCustomBoxes((prev) => prev.filter((item) => item.id !== selectedBoxId));
+            setEditorBoxConfig((prev) => {
+                const next = { ...prev };
+                delete next[selectedBoxId];
+                return next;
+            });
+        } else {
+            updateBoxConfig(selectedBoxId, { hidden: true });
+        }
+        setSelectedBoxId(null);
+    };
+
+    const restoreAllGeneralBoxes = () => {
+        setGeneralLayout(DEFAULT_GENERAL_LAYOUT);
+        setEditorBoxConfig({ ...DEFAULT_EDITOR_CONFIG });
+        setCustomBoxes([]);
+        setSelectedBoxId(null);
+    };
+
+    useEffect(() => {
+        if (!resizeState) return;
+        const onMouseMove = (event: MouseEvent) => {
+            const deltaY = event.clientY - resizeState.startY;
+            const deltaX = event.clientX - resizeState.startX;
+            const nextMinHeight = Math.max(160, Math.min(1000, resizeState.startMinHeight + deltaY));
+            const nextWidthSpan: 1 | 2 = deltaX > 120 ? 2 : deltaX < -120 ? 1 : resizeState.startWidthSpan;
+            updateBoxConfig(resizeState.boxId, { minHeight: nextMinHeight, widthSpan: nextWidthSpan });
+        };
+        const onMouseUp = () => setResizeState(null);
+        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mouseup", onMouseUp);
+        return () => {
+            window.removeEventListener("mousemove", onMouseMove);
+            window.removeEventListener("mouseup", onMouseUp);
+        };
+    }, [resizeState]);
 
     const speedData = useMemo(() => {
         if (!data || !data.top_posts) return null;
@@ -630,6 +998,16 @@ export default function SocialInsights() {
     if (!data) return <div className="p-20 text-center animate-pulse text-zinc-500">Carregando Insights do Facebook...</div>;
 
     const maxAction = Math.max(data.actions_split.reactions, data.actions_split.comments, data.actions_split.shares);
+    const followersSeries = useMemo(() => makeFollowersSeries(followersInterval, data.page_followers.value), [followersInterval, data.page_followers.value]);
+    const followersSummary = useMemo(() => {
+        const totalNew = followersSeries.reduce((acc, point) => acc + point.gained, 0);
+        const totalLost = followersSeries.reduce((acc, point) => acc + point.lost, 0);
+        const net = totalNew - totalLost;
+        const previousBase = Math.max(1, data.page_followers.value - net);
+        const growthPct = (net / previousBase) * 100;
+        return { totalNew, totalLost, net, growthPct };
+    }, [followersSeries, data.page_followers.value]);
+    const periodFollowers = useMemo(() => makePeriodFollowersSnapshot(period, data.page_followers.value), [period, data.page_followers.value]);
 
     return (
         <div className="space-y-6 pb-20">
@@ -649,10 +1027,12 @@ export default function SocialInsights() {
                         </button>
                     ))}
                 </div>
-                <div className="flex items-center gap-2 pr-2">
-                    <span className="text-[10px] uppercase font-bold text-zinc-500 hidden md:inline">Período:</span>
-                    <PeriodSelector />
-                </div>
+                {!hideTopPeriodSelector && (
+                    <div className="flex items-center gap-2 pr-2">
+                        <span className="text-[10px] uppercase font-bold text-zinc-500 hidden md:inline">Período:</span>
+                        <PeriodSelector value={period} onChange={(value) => setPeriod(value)} />
+                    </div>
+                )}
             </div>
 
             {/* TAB CONTENT: GERAL */}
@@ -667,40 +1047,489 @@ export default function SocialInsights() {
                         <KPICard title="Impressões" value={data.organic_impressions.value} change={data.organic_impressions.change} icon={EyeIcon} />
                     </div>
 
-                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6">
-                        <h3 className="text-lg font-black italic tracking-tight mb-6">Divisão por Ações</h3>
-                        <div className="space-y-4">
-                            <div className="space-y-1">
-                                <div className="flex justify-between text-xs font-bold uppercase text-zinc-500">
-                                    <span>Reações</span>
-                                    <span>{formatNumber(data.actions_split.reactions)}</span>
-                                </div>
-                                <div className="h-4 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(data.actions_split.reactions / maxAction) * 100}%` }}></div>
-                                </div>
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                        <div className="xl:col-span-2 grid grid-cols-1 xl:grid-cols-2 gap-6">
+                            <div
+                                draggable={isGeneralArrangeMode}
+                                onDragStart={() => setDraggingGeneralCard({ zone: "left", id: "mapa_calor" })}
+                                onDragOver={(event) => {
+                                    if (draggingGeneralCard?.zone === "left") event.preventDefault();
+                                }}
+                                onDrop={() => {
+                                    if (draggingGeneralCard?.zone === "left") {
+                                        moveGeneralCard("left", draggingGeneralCard.id, "mapa_calor");
+                                    }
+                                    setDraggingGeneralCard(null);
+                                }}
+                                onDragEnd={() => setDraggingGeneralCard(null)}
+                                style={{
+                                    order: getGeneralCardOrder("left", "mapa_calor"),
+                                    gridColumn: getEditorConfig("mapa_calor").widthSpan === 2 ? "span 2 / span 2" : undefined,
+                                    display: getEditorConfig("mapa_calor").hidden ? "none" : undefined,
+                                }}
+                                className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} rounded-3xl`}
+                            >
+                                {!getEditorConfig("mapa_calor").hidden && (
+                                    <div style={{ backgroundColor: getEditorConfig("mapa_calor").bgColor }} className="rounded-3xl overflow-hidden h-full">
+                                        <BrazilFollowersMap
+                                            title={getEditorConfig("mapa_calor").title}
+                                            subtitle={getEditorConfig("mapa_calor").subtitle}
+                                            spanTwoRows={false}
+                                        />
+                                    </div>
+                                )}
                             </div>
-                            <div className="space-y-1">
-                                <div className="flex justify-between text-xs font-bold uppercase text-zinc-500">
-                                    <span>Comentários</span>
-                                    <span>{formatNumber(data.actions_split.comments)}</span>
+
+                            <div
+                                draggable={isGeneralArrangeMode}
+                                onDragStart={() => setDraggingGeneralCard({ zone: "left", id: "publicacoes" })}
+                                onDragOver={(event) => {
+                                    if (draggingGeneralCard?.zone === "left") event.preventDefault();
+                                }}
+                                onDrop={() => {
+                                    if (draggingGeneralCard?.zone === "left") {
+                                        moveGeneralCard("left", draggingGeneralCard.id, "publicacoes");
+                                    }
+                                    setDraggingGeneralCard(null);
+                                }}
+                                onDragEnd={() => setDraggingGeneralCard(null)}
+                                style={{
+                                    order: getGeneralCardOrder("left", "publicacoes"),
+                                    gridColumn: getEditorConfig("publicacoes").widthSpan === 2 ? "span 2 / span 2" : undefined,
+                                    display: getEditorConfig("publicacoes").hidden ? "none" : undefined,
+                                }}
+                                className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} rounded-3xl`}
+                            >
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 h-full flex flex-col" style={{ backgroundColor: getEditorConfig("publicacoes").bgColor, minHeight: `${getEditorConfig("publicacoes").minHeight}px` }}>
+	                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                                    <div>
+                                        <h3 className="text-lg font-black italic tracking-tight text-blue-500">{getEditorConfig("publicacoes").title ?? "Publicações"}</h3>
+                                        <p className="text-[11px] text-zinc-500 mt-1">{getEditorConfig("publicacoes").subtitle ?? "Destaques e resumo do desempenho do período."}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab("publicacoes")}
+                                        className="px-3 py-2 rounded-xl bg-[var(--shell-side)] border border-[var(--shell-border)] text-[11px] font-black text-zinc-500 hover:text-[var(--foreground)] hover:border-blue-500/30 transition-colors self-start"
+                                    >
+                                        Ver detalhes
+                                    </button>
                                 </div>
-                                <div className="h-4 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(data.actions_split.comments / maxAction) * 100}%` }}></div>
-                                </div>
+
+                                {(() => {
+                                    const posts = data.top_posts || [];
+                                    const interactions = (p: any) => (p.reactions || 0) + (p.comments || 0) + (p.shares || 0);
+                                    const bestByReach = [...posts].sort((a, b) => (b.reach || 0) - (a.reach || 0))[0];
+                                    const bestByInteractions = [...posts].sort((a, b) => interactions(b) - interactions(a))[0];
+                                    const avgReach = posts.length ? posts.reduce((acc, p) => acc + (p.reach || 0), 0) / posts.length : 0;
+                                    const avgInteractions = posts.length ? posts.reduce((acc, p) => acc + interactions(p), 0) / posts.length : 0;
+                                    const top3 = [...posts].sort((a, b) => interactions(b) - interactions(a)).slice(0, 3);
+                                    const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+                                    const windowsMap = new Map<string, { label: string; posts: number; interactions: number; reach: number; typeCounts: Record<string, number> }>();
+                                    const dayMap = new Map<number, { posts: number; interactions: number }>();
+
+                                    posts.forEach((post) => {
+                                        const date = new Date(post.timestamp);
+                                        const day = date.getDay();
+                                        const startHour = Math.floor(date.getHours() / 2) * 2;
+                                        const endHour = Math.min(24, startHour + 2);
+                                        const key = `${day}-${startHour}`;
+                                        const label = `${weekDays[day]} · ${String(startHour).padStart(2, "0")}h-${String(endHour).padStart(2, "0")}h`;
+                                        const bucket = windowsMap.get(key) ?? { label, posts: 0, interactions: 0, reach: 0, typeCounts: {} };
+                                        bucket.posts += 1;
+                                        bucket.interactions += interactions(post);
+                                        bucket.reach += post.reach || 0;
+                                        const postType = getPostType(post);
+                                        bucket.typeCounts[postType] = (bucket.typeCounts[postType] ?? 0) + 1;
+                                        windowsMap.set(key, bucket);
+
+                                        const dayBucket = dayMap.get(day) ?? { posts: 0, interactions: 0 };
+                                        dayBucket.posts += 1;
+                                        dayBucket.interactions += interactions(post);
+                                        dayMap.set(day, dayBucket);
+                                    });
+
+                                    const topWindows = [...windowsMap.values()]
+                                        .sort((a, b) => (b.interactions - a.interactions) || (b.posts - a.posts))
+                                        .slice(0, 3);
+                                    const bestDayEntry = [...dayMap.entries()].sort((a, b) => b[1].interactions - a[1].interactions)[0];
+                                    const bestDayLabel = bestDayEntry ? weekDays[bestDayEntry[0]] : "—";
+                                    const maxWindowInteractions = Math.max(1, ...topWindows.map((slot) => slot.interactions));
+
+                                    return (
+                                        <div className="flex flex-col gap-6 flex-1">
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                                <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
+                                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Média de Alcance</div>
+                                                    <div className="text-2xl font-black text-[var(--foreground)] mt-2">{formatNumber(Math.round(avgReach))}</div>
+                                                    <div className="text-[10px] text-zinc-500 mt-1">por post</div>
+                                                </div>
+                                                <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
+                                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Média de Interações</div>
+                                                    <div className="text-2xl font-black text-[var(--foreground)] mt-2">{formatNumber(Math.round(avgInteractions))}</div>
+                                                    <div className="text-[10px] text-zinc-500 mt-1">reac. + com. + comp.</div>
+                                                </div>
+                                                <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
+                                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Melhor por Alcance</div>
+                                                    <div className="text-2xl font-black text-[var(--foreground)] mt-2">{bestByReach ? formatNumber(bestByReach.reach) : "—"}</div>
+                                                    <div className="text-[10px] text-zinc-500 mt-1 truncate" title={bestByReach?.message}>{bestByReach?.message || "Sem dados"}</div>
+                                                </div>
+                                                <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
+                                                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Melhor por Interações</div>
+                                                    <div className="text-2xl font-black text-[var(--foreground)] mt-2">{bestByInteractions ? formatNumber(interactions(bestByInteractions)) : "—"}</div>
+                                                    <div className="text-[10px] text-zinc-500 mt-1 truncate" title={bestByInteractions?.message}>{bestByInteractions?.message || "Sem dados"}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-5">
+                                                    <div className="flex items-start justify-between gap-4 mb-4">
+                                                        <div>
+                                                            <h4 className="text-sm font-black italic tracking-tight text-[var(--foreground)]">Divisão por ações</h4>
+                                                            <p className="text-[10px] text-zinc-500 mt-0.5">O que mais gerou engajamento.</p>
+                                                        </div>
+                                                        <div className="text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+                                                            {formatNumber(data.actions_split.reactions + data.actions_split.comments + data.actions_split.shares)}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-3">
+                                                        <div className="space-y-1">
+                                                            <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500">
+                                                                <span>Reações</span>
+                                                                <span>{formatNumber(data.actions_split.reactions)}</span>
+                                                            </div>
+                                                            <div className="h-3 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(data.actions_split.reactions / maxAction) * 100}%` }}></div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500">
+                                                                <span>Comentários</span>
+                                                                <span>{formatNumber(data.actions_split.comments)}</span>
+                                                            </div>
+                                                            <div className="h-3 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(data.actions_split.comments / maxAction) * 100}%` }}></div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500">
+                                                                <span>Compart.</span>
+                                                                <span>{formatNumber(data.actions_split.shares)}</span>
+                                                            </div>
+                                                            <div className="h-3 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                                                <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(data.actions_split.shares / maxAction) * 100}%` }}></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-5">
+                                                    <div className="flex items-start justify-between gap-4 mb-4">
+                                                        <div>
+                                                            <h4 className="text-sm font-black italic tracking-tight text-[var(--foreground)]">Top 3 posts</h4>
+                                                            <p className="text-[10px] text-zinc-500 mt-0.5">Ordenado por interações.</p>
+                                                        </div>
+                                                        <div className="text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+                                                            {posts.length} posts
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-3">
+                                                        {top3.map((post) => (
+                                                            <div key={post.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--shell-surface)] transition-colors">
+                                                                <div className="w-11 h-11 rounded-lg bg-zinc-200 dark:bg-zinc-800 overflow-hidden shrink-0">
+                                                                    <img src={post.image} alt="" className="w-full h-full object-cover opacity-90" />
+                                                                </div>
+                                                                <div className="min-w-0 flex-1">
+                                                                    <div className="text-[11px] font-black text-[var(--foreground)] truncate" title={post.message}>{post.message}</div>
+                                                                    <div className="flex items-center gap-3 text-[10px] text-zinc-500 mt-0.5 font-mono">
+                                                                        <span title="Alcance">A {formatNumber(post.reach)}</span>
+                                                                        <span title="Interações">I {formatNumber(interactions(post))}</span>
+                                                                        <span className="truncate" title={post.date}>{post.date}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-5 flex-1 flex flex-col min-h-[180px]">
+                                                <div className="flex items-start justify-between gap-4 mb-4">
+                                                    <div>
+                                                        <h4 className="text-sm font-black italic tracking-tight text-[var(--foreground)]">Melhores horários para publicações</h4>
+                                                        <p className="text-[10px] text-zinc-500 mt-0.5">Resumo baseado nos posts com maior interação.</p>
+                                                    </div>
+                                                    <div className="text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+                                                        Dia líder: {bestDayLabel}
+                                                    </div>
+                                                </div>
+
+                                                {topWindows.length > 0 ? (
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 auto-rows-fr flex-1">
+                                                        {topWindows.map((slot, index) => {
+                                                            const score = Math.round((slot.interactions / maxWindowInteractions) * 100);
+                                                            const reachSafe = Math.max(1, slot.reach);
+                                                            const engagementRate = slot.interactions / reachSafe;
+                                                            const bestFor = engagementRate >= 0.55 ? "Engajamento" : "Alcance";
+                                                            const typeEntries = Object.entries(slot.typeCounts);
+                                                            const topType = typeEntries.sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+                                                            const topTypeLabel = topType === "video" ? "Vídeo" : topType === "photo" ? "Foto" : topType === "album" ? "Álbum" : topType;
+
+                                                            return (
+                                                                <div
+                                                                    key={`${slot.label}-${index}`}
+                                                                    className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] p-3 h-full flex flex-col"
+                                                                >
+                                                                    <div className="flex items-start justify-between gap-2">
+                                                                        <div>
+                                                                            <div className="text-[10px] text-zinc-500 font-bold uppercase">#{index + 1} Horário</div>
+                                                                            <div className="text-sm font-black text-[var(--foreground)] mt-1">{slot.label}</div>
+                                                                        </div>
+                                                                        <div className="text-right">
+                                                                            <div className="text-[10px] text-zinc-500 font-bold uppercase">Score</div>
+                                                                            <div className="text-2xl font-black text-blue-500 leading-none mt-1">{score}</div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="text-[10px] text-zinc-500 mt-2">
+                                                                        {slot.posts} posts · {formatNumber(slot.interactions)} interações · {formatNumber(slot.reach)} de alcance
+                                                                    </div>
+
+                                                                    <div className="mt-auto pt-3 space-y-2">
+                                                                        <div className="flex items-center justify-between gap-2 text-[10px]">
+                                                                            <span className="text-zinc-500 font-bold uppercase flex items-center gap-1.5">
+                                                                                <ClockIcon className="w-3.5 h-3.5 text-zinc-400" />
+                                                                                Melhor para
+                                                                            </span>
+                                                                            <span className="font-black text-[var(--foreground)]">{bestFor}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center justify-between gap-2 text-[10px]">
+                                                                            <span className="text-zinc-500 font-bold uppercase flex items-center gap-1.5">
+                                                                                <DocumentTextIcon className="w-3.5 h-3.5 text-zinc-400" />
+                                                                                Tipo líder
+                                                                            </span>
+                                                                            <span className="font-black text-[var(--foreground)]">{topTypeLabel}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center justify-between gap-2 text-[10px]">
+                                                                            <span className="text-zinc-500 font-bold uppercase flex items-center gap-1.5">
+                                                                                <ChatBubbleLeftEllipsisIcon className="w-3.5 h-3.5 text-zinc-400" />
+                                                                                Interação/alc.
+                                                                            </span>
+                                                                            <span className="font-black text-[var(--foreground)]">{(engagementRate * 100).toFixed(0)}%</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs text-zinc-500">Sem dados suficientes para calcular horários.</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
-                            <div className="space-y-1">
-                                <div className="flex justify-between text-xs font-bold uppercase text-zinc-500">
-                                    <span>Compartilhamentos</span>
-                                    <span>{formatNumber(data.actions_split.shares)}</span>
-                                </div>
-                                <div className="h-4 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(data.actions_split.shares / maxAction) * 100}%` }}></div>
-                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            )}
+
+	                        <div className="flex flex-col gap-6">
+                                <div
+                                    draggable={isGeneralArrangeMode}
+                                    onDragStart={() => setDraggingGeneralCard({ zone: "right", id: "demografia" })}
+                                    onDragOver={(event) => {
+                                        if (draggingGeneralCard?.zone === "right") event.preventDefault();
+                                    }}
+                                    onDrop={() => {
+                                        if (draggingGeneralCard?.zone === "right") {
+                                            moveGeneralCard("right", draggingGeneralCard.id, "demografia");
+                                        }
+                                        setDraggingGeneralCard(null);
+                                    }}
+                                    onDragEnd={() => setDraggingGeneralCard(null)}
+                                    style={{
+                                        order: getGeneralCardOrder("right", "demografia"),
+                                        display: getEditorConfig("demografia").hidden ? "none" : undefined,
+                                        minHeight: `${getEditorConfig("demografia").minHeight}px`,
+                                        backgroundColor: getEditorConfig("demografia").bgColor,
+                                    }}
+                                    className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} rounded-3xl`}
+                                >
+		                            {data.demographics && (() => {
+	                                const rawTotalMale = data.demographics.age.reduce((acc, curr) => acc + curr.male, 0);
+	                                const rawTotalFemale = data.demographics.age.reduce((acc, curr) => acc + curr.female, 0);
+	                                const grandTotal = Math.max(1, rawTotalMale + rawTotalFemale);
+	                                const femalePct = Math.round((rawTotalFemale / grandTotal) * 100);
+	                                const malePct = 100 - femalePct;
+	                                const topAge = [...data.demographics.age].sort((a, b) => (b.male + b.female) - (a.male + a.female))[0];
+	                                const topAgePct = Math.round(((topAge.male + topAge.female) / grandTotal) * 100);
+
+			                                return (
+			                                    <div className="space-y-3">
+                                            <div className="px-1">
+                                                <h4 className="text-sm font-black italic tracking-tight text-blue-500">{getEditorConfig("demografia").title ?? "Demografia"}</h4>
+                                                <p className="text-[11px] text-zinc-500 mt-1">{getEditorConfig("demografia").subtitle ?? "Resumo por faixa etária e gênero."}</p>
+                                            </div>
+			                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+			                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 relative">
+		                                            <h4 className="text-sm font-black italic tracking-tight text-blue-500 mb-4">Total por Faixa Etária</h4>
+		                                            <div className="mx-auto w-40 h-40 rounded-full flex items-center justify-center" style={{
+		                                                background: "conic-gradient(#14b8a6 0 26%, #06b6d4 26% 45%, #3b82f6 45% 62%, #84cc16 62% 78%, #eab308 78% 90%, #f97316 90% 100%)"
+		                                            }}>
+		                                                <div className="w-24 h-24 rounded-full bg-[var(--shell-surface)] border border-[var(--shell-border)] flex flex-col items-center justify-center">
+		                                                    <span className="text-3xl font-black text-[var(--foreground)] leading-none">{topAgePct}%</span>
+		                                                    <span className="text-[11px] font-black text-zinc-500 uppercase mt-1">{topAge.range}</span>
+		                                                </div>
+		                                            </div>
+		                                        </div>
+
+		                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 relative">
+		                                            <h4 className="text-sm font-black italic tracking-tight text-blue-500 mb-4">Resumo de Gênero</h4>
+		                                            <div className="mx-auto w-40 h-40 rounded-full flex items-center justify-center" style={{
+		                                                background: `conic-gradient(#fb923c 0 ${femalePct}%, #0ea5e9 ${femalePct}% 100%)`
+		                                            }}>
+		                                                <div className="w-24 h-24 rounded-full bg-[var(--shell-surface)] border border-[var(--shell-border)] flex flex-col items-center justify-center">
+		                                                    <span className="text-3xl font-black text-[var(--foreground)] leading-none">{Math.max(femalePct, malePct)}%</span>
+		                                                    <span className="text-[11px] font-black text-zinc-500 uppercase mt-1">{femalePct >= malePct ? "MULHERES" : "HOMENS"}</span>
+		                                                </div>
+		                                            </div>
+			                                        </div>
+		                                    </div>
+                                            </div>
+			                                );
+		                            })()}
+                                </div>
+
+	                                <div
+	                                    draggable={isGeneralArrangeMode}
+	                                    onDragStart={() => setDraggingGeneralCard({ zone: "right", id: "publico" })}
+                                    onDragOver={(event) => {
+                                        if (draggingGeneralCard?.zone === "right") event.preventDefault();
+                                    }}
+	                                    onDrop={() => {
+	                                        if (draggingGeneralCard?.zone === "right") {
+	                                            moveGeneralCard("right", draggingGeneralCard.id, "publico");
+	                                        }
+	                                        setDraggingGeneralCard(null);
+	                                    }}
+	                                    onDragEnd={() => setDraggingGeneralCard(null)}
+	                                    style={{
+                                            order: getGeneralCardOrder("right", "publico"),
+                                            display: getEditorConfig("publico").hidden ? "none" : undefined,
+                                        }}
+	                                    className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} rounded-3xl`}
+	                                >
+		                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6" style={{ minHeight: `${getEditorConfig("publico").minHeight}px`, backgroundColor: getEditorConfig("publico").bgColor }}>
+		                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+		                                    <div>
+		                                        <h3 className="text-lg font-black italic tracking-tight text-blue-500">{getEditorConfig("publico").title ?? "Público"}</h3>
+		                                        <p className="text-[11px] text-zinc-500 mt-1">{getEditorConfig("publico").subtitle ?? "Principais dados de audiência e distribuição."}</p>
+		                                    </div>
+	                                    <button
+	                                        type="button"
+	                                        onClick={() => setActiveTab("publico")}
+	                                        className="px-3 py-2 rounded-xl bg-[var(--shell-side)] border border-[var(--shell-border)] text-[11px] font-black text-zinc-500 hover:text-[var(--foreground)] hover:border-blue-500/30 transition-colors self-start"
+	                                    >
+	                                        Ver detalhes
+	                                    </button>
+	                                </div>
+
+	                                {data.demographics ? (
+	                                    <div className="grid grid-cols-2 gap-4">
+	                                        <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
+	                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">País Principal</div>
+	                                            <div className="text-lg font-black text-[var(--foreground)] mt-2 truncate" title={data.demographics.top_country}>{data.demographics.top_country}</div>
+	                                        </div>
+	                                        <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
+	                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Cidade Principal</div>
+	                                            <div className="text-lg font-black text-[var(--foreground)] mt-2 truncate" title={data.demographics.top_city}>{data.demographics.top_city}</div>
+	                                        </div>
+	                                        <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
+	                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Idioma</div>
+	                                            <div className="text-lg font-black text-[var(--foreground)] mt-2 truncate" title={data.demographics.top_language}>{data.demographics.top_language}</div>
+	                                        </div>
+	                                        <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
+	                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Faixa Etária</div>
+	                                            <div className="text-lg font-black text-[var(--foreground)] mt-2 truncate" title={data.demographics.top_age_group}>{data.demographics.top_age_group}</div>
+	                                        </div>
+	                                    </div>
+	                                ) : (
+	                                    <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4 text-sm text-zinc-500">
+	                                        Dados de audiência indisponíveis para este período.
+	                                    </div>
+		                                )}
+		                            </div>
+                                </div>
+
+                                <div
+                                    draggable={isGeneralArrangeMode}
+                                    onDragStart={() => setDraggingGeneralCard({ zone: "right", id: "seguidores_periodo" })}
+                                    onDragOver={(event) => {
+                                        if (draggingGeneralCard?.zone === "right") event.preventDefault();
+                                    }}
+	                                    onDrop={() => {
+	                                        if (draggingGeneralCard?.zone === "right") {
+	                                            moveGeneralCard("right", draggingGeneralCard.id, "seguidores_periodo");
+	                                        }
+	                                        setDraggingGeneralCard(null);
+	                                    }}
+	                                    onDragEnd={() => setDraggingGeneralCard(null)}
+	                                    style={{
+                                            order: getGeneralCardOrder("right", "seguidores_periodo"),
+                                            display: getEditorConfig("seguidores_periodo").hidden ? "none" : undefined,
+                                        }}
+	                                    className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} rounded-3xl`}
+	                                >
+		                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden" style={{ minHeight: `${getEditorConfig("seguidores_periodo").minHeight}px`, backgroundColor: getEditorConfig("seguidores_periodo").bgColor }}>
+		                                <div className="p-5 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex items-center justify-between">
+		                                    <h4 className="text-sm font-black italic tracking-tight text-blue-500">{getEditorConfig("seguidores_periodo").title ?? "Seguidores no Período"}</h4>
+		                                    <span className="text-[10px] font-black uppercase text-zinc-500">Período atual</span>
+		                                </div>
+	                                <div className="p-5 space-y-3">
+	                                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+	                                        <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Novos Seguidores</div>
+	                                        <div className="text-4xl font-black tracking-tight text-emerald-400 mt-2">+{formatNumber(periodFollowers.newFollowers)}</div>
+	                                    </div>
+	                                    <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4 flex items-end justify-between">
+	                                        <div>
+	                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Crescimento</div>
+	                                            <div className={`text-3xl font-black tracking-tight mt-2 ${periodFollowers.growthPct >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+	                                                {periodFollowers.growthPct >= 0 ? "+" : ""}{periodFollowers.growthPct.toFixed(1)}%
+	                                            </div>
+	                                        </div>
+	                                        <div className="text-right">
+	                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Saldo Líquido</div>
+	                                            <div className={`text-lg font-black mt-2 ${periodFollowers.net >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+	                                                {periodFollowers.net >= 0 ? "+" : ""}{formatNumber(periodFollowers.net)}
+		                                </div>
+		                            </div>
+                                </div>
+	                                </div>
+	                            </div>
+                                </div>
+
+                                {customBoxes.filter((item) => item.zone === "right").map((box) => (
+                                    <div
+                                        key={box.id}
+                                        className="rounded-3xl"
+                                    >
+                                        {!getEditorConfig(box.id).hidden && (
+                                            <div
+                                                className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6"
+                                                style={{ minHeight: `${getEditorConfig(box.id).minHeight}px`, backgroundColor: getEditorConfig(box.id).bgColor }}
+                                            >
+                                                <h4 className="text-lg font-black italic tracking-tight text-blue-500">{getEditorConfig(box.id).title ?? "Nova Caixa"}</h4>
+                                                <p className="text-[11px] text-zinc-500 mt-2">{getEditorConfig(box.id).subtitle ?? "Sem conteúdo"}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+	                        </div>
+	                    </div>
+	                </div>
+	            )}
 
             {/* TAB CONTENT: PUBLICAÇÕES (SPLIT VIEW) */}
             {activeTab === "publicacoes" && (
@@ -1659,8 +2488,8 @@ export default function SocialInsights() {
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
 
                         {/* 1. TOP METRICS CARDS */}
-                        {data.demographics && (
-                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+		                        {data.demographics && (
+		                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                                 <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[140px]">
                                     <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
                                     <div>
@@ -1696,13 +2525,13 @@ export default function SocialInsights() {
                                         <div className="w-4 h-1 bg-emerald-500 rounded-full"></div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+		                            </div>
+		                        )}
 
-                        {/* 2. DEMOGRAPHIC FUNNEL & SUMMARIES */}
-                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 relative">
-                            <h3 className="text-lg font-black italic tracking-tight flex items-center gap-2 mb-8">
-                                <UserGroupIcon className="w-5 h-5 text-blue-500" />
+	                        {/* 2. DEMOGRAPHIC FUNNEL & SUMMARIES */}
+	                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 relative">
+	                            <h3 className="text-lg font-black italic tracking-tight flex items-center gap-2 mb-8">
+	                                <UserGroupIcon className="w-5 h-5 text-blue-500" />
                                 Faixa Etária & Gênero
                             </h3>
 
@@ -2221,19 +3050,220 @@ export default function SocialInsights() {
                                             }
                                         </div>
                                     </div>
-                                    {data.demographics.cities_by_age && data.demographics.cities_by_age[activeAgeGroupIndex] && (
-                                        <PaginationControl
-                                            currentPage={citiesAgePage}
-                                            totalItems={data.demographics.cities_by_age[activeAgeGroupIndex].cities.length}
-                                            pageSize={PAGE_SIZE}
-                                            onPageChange={setCitiesAgePage}
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )
+	                                    {data.demographics.cities_by_age && data.demographics.cities_by_age[activeAgeGroupIndex] && (
+	                                        <PaginationControl
+	                                            currentPage={citiesAgePage}
+	                                            totalItems={data.demographics.cities_by_age[activeAgeGroupIndex].cities.length}
+	                                            pageSize={PAGE_SIZE}
+	                                            onPageChange={setCitiesAgePage}
+	                                        />
+	                                    )}
+	                                </div>
+
+	                                {/* Seguidores */}
+	                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full lg:col-span-2">
+	                                    <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex items-start justify-between gap-4">
+	                                        <div>
+	                                            <h3 className="text-lg font-black italic tracking-tight text-blue-500">Seguidores</h3>
+	                                            <p className="text-xs text-zinc-500 mt-1">Fluxo de entrada/saída e evolução no período.</p>
+	                                        </div>
+	                                        <div className="flex bg-[var(--shell-surface)] rounded-xl p-0.5 border border-[var(--shell-border)]">
+	                                            <button
+	                                                onClick={() => setFollowersInterval("daily")}
+	                                                className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${followersInterval === "daily" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+	                                            >
+	                                                Diário
+	                                            </button>
+	                                            <button
+	                                                onClick={() => setFollowersInterval("weekly")}
+	                                                className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${followersInterval === "weekly" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+	                                            >
+	                                                Semanal
+	                                            </button>
+	                                            <button
+	                                                onClick={() => setFollowersInterval("monthly")}
+	                                                className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${followersInterval === "monthly" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+	                                            >
+	                                                Mensal
+	                                            </button>
+	                                        </div>
+	                                    </div>
+
+	                                    <div className="p-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+	                                        <div className="space-y-3">
+	                                            <div className="flex items-center justify-between">
+	                                                <h4 className="text-sm font-black italic tracking-tight text-blue-500">Novos vs Deixaram de seguir</h4>
+	                                                <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-3 py-1">
+	                                                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+	                                                    Novos
+	                                                    <span className="w-2 h-2 rounded-full bg-rose-500 ml-2" />
+	                                                    Saídas
+	                                                </div>
+	                                            </div>
+	                                            {(() => {
+	                                                const maxVal = Math.max(1, ...followersSeries.map(p => Math.max(p.gained, p.lost)));
+	                                                const barMax = 86;
+
+	                                                return (
+	                                                    <div className="relative h-[240px] rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] p-4 overflow-hidden">
+	                                                        <div className="absolute left-4 right-4 top-1/2 h-px bg-[var(--shell-border)]" />
+	                                                        <div className="absolute left-4 right-4 top-6 h-px bg-[var(--shell-border)] opacity-40" />
+	                                                        <div className="absolute left-4 right-4 bottom-6 h-px bg-[var(--shell-border)] opacity-40" />
+
+	                                                        <div className="relative h-full flex items-end gap-2">
+	                                                            {followersSeries.map((p) => {
+	                                                                const up = Math.round((p.gained / maxVal) * barMax);
+	                                                                const down = Math.round((p.lost / maxVal) * barMax);
+	                                                            return (
+	                                                                <div key={p.label} className="flex-1 h-full flex flex-col items-stretch justify-end gap-2 min-w-[18px]">
+	                                                                    <div className="relative flex-1 flex items-center justify-center">
+	                                                                        <div className="absolute left-1/2 top-1/2 h-[52px] -translate-x-1/2 border-l border-dashed border-zinc-500/35" />
+	                                                                        <div className="absolute left-0 right-0 top-1/2 -translate-y-full flex items-end justify-center">
+	                                                                            <div className="w-full max-w-[22px] rounded-t-lg bg-emerald-500/90 shadow-[0_10px_30px_rgba(16,185,129,0.15)]" style={{ height: `${up}px` }} title={`Novos: ${p.gained.toLocaleString('pt-BR')}`} />
+	                                                                        </div>
+	                                                                            <div className="absolute left-0 right-0 top-1/2 flex items-start justify-center">
+	                                                                                <div className="w-full max-w-[22px] rounded-b-lg bg-rose-500/85 shadow-[0_10px_30px_rgba(244,63,94,0.15)]" style={{ height: `${down}px` }} title={`Saídas: ${p.lost.toLocaleString('pt-BR')}`} />
+	                                                                            </div>
+	                                                                        </div>
+	                                                                    <div className="h-8 flex items-start justify-center">
+	                                                                        <span className="inline-block -rotate-35 origin-top text-[8px] font-bold text-zinc-500 text-left font-mono tracking-tight">
+	                                                                            {p.label}
+	                                                                        </span>
+	                                                                    </div>
+	                                                                    </div>
+	                                                                );
+	                                                            })}
+	                                                        </div>
+
+	                                                        <div className="absolute top-4 right-4 text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+	                                                            Net: {followersSeries[followersSeries.length - 1]?.cumulative >= 0 ? "+" : ""}
+	                                                            {followersSeries[followersSeries.length - 1]?.cumulative.toLocaleString('pt-BR')}
+	                                                        </div>
+	                                                    </div>
+	                                                );
+	                                            })()}
+	                                        </div>
+
+	                                        <div className="space-y-3">
+	                                            <h4 className="text-sm font-black italic tracking-tight text-blue-500">Aumento de seguidores</h4>
+	                                            {(() => {
+	                                                const values = followersSeries.map(p => p.cumulative);
+	                                                const min = Math.min(...values, 0);
+	                                                const max = Math.max(...values, 1);
+
+	                                                const w = 560;
+	                                                const h = 220;
+	                                                const padX = 8;
+	                                                const padY = 18;
+	                                                const innerW = w - padX * 2;
+	                                                const innerH = h - padY * 2;
+
+	                                                const xAt = (i: number) => padX + (innerW * (followersSeries.length <= 1 ? 0 : i / (followersSeries.length - 1)));
+	                                                const yAt = (v: number) => {
+	                                                    if (max === min) return padY + innerH / 2;
+	                                                    return padY + ((max - v) / (max - min)) * innerH;
+	                                                };
+
+	                                                const path = followersSeries.map((p, i) => `${i === 0 ? "M" : "L"} ${xAt(i).toFixed(1)} ${yAt(p.cumulative).toFixed(1)}`).join(" ");
+	                                                const area = `${path} L ${xAt(followersSeries.length - 1).toFixed(1)} ${yAt(min).toFixed(1)} L ${xAt(0).toFixed(1)} ${yAt(min).toFixed(1)} Z`;
+
+	                                                return (
+	                                                    <div className="relative h-[240px] rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] p-4 overflow-hidden">
+	                                                        <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full">
+	                                                            <defs>
+	                                                                <linearGradient id="followersArea" x1="0" y1="0" x2="0" y2="1">
+	                                                                    <stop offset="0%" stopColor="rgba(59,130,246,0.35)" />
+	                                                                    <stop offset="100%" stopColor="rgba(59,130,246,0)" />
+	                                                                </linearGradient>
+	                                                                <linearGradient id="followersStroke" x1="0" y1="0" x2="1" y2="0">
+	                                                                    <stop offset="0%" stopColor="#06b6d4" />
+	                                                                    <stop offset="60%" stopColor="#3b82f6" />
+	                                                                    <stop offset="100%" stopColor="#6366f1" />
+	                                                                </linearGradient>
+	                                                            </defs>
+
+	                                                            <line x1={padX} x2={w - padX} y1={yAt(0)} y2={yAt(0)} stroke="rgba(161,161,170,0.35)" strokeWidth="1" />
+	                                                            <line x1={padX} x2={w - padX} y1={padY} y2={padY} stroke="rgba(161,161,170,0.18)" strokeWidth="1" />
+	                                                            <line x1={padX} x2={w - padX} y1={h - padY} y2={h - padY} stroke="rgba(161,161,170,0.18)" strokeWidth="1" />
+	                                                            <path d={area} fill="url(#followersArea)" />
+	                                                            <path d={path} fill="none" stroke="url(#followersStroke)" strokeWidth="3" strokeLinecap="round" />
+	                                                            {followersSeries.map((p, i) => (
+	                                                                <g key={p.label}>
+	                                                                    <line
+	                                                                        x1={xAt(i)}
+	                                                                        x2={xAt(i)}
+	                                                                        y1={yAt(p.cumulative) + 6}
+	                                                                        y2={h - padY}
+	                                                                        stroke="rgba(161,161,170,0.45)"
+	                                                                        strokeWidth="1"
+	                                                                        strokeDasharray="3 4"
+	                                                                    />
+	                                                                    <circle cx={xAt(i)} cy={yAt(p.cumulative)} r="4" fill="#3b82f6" opacity="0.95" />
+	                                                                    <circle cx={xAt(i)} cy={yAt(p.cumulative)} r="10" fill="transparent" />
+	                                                                </g>
+	                                                            ))}
+	                                                            {followersSeries.map((point, i) => (
+	                                                                <g key={`label-${point.label}`} transform={`translate(${xAt(i)} ${h - 4}) rotate(-35)`}>
+	                                                                    <text
+	                                                                        x="0"
+	                                                                        y="0"
+	                                                                        textAnchor="start"
+	                                                                        fill="rgb(113 113 122)"
+	                                                                        fontSize="8"
+	                                                                        fontWeight="700"
+	                                                                        style={{ userSelect: "none" }}
+	                                                                    >
+	                                                                        {point.label}
+	                                                                    </text>
+	                                                                </g>
+	                                                            ))}
+	                                                        </svg>
+
+	                                                        <div className="absolute top-4 left-4 text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+	                                                            Net: {followersSeries[followersSeries.length - 1]?.cumulative >= 0 ? "+" : ""}
+	                                                            {followersSeries[followersSeries.length - 1]?.cumulative.toLocaleString('pt-BR')}
+	                                                        </div>
+	                                                    </div>
+	                                                );
+	                                            })()}
+	                                        </div>
+	                                    </div>
+	                                </div>
+
+	                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+	                                    <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)]">
+	                                        <h3 className="text-lg font-black italic tracking-tight text-blue-500">Resumo de Seguidores</h3>
+	                                        <p className="text-xs text-zinc-500 mt-1">Indicadores principais do intervalo atual.</p>
+	                                    </div>
+	                                    <div className="p-6 flex-1 flex flex-col gap-4">
+	                                        <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4">
+	                                            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Seguidores Totais</div>
+	                                            <div className="text-4xl font-black tracking-tight text-[var(--foreground)] mt-2">{formatNumber(data.page_followers.value)}</div>
+	                                        </div>
+	                                        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+	                                            <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Novos Seguidores</div>
+	                                            <div className="text-3xl font-black tracking-tight text-emerald-400 mt-2">+{formatNumber(followersSummary.totalNew)}</div>
+	                                        </div>
+	                                        <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4 flex items-end justify-between">
+	                                            <div>
+	                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Crescimento</div>
+	                                                <div className={`text-2xl font-black tracking-tight mt-2 ${followersSummary.growthPct >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+	                                                    {followersSummary.growthPct >= 0 ? "+" : ""}{followersSummary.growthPct.toFixed(1)}%
+	                                                </div>
+	                                            </div>
+	                                            <div className="text-right">
+	                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Saldo Líquido</div>
+	                                                <div className={`text-sm font-black mt-2 ${followersSummary.net >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+	                                                    {followersSummary.net >= 0 ? "+" : ""}{formatNumber(followersSummary.net)}
+	                                                </div>
+	                                            </div>
+	                                        </div>
+	                                    </div>
+	                                </div>
+	                            </div>
+	                        )}
+	                    </div>
+	                )
             }
         </div >
     );
