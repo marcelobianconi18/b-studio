@@ -230,7 +230,7 @@ const BrazilFollowersMap = ({
                 ],
             },
             center: [-52, -15],
-            zoom: 2.2,
+            zoom: 3.8,
             minZoom: 0.8,
             maxZoom: 8,
             dragRotate: false,
@@ -351,12 +351,7 @@ const BrazilFollowersMap = ({
                     },
                 });
 
-                // Open focused on Brazil as a whole, keeping world context around it.
-                map.fitBounds(BRAZIL_VIEW_BOUNDS, {
-                    padding: { top: 140, right: 70, bottom: 70, left: 70 },
-                    duration: 0,
-                    maxZoom: 2.4,
-                });
+                // Removed fitBounds to keep higher initial zoom
             } catch (error) {
                 console.error('Failed to initialize Brazil followers map:', error);
             }
@@ -423,8 +418,8 @@ const BrazilFollowersMap = ({
             <div className="absolute top-0 left-0 w-full p-6 z-10 bg-gradient-to-b from-[var(--shell-surface)] to-transparent pointer-events-none">
                 <div className="flex items-start justify-between gap-4">
                     <div className="max-w-[320px]">
-                        <h3 className="text-lg font-black italic tracking-tight text-blue-500">{title}</h3>
-                        <p className="text-xs text-zinc-500 mt-1">{subtitle}</p>
+                        <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">{title}</h3>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{subtitle}</p>
                         <p className="text-[10px] text-zinc-400 mt-1">Visualização com dados simulados por perfil</p>
                     </div>
 
