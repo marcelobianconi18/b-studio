@@ -1,1 +1,11 @@
 backend/venv/
+*.log
+*.pid
+.env
+.env.*
+!.env.example
+.DS_Store
+node_modules/
+.next/
+dist/
+build/
