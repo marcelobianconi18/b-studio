@@ -3387,41 +3387,104 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     </div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 flex flex-col hover:border-blue-500/20 transition-all group min-h-[120px]">
-                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
-                                        <div className="flex-1 flex flex-col justify-center">
-                                            <div className="text-3xl xl:text-4xl font-black text-white tracking-tighter break-words leading-none mb-3">{data.demographics.top_country}</div>
-                                            <div className="w-5 h-1.5 bg-emerald-500 rounded-full"></div>
+                                <div className="overflow-x-auto">
+                                    <div className="grid grid-cols-8 gap-3 min-w-[1760px]">
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Novos Seguidores</h3>
+                                            <div>
+                                                <div className="text-4xl xl:text-5xl font-black text-emerald-400 tracking-tighter leading-none mb-3">+{formatNumber(periodFollowers.newFollowers)}</div>
+                                                <div className={`text-[10px] font-bold uppercase tracking-wide ${periodFollowers.growthPct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                                    {periodFollowers.growthPct >= 0 ? "+" : ""}{periodFollowers.growthPct.toFixed(1)}% no período
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 flex flex-col hover:border-blue-500/20 transition-all group min-h-[120px]">
-                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
-                                        <div className="flex-1 flex flex-col justify-center">
-                                            <div className="text-3xl xl:text-4xl font-black text-white tracking-tighter break-words leading-none mb-3">{data.demographics.top_city}</div>
-                                            <div className="w-5 h-1.5 bg-emerald-500 rounded-full"></div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Total de Seguidores</h3>
+                                            <div>
+                                                <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">{formatNumber(data.page_followers.value)}</div>
+                                                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Base ativa da conta</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[120px]">
-                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
-                                        <div>
-                                            <div className="text-3xl xl:text-4xl font-black text-white tracking-tighter break-words leading-none mb-2">PT-BR</div>
-                                            <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide mb-3">Português (BR)</div>
-                                            <div className="w-5 h-1.5 bg-emerald-500 rounded-full"></div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Botômetro</h3>
+                                            <div className="space-y-2 w-full">
+                                                <div className="flex items-center justify-between text-[10px] font-bold">
+                                                    <span className="text-emerald-300 uppercase tracking-wide">Reais</span>
+                                                    <span className="text-white">86%</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-[10px] font-bold">
+                                                    <span className="text-amber-300 uppercase tracking-wide">Fantasmas</span>
+                                                    <span className="text-white">11%</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-[10px] font-bold">
+                                                    <span className="text-rose-300 uppercase tracking-wide">Bots</span>
+                                                    <span className="text-white">3%</span>
+                                                </div>
+                                                <div className="h-1.5 rounded-full overflow-hidden bg-[var(--shell-border)] flex mt-2 w-full">
+                                                    <div className="h-full bg-emerald-500" style={{ width: "86%" }} />
+                                                    <div className="h-full bg-amber-400" style={{ width: "11%" }} />
+                                                    <div className="h-full bg-rose-500" style={{ width: "3%" }} />
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[120px]">
-                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Público Principal</h3>
-                                        <div>
-                                            <div className="text-3xl xl:text-4xl font-black text-white tracking-tighter break-words leading-none mb-3">{data.demographics.top_audience}</div>
-                                            <div className="w-5 h-1.5 bg-emerald-500 rounded-full"></div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cluster Principal</h3>
+                                            {(() => {
+                                                const badge = getGenderBadge(data.demographics.top_audience);
+                                                const cluster = data.demographics.top_audience ?? "";
+                                                const ageMatch = cluster.match(/\b\d{2}\s*-\s*\d{2}\b|\b\d{2}\+\b/);
+                                                const ageRange = (ageMatch?.[0] ?? audienceTotalsForView.topAge?.range ?? data.demographics.top_age_group).replace(/\s/g, "");
+                                                return (
+                                                    <div className="flex items-center gap-4">
+                                                        <span className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl border text-2xl font-black leading-none shrink-0 ${badge.className}`}>
+                                                            {badge.symbol}
+                                                        </span>
+                                                        <div className="min-w-0">
+                                                            <div className="text-3xl font-black text-white tracking-tight leading-none truncate">{badge.label}</div>
+                                                            <div className="text-sm font-bold text-zinc-500 mt-1">{ageRange}</div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
-                                    </div>
-                                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group min-h-[120px] col-span-2 lg:col-span-1">
-                                        <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Faixa Etária Principal</h3>
-                                        <div>
-                                            <div className="text-5xl font-black text-white tracking-tighter leading-none mb-3">{data.demographics.top_age_group}</div>
-                                            <div className="w-5 h-1.5 bg-emerald-500 rounded-full"></div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Faixa Etária Principal</h3>
+                                            <div>
+                                                <div className="text-5xl font-black text-white tracking-tighter leading-none mb-3">
+                                                    {audienceTotalsForView.topAge?.range ?? data.demographics.top_age_group}
+                                                </div>
+                                                {audienceTotalsForView.topAge && (
+                                                    <div className="text-[10px] text-blue-400 font-bold uppercase tracking-wide">
+                                                        {AGE_ECONOMIC_TAGS[audienceTotalsForView.topAge.range] ?? "Cluster"}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
+                                            <div className="flex-1 flex items-center">
+                                                <div className="text-3xl xl:text-4xl font-black text-white tracking-tighter break-words leading-none">
+                                                    {formatCityWithState(data.demographics.top_city, data.demographics.cities_data)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
+                                            <div className="flex-1 flex items-center gap-4">
+                                                <div className="text-6xl leading-none shrink-0 filter drop-shadow-lg">
+                                                    {getCountryFlagEmoji(data.demographics.top_country)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="text-xl xl:text-3xl font-black text-white tracking-tight leading-none break-words">{data.demographics.top_country}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
+                                            <div>
+                                                <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">PT-BR</div>
+                                                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Português (BR)</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
