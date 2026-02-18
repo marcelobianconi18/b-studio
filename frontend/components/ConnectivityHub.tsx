@@ -107,20 +107,28 @@ export default function ConnectivityHub() {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
+        let isActive = true;
+
         const checkStatus = async () => {
             try {
-                const res = await fetch(apiUrl("/api/system/status"));
-                if (res.ok) {
-                    setStatus(await res.json());
+                const res = await fetch(apiUrl("/api/system/status"), { cache: "no-store" });
+                if (!res.ok) {
+                    if (isActive) setStatus(null);
+                    return;
                 }
-            } catch (e) {
-                console.error("Status check failed", e);
+                const payload = await res.json();
+                if (isActive) setStatus(payload);
+            } catch {
+                if (isActive) setStatus(null);
             }
         };
 
         checkStatus();
         const interval = setInterval(checkStatus, 60000);
-        return () => clearInterval(interval);
+        return () => {
+            isActive = false;
+            clearInterval(interval);
+        };
     }, []);
 
     const isConnected = (platformId: string) => {

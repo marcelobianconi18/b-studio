@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, type ComponentType, type MouseEvent as ReactMouseEvent } from "react";
 import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 import dynamic from 'next/dynamic';
+import InstagramReelsMiniAnalysis from "./InstagramReelsMiniAnalysis";
 
 const BrazilFollowersMap = dynamic(() => import('./BrazilFollowersMap'), {
     ssr: false,
@@ -350,11 +351,18 @@ type KPICardProps = {
     tooltip?: string;
 };
 
-const KPICard = ({ title, value, change, icon: Icon, tooltip }: KPICardProps) => (
-    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-        <div className="flex justify-between items-start mb-2">
-            <div className="flex items-center gap-1">
-                <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest">{title}</h3>
+const KPICard = ({ title, value, change, icon: _Icon, tooltip }: KPICardProps) => {
+    const subtitle =
+        change > 0
+            ? `+${Math.abs(change)}% vs período anterior`
+            : change < 0
+                ? `-${Math.abs(change)}% vs período anterior`
+                : "Base ativa da conta no período.";
+
+    return (
+        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
+            <div className="flex items-center gap-1 mb-2">
+                <h3 className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">{title}</h3>
                 {tooltip && (
                     <span
                         title={tooltip}
@@ -364,21 +372,11 @@ const KPICard = ({ title, value, change, icon: Icon, tooltip }: KPICardProps) =>
                     </span>
                 )}
             </div>
-            <div className="p-2 rounded-lg bg-[var(--shell-side)] text-zinc-400 group-hover:text-blue-500 group-hover:bg-blue-500/10 transition-colors">
-                <Icon className="w-4 h-4" />
-            </div>
+            <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight">{formatNumber(value)}</div>
+            <p className="mt-2 text-[12px] font-semibold text-zinc-500">{subtitle}</p>
         </div>
-        <div>
-            <div className="text-3xl font-black text-[var(--foreground)] tracking-tight">{formatNumber(value)}</div>
-            {change !== 0 && (
-                <div className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide mt-1 ${change > 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                    {change > 0 ? <ArrowTrendingUpIcon className="w-3 h-3" /> : <ArrowTrendingDownIcon className="w-3 h-3" />}
-                    <span>{Math.abs(change)}% vs Período Anterior</span>
-                </div>
-            )}
-        </div>
-    </div>
-);
+    );
+};
 
 // Population Pyramid Component
 const PopulationPyramid = ({
@@ -1253,61 +1251,6 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
         return { totalNew, totalLost, net, growthPct };
     }, [followersSeries, followersBase]);
     const periodFollowers = useMemo(() => makePeriodFollowersSnapshot(period, followersBase), [period, followersBase]);
-    const summaryCards = useMemo(() => {
-        if (!data) return [];
-
-        const qualityRate = data.organic_impressions.value > 0
-            ? (data.total_reactions.value / data.organic_impressions.value) * 100
-            : 0;
-        const engagementPerPost = data.number_of_posts.value > 0
-            ? Math.round(data.engagements.value / data.number_of_posts.value)
-            : 0;
-        const conversationSignals = data.actions_split.comments + data.actions_split.shares;
-
-        if (isInstagram) {
-            return [
-                {
-                    title: "Resumo do Mês",
-                    value: `${data.page_followers.change > 0 ? "+" : ""}${data.page_followers.change.toFixed(1)}%`,
-                    subtitle: "Crescimento da base ativa",
-                    tone: data.page_followers.change >= 0 ? "text-emerald-500" : "text-rose-500",
-                },
-                {
-                    title: "Taxa de Qualidade",
-                    value: `${qualityRate.toFixed(2)}%`,
-                    subtitle: "Interação qualificada / alcance",
-                    tone: "text-blue-500",
-                },
-                {
-                    title: "Eficiência de Conteúdo",
-                    value: formatNumber(engagementPerPost),
-                    subtitle: "Engajamento médio por post",
-                    tone: "text-[var(--foreground)]",
-                },
-            ];
-        }
-
-        return [
-            {
-                title: "Resumo do Mês",
-                value: `${data.page_followers.change > 0 ? "+" : ""}${data.page_followers.change.toFixed(1)}%`,
-                subtitle: "Crescimento da base",
-                tone: data.page_followers.change >= 0 ? "text-emerald-500" : "text-rose-500",
-            },
-            {
-                title: "Engajamento por Post",
-                value: formatNumber(engagementPerPost),
-                subtitle: "Interações médias por publicação",
-                tone: "text-blue-500",
-            },
-            {
-                title: "Sinais de Conversa",
-                value: formatNumber(conversationSignals),
-                subtitle: "Comentários + compartilhamentos",
-                tone: "text-[var(--foreground)]",
-            },
-        ];
-    }, [data, isInstagram]);
     const videoRetentionSummary = useMemo(() => {
         if (!data) return { retention3s: 0, avgWatchSeconds: 0, rewatchRate: 0 };
 
@@ -1337,81 +1280,6 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
             conversion,
         };
     }, [data]);
-    const healthcheck = useMemo(() => {
-        if (!data) {
-            return {
-                score: 0,
-                label: "Perigo",
-                tone: "text-rose-500",
-                subtitle: "Sem dados para classificar",
-            };
-        }
-
-        const reachBase = Math.max(1, conversionFunnel.reach);
-        const qualityRate = (data.total_reactions.value / reachBase) * 100;
-        const conversionRate = (conversionFunnel.conversion / reachBase) * 100;
-
-        const normalize = (value: number, min: number, max: number) => {
-            if (max <= min) return 0;
-            return Math.max(0, Math.min(1, (value - min) / (max - min)));
-        };
-
-        const qualityNorm = normalize(qualityRate, 1.5, 6);
-        const retentionNorm = normalize(videoRetentionSummary.retention3s, 45, 80);
-        const conversionNorm = normalize(conversionRate, 0.03, 0.2);
-        const score = Math.round((qualityNorm * 0.45 + retentionNorm * 0.35 + conversionNorm * 0.2) * 100);
-
-        if (score >= 80) {
-            return {
-                score,
-                label: "Oceano Azul",
-                tone: "text-emerald-500",
-                subtitle: "Alta retenção e boa conversão",
-            };
-        }
-
-        if (score >= 40) {
-            return {
-                score,
-                label: "Atenção",
-                tone: "text-amber-400",
-                subtitle: "Distribui bem, mas pode converter melhor",
-            };
-        }
-
-        return {
-            score,
-            label: "Perigo",
-            tone: "text-rose-500",
-            subtitle: "Risco de conteúdo com baixa tração real",
-        };
-    }, [conversionFunnel, data, videoRetentionSummary.retention3s]);
-    const sixMonthTrend = useMemo(() => {
-        if (!data) return { rows: [] as Array<{ month: string; reach: number; engagement: number; quality: number }>, cagrReach: 0, cagrEngagement: 0 };
-
-        const reachCurrent = Math.max(1, conversionFunnel.reach);
-        const engagementCurrent = Math.max(1, data.engagements.value);
-        const startFactor = data.engagements.change >= 0 ? 0.72 : 1.22;
-        const rows = Array.from({ length: 6 }).map((_, idx) => {
-            const position = idx / 5;
-            const factor = startFactor + (1 - startFactor) * position;
-            const wave = 0.94 + (Math.sin((idx + 1) * 1.2) + 1) * 0.05;
-            const reach = Math.round(reachCurrent * factor * wave);
-            const engagement = Math.round(engagementCurrent * factor * (0.93 + (Math.cos((idx + 1) * 1.05) + 1) * 0.06));
-            const quality = Number(((engagement / Math.max(1, reach)) * 100).toFixed(2));
-            const date = new Date();
-            date.setMonth(date.getMonth() - (5 - idx), 1);
-            const month = date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "").toUpperCase();
-            return { month, reach, engagement, quality };
-        });
-
-        const first = rows[0];
-        const last = rows[rows.length - 1];
-        const cagrReach = Number(((Math.pow(last.reach / Math.max(1, first.reach), 1 / 5) - 1) * 100).toFixed(1));
-        const cagrEngagement = Number(((Math.pow(last.engagement / Math.max(1, first.engagement), 1 / 5) - 1) * 100).toFixed(1));
-
-        return { rows, cagrReach, cagrEngagement };
-    }, [conversionFunnel.reach, data]);
     const formatEfficiencyRows = useMemo(() => {
         if (!data) return [] as Array<{ label: string; posts: number; avgReach: number; avgEngagement: number; avgClicks: number; efficiency: number }>;
 
@@ -1719,6 +1587,17 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
         };
     }, [audienceRowsForView]);
     const maxAction = data ? Math.max(data.actions_split.reactions, data.actions_split.comments, data.actions_split.shares) : 1;
+    const tabItems = useMemo(
+        () => (
+            isInstagram
+                ? [
+                    ...TAB_ITEMS,
+                    { id: "reels_stories", label: "Reels/Stories" },
+                ]
+                : TAB_ITEMS
+        ),
+        [isInstagram],
+    );
 
     if (!data) return <div className="p-20 text-center animate-pulse text-zinc-500">Carregando Insights do {isInstagram ? "Instagram" : "Facebook"}...</div>;
 
@@ -1726,8 +1605,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
         <div className="space-y-6 pb-20">
             {/* Tabs Navigation & Period Selector */}
             <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[var(--shell-border)] pb-1 mb-6 gap-4">
-                <div className="flex items-center gap-2">
-                    {TAB_ITEMS.map((tab) => (
+                <div className="flex flex-wrap items-center gap-2">
+                    {tabItems.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
@@ -1751,104 +1630,6 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
             {/* TAB CONTENT: GERAL */}
             {activeTab === "geral" && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                            <div>
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Quick Healthcheck</div>
-                                <div className={`text-3xl font-black tracking-tight mt-1 ${healthcheck.tone}`}>{healthcheck.score}/100</div>
-                                <div className="text-[11px] text-zinc-500 mt-1">{healthcheck.label} · {healthcheck.subtitle}</div>
-                            </div>
-                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                                <span className="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">Oceano Azul 80-100</span>
-                                <span className="px-2 py-1 rounded-full bg-amber-500/10 text-amber-400">Atenção 40-79</span>
-                                <span className="px-2 py-1 rounded-full bg-rose-500/10 text-rose-400">Perigo 0-39</span>
-                            </div>
-                        </div>
-                        <div className="mt-4 h-2 rounded-full bg-zinc-100 dark:bg-white/5 overflow-hidden">
-                            <div
-                                className={`h-full rounded-full ${healthcheck.score >= 80 ? "bg-emerald-500" : healthcheck.score >= 40 ? "bg-amber-400" : "bg-rose-500"}`}
-                                style={{ width: `${Math.max(2, healthcheck.score)}%` }}
-                            />
-                        </div>
-                    </div>
-	                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-	                        {summaryCards.map((card) => (
-	                            <div key={card.title} className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
-	                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{card.title}</div>
-	                                <div className={`text-3xl font-black mt-2 tracking-tight ${card.tone}`}>{card.value}</div>
-	                                <div className="text-[11px] text-zinc-500 mt-1">{card.subtitle}</div>
-	                            </div>
-	                        ))}
-	                    </div>
-	                    {isInstagram && instagramAudienceModel && (
-	                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-	                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
-	                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Quality Score</div>
-	                                <div className="mt-3 flex items-center gap-4">
-	                                    <div className="relative w-24 h-24 shrink-0">
-	                                        <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-	                                            <circle cx="60" cy="60" r="44" fill="none" stroke="var(--shell-border)" strokeWidth="12" />
-	                                            <circle
-	                                                cx="60"
-	                                                cy="60"
-	                                                r="44"
-	                                                fill="none"
-	                                                stroke={instagramAudienceModel.qualityColor}
-	                                                strokeWidth="12"
-	                                                strokeLinecap="round"
-	                                                strokeDasharray={`${(instagramAudienceModel.qualityScore / 100) * (2 * Math.PI * 44)} ${2 * Math.PI * 44}`}
-	                                                className="transition-all duration-700"
-	                                            />
-	                                        </svg>
-	                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-	                                            <span className={`text-2xl font-black tracking-tight ${instagramAudienceModel.qualityTone}`}>{instagramAudienceModel.qualityScore}</span>
-	                                            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">/100</span>
-	                                        </div>
-	                                    </div>
-	                                    <div>
-	                                        <div className={`text-sm font-black ${instagramAudienceModel.qualityTone}`}>{instagramAudienceModel.qualityLabel}</div>
-	                                        <div className="text-[11px] text-zinc-500 mt-1 leading-relaxed">{instagramAudienceModel.qualitySubtitle}</div>
-	                                    </div>
-	                                </div>
-	                            </div>
-	                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
-	                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Influenciador vs Decisor</div>
-	                                <div className="mt-3 flex flex-wrap gap-2">
-	                                    <span className="px-2 py-1 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[10px] font-black uppercase tracking-wide">
-	                                        Influenciador {instagramAudienceModel.influencerRange} ({instagramAudienceModel.influencerShare}%)
-	                                    </span>
-	                                    <span className="px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wide">
-	                                        Decisor {instagramAudienceModel.decisorRange} ({instagramAudienceModel.decisorShare}%)
-	                                    </span>
-	                                </div>
-	                                <div className="text-[11px] text-zinc-500 mt-3 leading-relaxed">
-	                                    {instagramAudienceModel.conversionInsight}
-	                                </div>
-	                            </div>
-	                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
-	                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Botômetro (Prévia)</div>
-	                                <div className="mt-3 space-y-2">
-	                                    <div className="flex items-center justify-between text-[10px] font-bold">
-	                                        <span className="text-emerald-300 uppercase tracking-wide">Valiosos</span>
-	                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.valuablePct}%</span>
-	                                    </div>
-	                                    <div className="flex items-center justify-between text-[10px] font-bold">
-	                                        <span className="text-amber-300 uppercase tracking-wide">Fantasmas</span>
-	                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.ghostPct}%</span>
-	                                    </div>
-	                                    <div className="flex items-center justify-between text-[10px] font-bold">
-	                                        <span className="text-rose-300 uppercase tracking-wide">Bots/Mass</span>
-	                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.botPct}%</span>
-	                                    </div>
-	                                    <div className="h-2 rounded-full overflow-hidden bg-[var(--shell-border)] flex mt-3">
-	                                        <div className="h-full bg-emerald-500" style={{ width: `${instagramAudienceModel.botometer.valuablePct}%` }} />
-	                                        <div className="h-full bg-amber-400" style={{ width: `${instagramAudienceModel.botometer.ghostPct}%` }} />
-	                                        <div className="h-full bg-rose-500" style={{ width: `${instagramAudienceModel.botometer.botPct}%` }} />
-	                                    </div>
-	                                </div>
-	                            </div>
-	                        </div>
-	                    )}
 	                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
 	                        <KPICard title={isInstagram ? "Seguidores Ativos" : "Seguidores da Página"} value={data.page_followers.value} change={data.page_followers.change} icon={UserGroupIcon} tooltip="Quantidade de perfis que acompanham a conta neste período." />
 	                        <KPICard title={isInstagram ? "Interações Qualificadas" : "Reações Totais"} value={data.total_reactions.value} change={data.total_reactions.change} icon={HandThumbUpIcon} tooltip={isInstagram ? "Ações com intenção (salvar, compartilhar, responder, etc.)." : "Reações totais das publicações no período."} />
@@ -1857,45 +1638,6 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                         <KPICard title={isInstagram ? "Conteúdos Publicados" : "Total de Posts"} value={data.number_of_posts.value} change={data.number_of_posts.change} icon={DocumentTextIcon} tooltip="Quantidade de conteúdos publicados no período selecionado." />
                         <KPICard title={isInstagram ? "Alcance Não Seguidores" : "Impressões"} value={data.organic_impressions.value} change={data.organic_impressions.change} icon={EyeIcon} tooltip={isInstagram ? "Pessoas alcançadas fora da base atual de seguidores." : "Total de visualizações exibidas, incluindo repetições."} />
                     </div>
-                    <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-5">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-                            <div>
-                                <h4 className="text-sm font-black italic tracking-tight text-[var(--foreground)]">Tendência Semestral</h4>
-                                <p className="text-[11px] text-zinc-500 mt-1">Leitura de 6 meses para evitar decisões baseadas em janelas curtas.</p>
-                            </div>
-                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide">
-                                <span className={`px-2 py-1 rounded-full ${sixMonthTrend.cagrReach >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}>
-                                    CAGR Alcance {sixMonthTrend.cagrReach >= 0 ? "+" : ""}{sixMonthTrend.cagrReach}%
-                                </span>
-                                <span className={`px-2 py-1 rounded-full ${sixMonthTrend.cagrEngagement >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}>
-                                    CAGR Engaj. {sixMonthTrend.cagrEngagement >= 0 ? "+" : ""}{sixMonthTrend.cagrEngagement}%
-                                </span>
-                            </div>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm whitespace-nowrap">
-                                <thead>
-                                    <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                                        <th className="pb-2 pr-3">Mês</th>
-                                        <th className="pb-2 pr-3 text-right">Alcance</th>
-                                        <th className="pb-2 pr-3 text-right">Engajamento</th>
-                                        <th className="pb-2 pr-3 text-right">Taxa de Qualidade</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[var(--shell-border)]">
-                                    {sixMonthTrend.rows.map((row) => (
-                                        <tr key={row.month}>
-                                            <td className="py-2 pr-3 font-black text-[var(--foreground)]">{row.month}</td>
-                                            <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.reach)}</td>
-                                            <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.engagement)}</td>
-                                            <td className="py-2 pr-3 text-right font-mono text-blue-400">{row.quality.toFixed(2)}%</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                         <div className="xl:col-span-2 grid grid-cols-1 xl:grid-cols-2 gap-6">
                             <div
@@ -2387,43 +2129,35 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                     {isInstagram && instagramPublicationsTopStats && (
                         <div className="grid grid-cols-1 lg:grid-cols-8 gap-4 items-stretch">
                             <div className="lg:col-span-4 space-y-4">
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl overflow-hidden">
-                                    <div className="px-4 py-3 bg-[var(--shell-side)] border-b border-[var(--shell-border)] text-zinc-400 text-sm font-semibold">
-                                        Total de Posts
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
+                                    <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Total de Posts</div>
+                                    <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight mt-2">
+                                        {instagramPublicationsTopStats.totalPosts.toLocaleString("pt-BR")}
                                     </div>
-                                    <div className="p-5">
-                                        <div className="text-center">
-                                            <div className="text-5xl font-black text-[var(--foreground)] tracking-tight">
-                                                {instagramPublicationsTopStats.totalPosts.toLocaleString("pt-BR")}
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 pt-3 border-t border-[var(--shell-border)] flex items-center justify-between">
-                                            <span className="text-[11px] font-semibold text-zinc-500">Média de Engajamento/Post</span>
-                                            <span className="text-lg font-black text-emerald-400">
-                                                {instagramPublicationsTopStats.avgEngagementPerPost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
-                                            </span>
-                                        </div>
+                                    <div className="mt-2 flex items-end justify-between gap-3">
+                                        <span className="text-[12px] font-semibold text-zinc-500">Média de Engajamento/Post</span>
+                                        <span className="text-2xl font-black text-emerald-400">
+                                            {instagramPublicationsTopStats.avgEngagementPerPost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                                        </span>
                                     </div>
                                 </div>
 
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl overflow-hidden">
-                                    <div className="px-4 py-3 bg-[var(--shell-side)] border-b border-[var(--shell-border)] text-zinc-400 text-sm font-semibold">
-                                        Médias por Post
-                                    </div>
-                                    <div className="p-5 grid grid-cols-2 gap-4">
-                                        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4 text-center">
-                                            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Interações</div>
-                                            <div className="text-3xl font-black text-[var(--foreground)] tracking-tight mt-2">
+                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5">
+                                    <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em] mb-4">Médias por Post</div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] px-5 py-4 flex flex-col justify-center min-h-[118px]">
+                                            <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Interações</div>
+                                            <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight mt-2">
                                                 {instagramPublicationsTopStats.avgInteractionsPerPost.toLocaleString("pt-BR")}
                                             </div>
-                                            <div className="text-[10px] text-zinc-500 mt-1">Média por post</div>
+                                            <div className="mt-2 text-[12px] font-semibold text-zinc-500">Média por post</div>
                                         </div>
-                                        <div className="rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4 text-center">
-                                            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Visualizações</div>
-                                            <div className="text-3xl font-black text-[var(--foreground)] tracking-tight mt-2">
+                                        <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] px-5 py-4 flex flex-col justify-center min-h-[118px]">
+                                            <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Visualizações</div>
+                                            <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight mt-2">
                                                 {instagramPublicationsTopStats.avgViewsPerPost.toLocaleString("pt-BR")}
                                             </div>
-                                            <div className="text-[10px] text-zinc-500 mt-1">Média por post</div>
+                                            <div className="mt-2 text-[12px] font-semibold text-zinc-500">Média por post</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2432,16 +2166,20 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             <div className="lg:col-span-4 lg:justify-self-end w-full h-full grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="w-full h-full flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] relative">
                                     {(() => {
-                                        const radius = 34;
-                                        const circumference = 2 * Math.PI * radius;
-                                        let cumulative = 0;
                                         const segments = instagramPublicationsTopStats.split.map((item) => {
-                                            const value = Math.max(0, Math.min(100, item.percentage));
-                                            const length = (value / 100) * circumference;
-                                            const offset = -cumulative;
-                                            cumulative += length;
-                                            return { ...item, length, offset };
+                                            const value = Math.max(0, item.percentage);
+                                            return { ...item, percentage: value };
                                         });
+                                        const totalPercentage = Math.max(1, segments.reduce((acc, segment) => acc + segment.percentage, 0));
+                                        let cursor = 0;
+                                        const donutGradient = segments
+                                            .map((segment) => {
+                                                const normalized = (segment.percentage / totalPercentage) * 100;
+                                                const start = cursor;
+                                                cursor += normalized;
+                                                return `${segment.color} ${start}% ${cursor}%`;
+                                            })
+                                            .join(", ");
                                         const main = instagramPublicationsTopStats.split.reduce((prev, curr) =>
                                             curr.percentage > prev.percentage ? curr : prev
                                         );
@@ -2458,37 +2196,16 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     </div>
                                                 </div>
 
-                                                <div className="relative w-40 h-40 flex items-center justify-center">
-                                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                                                        <circle
-                                                            cx="50"
-                                                            cy="50"
-                                                            r="40"
-                                                            fill="none"
-                                                            stroke="var(--shell-surface)"
-                                                            strokeWidth="20"
-                                                        />
-                                                        {segments.map((segment) => (
-                                                            <circle
-                                                                key={segment.label}
-                                                                cx="50"
-                                                                cy="50"
-                                                                r="40"
-                                                                fill="none"
-                                                                stroke={segment.color}
-                                                                strokeWidth="20"
-                                                                strokeDasharray={`${segment.length} ${circumference}`}
-                                                                strokeDashoffset={segment.offset}
-                                                                strokeLinecap="round"
-                                                                className="transition-all duration-1000 ease-out"
-                                                            />
-                                                        ))}
-                                                    </svg>
-                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                        <div className="text-4xl leading-none font-black text-[var(--foreground)] tracking-tight">
+                                                <div className="relative w-44 h-44 flex items-center justify-center">
+                                                    <div
+                                                        className="w-full h-full rounded-full -rotate-90 transition-all duration-700"
+                                                        style={{ background: `conic-gradient(${donutGradient})` }}
+                                                    />
+                                                    <div className="absolute inset-[28px] rounded-full bg-[var(--shell-surface)] border border-[var(--shell-border)] flex flex-col items-center justify-center text-center px-2">
+                                                        <div className="text-4xl leading-none font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">
                                                             {main.percentage.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%
                                                         </div>
-                                                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1">
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mt-1">
                                                             {main.label}
                                                         </div>
                                                     </div>
@@ -2522,17 +2239,21 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                                 <div className="w-full h-full flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] relative">
                                     {(() => {
-                                        const radius = 34;
-                                        const circumference = 2 * Math.PI * radius;
                                         const totalPosts = Math.max(1, instagramPublicationsTopStats.totalPosts);
-                                        let cumulative = 0;
                                         const segments = instagramPublicationsTopStats.postTypeSplit.map((item) => {
                                             const percentage = (item.count / totalPosts) * 100;
-                                            const length = (percentage / 100) * circumference;
-                                            const offset = -cumulative;
-                                            cumulative += length;
-                                            return { ...item, percentage, length, offset };
+                                            return { ...item, percentage };
                                         });
+                                        const totalPercentage = Math.max(1, segments.reduce((acc, segment) => acc + segment.percentage, 0));
+                                        let cursor = 0;
+                                        const donutGradient = segments
+                                            .map((segment) => {
+                                                const normalized = (segment.percentage / totalPercentage) * 100;
+                                                const start = cursor;
+                                                cursor += normalized;
+                                                return `${segment.color} ${start}% ${cursor}%`;
+                                            })
+                                            .join(", ");
                                         const main = segments.reduce((prev, curr) =>
                                             curr.count > prev.count ? curr : prev
                                         );
@@ -2549,37 +2270,16 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     </div>
                                                 </div>
 
-                                                <div className="relative w-40 h-40 flex items-center justify-center">
-                                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                                                        <circle
-                                                            cx="50"
-                                                            cy="50"
-                                                            r="40"
-                                                            fill="none"
-                                                            stroke="var(--shell-surface)"
-                                                            strokeWidth="20"
-                                                        />
-                                                        {segments.map((segment) => (
-                                                            <circle
-                                                                key={segment.label}
-                                                                cx="50"
-                                                                cy="50"
-                                                                r="40"
-                                                                fill="none"
-                                                                stroke={segment.color}
-                                                                strokeWidth="20"
-                                                                strokeDasharray={`${segment.length} ${circumference}`}
-                                                                strokeDashoffset={segment.offset}
-                                                                strokeLinecap="round"
-                                                                className="transition-all duration-1000 ease-out"
-                                                            />
-                                                        ))}
-                                                    </svg>
-                                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                        <div className="text-4xl leading-none font-black text-[var(--foreground)] tracking-tight">
+                                                <div className="relative w-44 h-44 flex items-center justify-center">
+                                                    <div
+                                                        className="w-full h-full rounded-full -rotate-90 transition-all duration-700"
+                                                        style={{ background: `conic-gradient(${donutGradient})` }}
+                                                    />
+                                                    <div className="absolute inset-[28px] rounded-full bg-[var(--shell-surface)] border border-[var(--shell-border)] flex flex-col items-center justify-center text-center px-2">
+                                                        <div className="text-4xl leading-none font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">
                                                             {main.count}
                                                         </div>
-                                                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1">
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mt-1">
                                                             {main.label}
                                                         </div>
                                                     </div>
@@ -3068,107 +2768,25 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                                     {isInstagram && (
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
-                                                <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Retenção 0-3s</div>
-                                                <div className="text-3xl font-black text-emerald-500 mt-2">{videoRetentionSummary.retention3s}%</div>
-                                                <div className="text-[10px] text-zinc-500 mt-1">Taxa de permanência inicial</div>
+                                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
+                                                <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Retenção 0-3s</div>
+                                                <div className="text-5xl leading-[0.9] font-black text-emerald-500 mt-2">{videoRetentionSummary.retention3s}%</div>
+                                                <div className="mt-2 text-[12px] font-semibold text-zinc-500">Taxa de permanência inicial</div>
                                             </div>
-                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
-                                                <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Tempo Médio</div>
-                                                <div className="text-3xl font-black text-blue-500 mt-2">{videoRetentionSummary.avgWatchSeconds}s</div>
-                                                <div className="text-[10px] text-zinc-500 mt-1">Visualização média por Reel</div>
+                                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
+                                                <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Tempo Médio</div>
+                                                <div className="text-5xl leading-[0.9] font-black text-blue-500 mt-2">{videoRetentionSummary.avgWatchSeconds}s</div>
+                                                <div className="mt-2 text-[12px] font-semibold text-zinc-500">Visualização média por Reel</div>
                                             </div>
-                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
-                                                <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-500">Re-watch</div>
-                                                <div className="text-3xl font-black text-indigo-500 mt-2">{videoRetentionSummary.rewatchRate}%</div>
-                                                <div className="text-[10px] text-zinc-500 mt-1">Taxa estimada de loop/revisita</div>
+                                            <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
+                                                <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Re-watch</div>
+                                                <div className="text-5xl leading-[0.9] font-black text-indigo-500 mt-2">{videoRetentionSummary.rewatchRate}%</div>
+                                                <div className="mt-2 text-[12px] font-semibold text-zinc-500">Taxa estimada de loop/revisita</div>
                                             </div>
                                         </div>
                                     )}
-
-                                    {/* INSIGHTS / TIPS SECTION */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-8 border-t border-[var(--shell-border)]/50">
-                                        {/* Tip 1: Content Advice */}
-                                        <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 flex flex-col items-start gap-3">
-                                            <div className="bg-blue-500/10 p-2 rounded-lg">
-                                                <DocumentTextIcon className="w-5 h-5 text-blue-500" />
-                                            </div>
-                                            <div>
-                                                <h5 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">Dica de Postagem</h5>
-                                                <p className="text-sm text-[var(--foreground)] leading-snug">
-                                                    {isInstagram ? (
-                                                        <>Nos Reels, os primeiros <strong>2 segundos</strong> estão decidindo a distribuição. Comece com promessa clara e corte sem introdução.</>
-                                                    ) : (
-                                                        <>Vídeos curtos (Reels) estão gerando <strong>2x mais alcance</strong> que fotos estáticas. Explore esse formato para crescer.</>
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Tip 2: Attention Point */}
-                                        <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-4 flex flex-col items-start gap-3">
-                                            <div className="bg-rose-500/10 p-2 rounded-lg">
-                                                <ArrowTrendingDownIcon className="w-5 h-5 text-rose-500" />
-                                            </div>
-                                            <div>
-                                                <h5 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-1">Ponto de Atenção</h5>
-                                                <p className="text-sm text-[var(--foreground)] leading-snug">
-                                                    {isInstagram ? (
-                                                        <>Muito alcance com pouco <strong>salvamento</strong> indica conteúdo consumido e descartado. Falta utilidade prática para retorno.</>
-                                                    ) : (
-                                                        <>O engajamento em <strong>Álbuns</strong> caiu 15% esta semana. Tente reduzir a quantidade de fotos por carrossel.</>
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Tip 3: Success Point */}
-                                        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 flex flex-col items-start gap-3">
-                                            <div className="bg-emerald-500/10 p-2 rounded-lg">
-                                                <HandThumbUpIcon className="w-5 h-5 text-emerald-500" />
-                                            </div>
-                                            <div>
-                                                <h5 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">Ponto de Sucesso</h5>
-                                                <p className="text-sm text-[var(--foreground)] leading-snug">
-                                                    {isInstagram ? (
-                                                        <>Conteúdos com <strong>CTA para DM</strong> estão puxando os melhores resultados de lead. Escale esse formato 2x por semana.</>
-                                                    ) : (
-                                                        <>Seus posts de <strong>terça-feira às 18h</strong> têm a melhor performance. Mantenha a consistência neste horário!</>
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-6 bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h5 className="text-xs font-black uppercase tracking-widest text-zinc-500">Matriz de Prioridade</h5>
-                                            <span className="text-[10px] font-bold text-zinc-500">Issue → Recommendation → Priority</span>
-                                        </div>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left text-sm">
-                                                <thead>
-                                                    <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                                                        <th className="pb-2 pr-3">Issue</th>
-                                                        <th className="pb-2 pr-3">Recommendation</th>
-                                                        <th className="pb-2 pr-3 text-right">Priority</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-[var(--shell-border)]">
-                                                    {actionableMatrix.map((item, idx) => (
-                                                        <tr key={`${item.issue}-${idx}`}>
-                                                            <td className="py-2 pr-3 text-[11px] text-[var(--foreground)] font-semibold">{item.issue}</td>
-                                                            <td className="py-2 pr-3 text-[11px] text-zinc-400">{item.recommendation}</td>
-                                                            <td className={`py-2 pr-3 text-right text-[10px] font-black uppercase tracking-wider ${item.tone}`}>{item.priority}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
                                 </div>
                             )}
-
 
                         </div>
                     </div >
@@ -3652,11 +3270,228 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 </div>
                             </div>
                         )}
+
                     </div>
                 </div>
                 </div>
             )
             }
+
+            {/* TAB CONTENT: REELS/STORIES */}
+            {activeTab === "reels_stories" && isInstagram && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
+                    {(() => {
+                        const basePosts = [...data.top_posts]
+                            .sort((a, b) => b.timestamp - a.timestamp)
+                            .slice(0, 6);
+                        const sequenceSource = basePosts.length
+                            ? basePosts
+                            : Array.from({ length: 6 }).map((_, index) => ({
+                                id: `fallback-story-${index + 1}`,
+                                image: "https://placehold.co/120x120/0f172a/e2e8f0?text=ST",
+                                timestamp: Date.now() - (index * 3600 * 1000),
+                                video_views: 12000 - index * 900,
+                                reach: 12000 - index * 900,
+                                shares: 240 - index * 20,
+                                comments: 180 - index * 14,
+                                reactions: 480 - index * 30,
+                                link_clicks: 80 - index * 8,
+                            }));
+
+                        const storyAgeBands = ["18-24", "25-34", "35-44", "45-54"];
+                        const sequence = sequenceSource.map((post, index) => {
+                            const reach = Math.max(1200, Math.round((post.video_views || post.reach) * (0.66 - index * 0.05)));
+                            const retention = clamp(95 - index * 12 + ((post.shares ?? 0) % 6), 28, 98);
+                            const backTaps = Math.max(15, Math.round((post.comments ?? 0) * 0.8 + (post.shares ?? 0) * 0.4 + index * 16));
+                            const nextTaps = Math.max(40, Math.round((post.reactions ?? 0) * 0.7 + (post.shares ?? 0) * 0.9 + index * 42));
+                            const exits = Math.max(18, Math.round(((100 - retention) * reach) / 1400));
+                            const replies = Math.max(8, Math.round((post.comments ?? 0) * 1.15 + (post.link_clicks ?? 0) * 0.6));
+                            const linkClicks = Math.max(0, Math.round((post.link_clicks ?? 0) * 0.8 - index * 4));
+                            const seed = post.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) + index * 17;
+                            const type = index % 3 === 0 ? "Vídeo" : index % 3 === 1 ? "Estático" : "Repost";
+                            const interactionLabel = index % 3 === 0
+                                ? `Enquete (${formatNumber(Math.max(12, (post.comments ?? 0) + (post.shares ?? 0)))})`
+                                : index % 3 === 1
+                                    ? `Caixinha (${formatNumber(Math.max(8, post.comments ?? 0))})`
+                                    : `Reações (${formatNumber(Math.max(10, post.reactions ?? 0))})`;
+                            const dominantAgeRange = storyAgeBands[seed % storyAgeBands.length];
+                            const dominantAgeShare = clamp(33 + (seed % 25), 30, 68);
+                            const dominantGender = seed % 2 === 0 ? "Mulheres" : "Homens";
+                            const dominantGenderShare = clamp(52 + (seed % 19), 50, 78);
+
+                            return {
+                                id: post.id,
+                                image: post.image,
+                                timestamp: post.timestamp,
+                                time: new Date(post.timestamp).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+                                label: `Story ${index + 1}`,
+                                type,
+                                reach,
+                                retention,
+                                backTaps,
+                                nextTaps,
+                                exits,
+                                replies,
+                                interactionLabel,
+                                linkClicks,
+                                dominantAgeRange,
+                                dominantAgeShare,
+                                dominantGender,
+                                dominantGenderShare,
+                            };
+                        });
+
+                        const totalBack = sequence.reduce((acc, item) => acc + item.backTaps, 0);
+                        const totalForward = sequence.reduce((acc, item) => acc + item.nextTaps, 0);
+                        const totalExits = sequence.reduce((acc, item) => acc + item.exits, 0);
+                        const totalReplies = sequence.reduce((acc, item) => acc + item.replies, 0);
+
+                        let rejectionIndex = 0;
+                        let maxDrop = -Infinity;
+                        for (let i = 1; i < sequence.length; i += 1) {
+                            const drop = sequence[i - 1].reach - sequence[i].reach;
+                            if (drop > maxDrop) {
+                                maxDrop = drop;
+                                rejectionIndex = i;
+                            }
+                        }
+
+                        const bestWindow = sequence.length >= 2
+                            ? `${sequence[0].time} - ${sequence[1].time}`
+                            : sequence[0]?.time ?? "--:--";
+                        const repliesPerK = Math.round((totalReplies / Math.max(1, sequence.reduce((acc, item) => acc + item.reach, 0))) * 1000);
+
+                        return (
+                            <div className="space-y-4">
+                                <InstagramReelsMiniAnalysis posts={data.top_posts} storiesRows={sequence} totalFollowers={data.page_followers.value} />
+
+                                <div className="bg-[var(--shell-surface)] border border-cyan-500/25 rounded-3xl overflow-hidden shadow-[0_0_35px_rgba(6,182,212,0.14)]">
+                                    <div className="px-5 py-3 border-b border-cyan-500/20 bg-[var(--shell-side)]">
+                                        <h3 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">
+                                            Protocolo AIMC-Bianconi 2026 - Monitor de Lealdade (Stories Analytics)
+                                        </h3>
+                                    </div>
+                                    <div className="p-4 md:p-5 space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                                            <div className="h-[132px] rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4 flex flex-col justify-between">
+                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-emerald-300">◀ Toques para Voltar (Interesse)</div>
+                                                <div className="text-5xl leading-none font-black tracking-tight text-emerald-300">{formatNumber(totalBack)}</div>
+                                                <div className="text-[11px] text-emerald-200/80">Alta relevância</div>
+                                            </div>
+                                            <div className="h-[132px] rounded-2xl border border-amber-500/35 bg-amber-500/10 p-4 flex flex-col justify-between">
+                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-amber-300">▶ Toques para Avançar (Tédio)</div>
+                                                <div className="text-5xl leading-none font-black tracking-tight text-amber-300">{formatNumber(totalForward)}</div>
+                                                <div className="text-[11px] text-amber-200/80">Alerta amarelo (melhorar ritmo)</div>
+                                            </div>
+                                            <div className="h-[132px] rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 flex flex-col justify-between">
+                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-rose-300">⛔ Saídas (Rejeição)</div>
+                                                <div className="text-5xl leading-none font-black tracking-tight text-rose-300">{formatNumber(totalExits)}</div>
+                                                <div className="text-[11px] text-rose-200/80">Alerta vermelho (tóxico)</div>
+                                            </div>
+                                            <div className="h-[132px] rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4 flex flex-col justify-between">
+                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-emerald-300">💬 Respostas & Reações (Conversão)</div>
+                                                <div className="text-5xl leading-none font-black tracking-tight text-emerald-300">{formatNumber(totalReplies)}</div>
+                                                <div className="text-[11px] text-emerald-200/80">Sucesso</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-[var(--shell-border)] overflow-hidden">
+                                            <div className="px-4 py-3 border-b border-[var(--shell-border)] bg-[var(--shell-side)]">
+                                                <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-500 dark:text-zinc-400">Tabela de Detalhamento (Frame a Frame)</h4>
+                                            </div>
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full min-w-[1220px] text-sm">
+                                                    <thead>
+                                                        <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                                            <th className="py-2.5 px-3 text-left">Frame</th>
+                                                            <th className="py-2.5 px-3 text-left">Tipo</th>
+                                                            <th className="py-2.5 px-3 text-right">Faixa etária pred.</th>
+                                                            <th className="py-2.5 px-3 text-right">Gênero maioria</th>
+                                                            <th className="py-2.5 px-3 text-right">Alcance</th>
+                                                            <th className="py-2.5 px-3 text-right">Retenção</th>
+                                                            <th className="py-2.5 px-3 text-right">Interação</th>
+                                                            <th className="py-2.5 px-3 text-right">Navegação</th>
+                                                            <th className="py-2.5 px-3 text-right">Link</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-[var(--shell-border)]">
+                                                        {sequence.map((item) => (
+                                                            <tr key={item.id} className="hover:bg-[var(--shell-side)] transition-colors">
+                                                                <td className="py-2.5 px-3">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="w-9 h-9 rounded-md overflow-hidden border border-[var(--shell-border)] bg-zinc-800 shrink-0">
+                                                                            <img src={item.image} alt={item.label} className="w-full h-full object-cover" />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="font-black text-[var(--foreground)]">{item.time}</div>
+                                                                            <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{item.label}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-zinc-600 dark:text-zinc-400">{item.type}</td>
+                                                                <td className="py-2.5 px-3 text-right">
+                                                                    <span className="inline-flex items-center px-2 py-0.5 rounded border border-violet-500/30 bg-violet-500/15 text-xs font-black text-violet-700 dark:text-violet-300">
+                                                                        {item.dominantAgeRange}
+                                                                    </span>
+                                                                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">{item.dominantAgeShare}%</div>
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-right">
+                                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-black ${
+                                                                        item.dominantGender === "Mulheres"
+                                                                            ? "border-fuchsia-500/30 bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300"
+                                                                            : "border-sky-500/30 bg-sky-500/15 text-sky-700 dark:text-sky-300"
+                                                                    }`}>
+                                                                        {item.dominantGender}
+                                                                    </span>
+                                                                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">{item.dominantGenderShare}%</div>
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-right font-black text-[var(--foreground)]">{formatNumber(item.reach)}</td>
+                                                                <td className="py-2.5 px-3 text-right">
+                                                                    <div className="flex items-center justify-end gap-2">
+                                                                        <div className="w-24 h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                                                                            <div className={`h-full ${item.retention >= 80 ? "bg-emerald-400" : item.retention >= 60 ? "bg-amber-400" : "bg-rose-500"}`} style={{ width: `${item.retention}%` }} />
+                                                                        </div>
+                                                                        <span className={`font-black text-xs ${item.retention >= 80 ? "text-emerald-400" : item.retention >= 60 ? "text-amber-400" : "text-rose-400"}`}>{item.retention}%</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-right text-zinc-700 dark:text-zinc-300">{item.interactionLabel}</td>
+                                                                <td className="py-2.5 px-3 text-right">
+                                                                    <div className="flex items-center justify-end gap-2">
+                                                                        <div className="w-24 h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden flex">
+                                                                            <div className="h-full bg-emerald-400" style={{ width: `${Math.min(100, (item.backTaps / Math.max(1, item.backTaps + item.exits)) * 100)}%` }} />
+                                                                            <div className="h-full bg-rose-500" style={{ width: `${Math.min(100, (item.exits / Math.max(1, item.backTaps + item.exits)) * 100)}%` }} />
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-2.5 px-3 text-right font-black text-zinc-700 dark:text-zinc-300">{item.linkClicks > 0 ? formatNumber(item.linkClicks) : "-"}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+                                            <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3">
+                                                <div className="text-[11px] font-black text-cyan-700 dark:text-cyan-300 uppercase tracking-widest">A. Melhor Horário de Retenção</div>
+                                                <div className="text-sm font-bold text-cyan-900 dark:text-cyan-100 mt-1">{bestWindow} (&lt;2% rejeição)</div>
+                                            </div>
+                                            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                                                <div className="text-[11px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest">B. Cemitério de Sequências</div>
+                                                <div className="text-sm font-bold text-amber-900 dark:text-amber-100 mt-1">Aviso: {sequence[rejectionIndex]?.type ?? "Frame"} com pico de saída na sequência.</div>
+                                            </div>
+                                            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+                                                <div className="text-[11px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">C. Termômetro de Comunidade</div>
+                                                <div className="text-sm font-bold text-emerald-900 dark:text-emerald-100 mt-1">{totalReplies} replies / {Math.max(1, repliesPerK)}k views (Comunidade forte)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+                </div>
+            )}
 
             {/* TAB CONTENT: PÚBLICO */}
             {
@@ -3845,30 +3680,30 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 	                                const palette = ["#3b82f6", "#06b6d4", "#14b8a6", "#10b981", "#84cc16", "#eab308", "#f97316"];
 
 	                                return (
-	                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
-	                                        <div className="flex flex-col p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] h-full relative overflow-hidden">
+		                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
+		                                        <div className="flex flex-col p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] relative overflow-hidden self-start min-h-[330px] lg:min-h-[500px]">
 	                                            <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-2 tracking-widest z-10 w-full text-center lg:text-left">
 	                                                {isInstagram && audienceViewMode === "base_engajada" ? "Faixa Etária Engajada" : "Total por Faixa Etária"}
 	                                            </h4>
-	                                            <div className="w-full text-left mb-2 z-10 relative">
-	                                                <div className="text-xl font-black text-[var(--foreground)]">
-	                                                    {topAge?.range ?? "—"} anos
-	                                                </div>
-	                                                <div className="text-[10px] text-zinc-500 mt-1">
-	                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{topAgePercentage}%</strong> da leitura atual.
-	                                                </div>
-	                                                {topAge && isInstagram && (
-	                                                    <div className="text-[10px] text-blue-300 mt-1 font-bold uppercase tracking-wide">
-	                                                        {AGE_ECONOMIC_TAGS[topAge.range] ?? "Cluster"}
-	                                                    </div>
-	                                                )}
-	                                            </div>
+		                                            <div className="w-full text-left mb-1 z-10 relative pr-28">
+		                                                <div className="text-xl font-black text-[var(--foreground)]">
+		                                                    {topAge?.range ?? "—"} anos
+		                                                </div>
+		                                                <div className="text-[10px] text-zinc-500 mt-1">
+		                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{topAgePercentage}%</strong> da leitura atual.
+		                                                </div>
+		                                                {topAge && isInstagram && (
+		                                                    <div className="absolute top-0 right-0 text-[10px] text-blue-300 font-bold uppercase tracking-wide text-right">
+		                                                        {AGE_ECONOMIC_TAGS[topAge.range] ?? "Cluster"}
+		                                                    </div>
+		                                                )}
+		                                            </div>
 
-	                                            <div className="flex flex-col items-center justify-between h-full gap-4 relative z-10">
-	                                                <div className="relative w-40 h-40 shrink-0">
-	                                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-	                                                        {(() => {
-	                                                            const radius = 40;
+		                                            <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] items-center gap-3 relative z-10 mt-0">
+		                                                <div className="relative w-40 h-40 shrink-0 justify-self-center self-center">
+		                                                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+		                                                        {(() => {
+		                                                            const radius = 40;
 	                                                            const circumference = 2 * Math.PI * radius;
 	                                                            let cumulativePercent = 0;
 	                                                            return sortedByAge.map((item, index) => {
@@ -3890,45 +3725,40 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 	                                                                );
 	                                                            });
 	                                                        })()}
-	                                                    </svg>
-	                                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-	                                                        <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
-	                                                            {topAgePercentage}%
-	                                                        </span>
-	                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
-	                                                            {topAge?.range ?? "—"}
-	                                                        </span>
-	                                                    </div>
-	                                                </div>
-	                                                <div className="w-full mt-2 grid grid-cols-1 gap-1.5">
-	                                                    {sortedByAge.map((item, index) => {
-	                                                        const isDecisor = instagramAudienceModel?.decisorRange === item.range;
-	                                                        const isInfluencer = instagramAudienceModel?.influencerRange === item.range && !isDecisor;
-	                                                        return (
-	                                                            <div
-	                                                                key={item.range}
-	                                                                className={`flex items-center justify-between text-[10px] p-1.5 rounded transition-colors ${isDecisor
-	                                                                    ? "bg-emerald-500/10 border border-emerald-500/25"
-	                                                                    : isInfluencer
-	                                                                        ? "bg-blue-500/10 border border-blue-500/25"
-	                                                                        : "hover:bg-[var(--shell-surface)]"
-	                                                                    }`}
-	                                                            >
-	                                                                <div className="flex items-center gap-2 min-w-0">
-	                                                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: palette[index % palette.length] }} />
-	                                                                    <div className="min-w-0">
-	                                                                        <div className="text-zinc-300 font-medium truncate">{item.range} anos</div>
-	                                                                        {isInstagram && (
-	                                                                            <div className="text-[9px] text-zinc-500 truncate">{AGE_ECONOMIC_TAGS[item.range] ?? "Cluster"}</div>
-	                                                                        )}
-	                                                                    </div>
-	                                                                </div>
-	                                                                <span className="font-mono font-black text-[var(--foreground)] px-1.5 py-0.5 rounded">
-	                                                                    {Math.round(item.total)}%
-	                                                                </span>
-	                                                            </div>
-	                                                        );
-	                                                    })}
+		                                                    </svg>
+		                                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+		                                                        <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
+		                                                            {topAgePercentage}%
+		                                                        </span>
+		                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
+		                                                            {topAge?.range ?? "—"}
+		                                                        </span>
+		                                                    </div>
+		                                                </div>
+		                                                <div className="w-[150px] max-w-full grid grid-cols-1 gap-1 justify-self-end">
+		                                                    {sortedByAge.map((item, index) => {
+		                                                        const isDecisor = instagramAudienceModel?.decisorRange === item.range;
+		                                                        const isInfluencer = instagramAudienceModel?.influencerRange === item.range && !isDecisor;
+		                                                        return (
+		                                                            <div
+		                                                                key={item.range}
+		                                                                className={`flex items-center justify-between gap-2 text-[10px] px-1.5 py-1 rounded transition-colors ${isDecisor
+		                                                                    ? "bg-emerald-500/10 border border-emerald-500/25"
+		                                                                    : isInfluencer
+		                                                                        ? "bg-blue-500/10 border border-blue-500/25"
+		                                                                        : "hover:bg-[var(--shell-surface)]"
+		                                                                    }`}
+		                                                            >
+		                                                                <div className="flex items-center gap-1.5 min-w-0">
+		                                                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: palette[index % palette.length] }} />
+		                                                                    <div className="text-zinc-300 font-medium truncate">{item.range}</div>
+		                                                                </div>
+		                                                                <span className="font-mono text-[9px] font-black text-[var(--foreground)] pl-1">
+		                                                                    {Math.round(item.total)}%
+		                                                                </span>
+		                                                            </div>
+		                                                        );
+		                                                    })}
 	                                                </div>
 	                                            </div>
 	                                        </div>
@@ -3945,7 +3775,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 	                                            />
 	                                        </div>
 
-	                                        <div className="flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] h-full relative">
+		                                        <div className="flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] relative self-start min-h-[330px] lg:min-h-[500px]">
 	                                            <div className="w-full text-left">
 	                                                <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-1 tracking-widest">
 	                                                    {isInstagram && audienceViewMode === "base_engajada" ? "Gênero da Base Engajada" : "Resumo de Gênero"}

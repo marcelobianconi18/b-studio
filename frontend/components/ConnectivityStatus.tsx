@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon } from "@heroicons/react/24/solid";
+import { apiUrl } from "@/lib/api";
 
 interface SystemStatus {
     database: "connected" | "disconnected" | "error";
@@ -17,20 +18,28 @@ export default function ConnectivityStatus() {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
+        let isActive = true;
+
         const checkStatus = async () => {
             try {
-                const res = await fetch("http://localhost:8001/api/system/status");
-                if (res.ok) {
-                    setStatus(await res.json());
+                const res = await fetch(apiUrl("/api/system/status"), { cache: "no-store" });
+                if (!res.ok) {
+                    if (isActive) setStatus(null);
+                    return;
                 }
-            } catch (e) {
-                console.error("Status check failed", e);
+                const payload = await res.json();
+                if (isActive) setStatus(payload);
+            } catch {
+                if (isActive) setStatus(null);
             }
         };
 
         checkStatus();
         const interval = setInterval(checkStatus, 60000);
-        return () => clearInterval(interval);
+        return () => {
+            isActive = false;
+            clearInterval(interval);
+        };
     }, []);
 
     if (!status) return null;

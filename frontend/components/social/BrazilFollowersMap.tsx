@@ -37,6 +37,8 @@ type ViewMode = 'gender' | 'age';
 type GenderFilter = 'all' | 'female' | 'male';
 type AgeFilter = '-18' | '18-24' | '25-34' | '35-44' | '45-54' | '55-64' | '65+';
 type StateProfile = Record<string, number>;
+let worldGeoJSONMemoryCache: GeoJSON.FeatureCollection | null = null;
+const BRAZIL_VIEW_BOUNDS: maplibregl.LngLatBoundsLike = [[-74, -34], [-32, 6]];
 
 const buildFollowersGeoJSON = (): FeatureCollection => {
     const points: Array<{ lat: number; lng: number; value: number; state: string }> = [];
@@ -102,14 +104,46 @@ const AGE_PROFILES: Record<AgeFilter, StateProfile> = {
 
 const loadBrazilGeoJSON = async () => {
     const cacheKey = 'brazil-states-geojson';
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached) {
-        return JSON.parse(cached);
+    try {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) return JSON.parse(cached);
+    } catch {
+        // Ignore storage access issues (quota/private mode).
     }
 
     const response = await fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson');
     const geojson = await response.json();
-    sessionStorage.setItem(cacheKey, JSON.stringify(geojson));
+    try {
+        sessionStorage.setItem(cacheKey, JSON.stringify(geojson));
+    } catch {
+        // Ignore quota errors: map can still work without persisted cache.
+    }
+    return geojson;
+};
+
+const loadWorldGeoJSON = async () => {
+    const cacheKey = 'world-countries-geojson';
+    if (worldGeoJSONMemoryCache) {
+        return worldGeoJSONMemoryCache;
+    }
+    try {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+            worldGeoJSONMemoryCache = JSON.parse(cached) as GeoJSON.FeatureCollection;
+            return worldGeoJSONMemoryCache;
+        }
+    } catch {
+        // Ignore storage access issues (quota/private mode).
+    }
+
+    const response = await fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson');
+    const geojson = await response.json() as GeoJSON.FeatureCollection;
+    worldGeoJSONMemoryCache = geojson;
+    try {
+        sessionStorage.setItem(cacheKey, JSON.stringify(geojson));
+    } catch {
+        // Ignore quota errors for large world payload.
+    }
     return geojson;
 };
 
@@ -196,8 +230,8 @@ const BrazilFollowersMap = ({
                 ],
             },
             center: [-52, -15],
-            zoom: 3.1,
-            minZoom: 2,
+            zoom: 2.2,
+            minZoom: 0.8,
             maxZoom: 8,
             dragRotate: false,
             pitchWithRotate: false,
@@ -211,8 +245,36 @@ const BrazilFollowersMap = ({
 
         map.on('load', async () => {
             try {
-                const brazilGeoJSON = await loadBrazilGeoJSON();
+                const [worldGeoJSON, brazilGeoJSON] = await Promise.all([
+                    loadWorldGeoJSON(),
+                    loadBrazilGeoJSON(),
+                ]);
                 const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+                map.addSource('world-countries', {
+                    type: 'geojson',
+                    data: worldGeoJSON,
+                });
+
+                map.addLayer({
+                    id: 'world-fill',
+                    type: 'fill',
+                    source: 'world-countries',
+                    paint: {
+                        'fill-color': isDark ? '#111724' : '#e7edf7',
+                        'fill-opacity': 1,
+                    },
+                });
+
+                map.addLayer({
+                    id: 'world-border',
+                    type: 'line',
+                    source: 'world-countries',
+                    paint: {
+                        'line-color': isDark ? '#273248' : '#b9c6db',
+                        'line-width': 0.8,
+                    },
+                });
 
                 map.addSource('brazil-states', {
                     type: 'geojson',
@@ -224,7 +286,7 @@ const BrazilFollowersMap = ({
                     type: 'fill',
                     source: 'brazil-states',
                     paint: {
-                        'fill-color': isDark ? '#1e1e1e' : '#d4d4d8',
+                        'fill-color': isDark ? '#1a2333' : '#cfd8e9',
                         'fill-opacity': 1,
                     },
                 });
@@ -234,8 +296,8 @@ const BrazilFollowersMap = ({
                     type: 'line',
                     source: 'brazil-states',
                     paint: {
-                        'line-color': isDark ? '#3f3f46' : '#c4c4ce',
-                        'line-width': 1.2,
+                        'line-color': isDark ? '#526384' : '#8ca1c1',
+                        'line-width': 1.3,
                     },
                 });
 
@@ -261,14 +323,16 @@ const BrazilFollowersMap = ({
                             'interpolate',
                             ['linear'],
                             ['zoom'],
-                            2, 0.8,
+                            0.8, 0.25,
+                            2.5, 0.8,
                             8, 1.8,
                         ],
                         'heatmap-radius': [
                             'interpolate',
                             ['linear'],
                             ['zoom'],
-                            2, 12,
+                            0.8, 4,
+                            2.5, 12,
                             8, 34,
                         ],
                         'heatmap-opacity': 0.92,
@@ -285,6 +349,13 @@ const BrazilFollowersMap = ({
                             1, '#FF6B3B',
                         ],
                     },
+                });
+
+                // Open focused on Brazil as a whole, keeping world context around it.
+                map.fitBounds(BRAZIL_VIEW_BOUNDS, {
+                    padding: { top: 140, right: 70, bottom: 70, left: 70 },
+                    duration: 0,
+                    maxZoom: 2.4,
                 });
             } catch (error) {
                 console.error('Failed to initialize Brazil followers map:', error);
@@ -317,17 +388,25 @@ const BrazilFollowersMap = ({
         if (!map || !map.isStyleLoaded()) return;
 
         const bg = isDarkMode ? '#18181b' : '#f4f4f5';
-        const fill = isDarkMode ? '#1e1e1e' : '#d4d4d8';
-        const border = isDarkMode ? '#3f3f46' : '#c4c4ce';
+        const worldFill = isDarkMode ? '#111724' : '#e7edf7';
+        const worldBorder = isDarkMode ? '#273248' : '#b9c6db';
+        const brazilFill = isDarkMode ? '#1a2333' : '#cfd8e9';
+        const brazilBorder = isDarkMode ? '#526384' : '#8ca1c1';
 
         if (map.getLayer('background')) {
             map.setPaintProperty('background', 'background-color', bg);
         }
+        if (map.getLayer('world-fill')) {
+            map.setPaintProperty('world-fill', 'fill-color', worldFill);
+        }
+        if (map.getLayer('world-border')) {
+            map.setPaintProperty('world-border', 'line-color', worldBorder);
+        }
         if (map.getLayer('brazil-fill')) {
-            map.setPaintProperty('brazil-fill', 'fill-color', fill);
+            map.setPaintProperty('brazil-fill', 'fill-color', brazilFill);
         }
         if (map.getLayer('brazil-border')) {
-            map.setPaintProperty('brazil-border', 'line-color', border);
+            map.setPaintProperty('brazil-border', 'line-color', brazilBorder);
         }
     }, [isDarkMode]);
 
