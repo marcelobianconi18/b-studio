@@ -385,10 +385,14 @@ const PopulationPyramid = ({
     data,
     influencerRange,
     decisorRange,
+    valueMode = "pct",
+    totalBase = 0,
 }: {
     data: Array<{ range: string; male: number; female: number }>;
     influencerRange?: string;
     decisorRange?: string;
+    valueMode?: "pct" | "abs";
+    totalBase?: number;
 }) => {
     const maxVal = Math.max(...data.map(d => Math.max(d.male, d.female))) * 1.1; // Add 10% buffer
 
@@ -421,8 +425,8 @@ const PopulationPyramid = ({
 
                         {/* Left Side: Male (Blue) */}
                         <div className="flex-1 flex justify-end items-center gap-3 pr-4 h-full">
-                            <span className="text-[11px] font-black text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors w-10 text-right shrink-0">
-                                {item.male}%
+                            <span className={`text-[11px] font-black text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors ${valueMode === "abs" ? "w-14" : "w-10"} text-right shrink-0`}>
+                                {valueMode === "abs" ? formatNumber(Math.round(item.male * totalBase / 100)) : `${item.male}%`}
                             </span>
                             <div
                                 className="h-5 bg-sky-500 rounded-l-sm transition-all duration-500 shadow-sm relative group-hover:shadow-md group-hover:bg-sky-400"
@@ -446,8 +450,8 @@ const PopulationPyramid = ({
                                 className="h-5 bg-orange-400 rounded-r-sm transition-all duration-500 shadow-sm relative group-hover:shadow-md group-hover:bg-orange-300"
                                 style={{ width: `${(item.female / maxVal) * 100}%`, minWidth: '4px' }}
                             />
-                            <span className="text-[11px] font-black text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors w-10 text-left shrink-0">
-                                {item.female}%
+                            <span className={`text-[11px] font-black text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors ${valueMode === "abs" ? "w-14" : "w-10"} text-left shrink-0`}>
+                                {valueMode === "abs" ? formatNumber(Math.round(item.female * totalBase / 100)) : `${item.female}%`}
                             </span>
                         </div>
 
@@ -728,6 +732,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
     const [citiesAgePage, setCitiesAgePage] = useState(1);
     const [selectedStateFilter, setSelectedStateFilter] = useState<string>('todos');
     const [audienceViewMode, setAudienceViewMode] = useState<AudienceViewMode>("base_total");
+    const [demoValueMode, setDemoValueMode] = useState<"pct" | "abs">("pct");
     const PAGE_SIZE = 10;
     const isLocalEditor = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
@@ -3502,6 +3507,20 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         {isInstagram ? "Leitura de volume vs valor para priorizar quem realmente converte." : "Resumo da distribuição demográfica da base."}
                                     </p>
                                 </div>
+                                <div className="inline-flex rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-1">
+                                    <button
+                                        onClick={() => setDemoValueMode("pct")}
+                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${demoValueMode === "pct" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                    >
+                                        % Relativo
+                                    </button>
+                                    <button
+                                        onClick={() => setDemoValueMode("abs")}
+                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${demoValueMode === "abs" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                    >
+                                        Nº Absoluto
+                                    </button>
+                                </div>
                             </div>
 
                             {data.demographics && (() => {
@@ -3523,7 +3542,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     {topAge?.range ?? "—"} anos
                                                 </div>
                                                 <div className="text-[10px] text-zinc-500 mt-1">
-                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{topAgePercentage}%</strong> da leitura atual.
+                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(topAgePercentage * data.page_followers.value / 100)) : `${topAgePercentage}%`}</strong> da leitura atual.
                                                 </div>
                                                 {topAge && isInstagram && (
                                                     <div className="absolute top-0 right-0 text-[10px] text-blue-300 font-bold uppercase tracking-wide text-right">
@@ -3562,7 +3581,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     </svg>
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                                         <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
-                                                            {topAgePercentage}%
+                                                            {demoValueMode === "abs" ? formatNumber(Math.round(topAgePercentage * data.page_followers.value / 100)) : `${topAgePercentage}%`}
                                                         </span>
                                                         <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
                                                             {topAge?.range ?? "—"}
@@ -3591,7 +3610,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                 <div className="font-medium truncate text-zinc-500">{item.range}</div>
                                                             </div>
                                                             <span className="font-mono font-black text-zinc-600">
-                                                                {Math.round(item.total)}%
+                                                                {demoValueMode === "abs" ? formatNumber(Math.round(item.total * data.page_followers.value / 100)) : `${Math.round(item.total)}%`}
                                                             </span>
                                                         </div>
                                                     );
@@ -3611,6 +3630,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 }))}
                                                 influencerRange={isInstagram ? instagramAudienceModel?.influencerRange : undefined}
                                                 decisorRange={isInstagram ? instagramAudienceModel?.decisorRange : undefined}
+                                                valueMode={demoValueMode}
+                                                totalBase={data.page_followers.value}
                                             />
                                         </div>
 
@@ -3623,7 +3644,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     {totalFemale > totalMale ? "Mulheres" : "Homens"}
                                                 </div>
                                                 <div className="text-[10px] text-zinc-500 mt-1">
-                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{Math.max(totalFemale, totalMale)}%</strong> da leitura atual.
+                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(Math.max(totalFemale, totalMale) * data.page_followers.value / 100)) : `${Math.max(totalFemale, totalMale)}%`}</strong> da leitura atual.
                                                 </div>
                                             </div>
 
@@ -3657,8 +3678,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         />
                                                     </svg>
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                        <span className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none">
-                                                            {Math.max(totalFemale, totalMale)}%
+                                                        <span className={`font-black text-[var(--foreground)] tracking-tighter leading-none ${demoValueMode === "abs" ? "text-xl" : "text-3xl"}`}>
+                                                            {demoValueMode === "abs" ? formatNumber(Math.round(Math.max(totalFemale, totalMale) * data.page_followers.value / 100)) : `${Math.max(totalFemale, totalMale)}%`}
                                                         </span>
                                                         <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
                                                             {totalFemale > totalMale ? "Mulheres" : "Homens"}
@@ -3673,14 +3694,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         <span className="w-2 h-2 rounded-full bg-orange-400"></span>
                                                         Mulheres
                                                     </span>
-                                                    <span className="text-[var(--foreground)]">{totalFemale}%</span>
+                                                    <span className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(totalFemale * data.page_followers.value / 100)) : `${totalFemale}%`}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-[10px] font-bold">
                                                     <span className="flex items-center gap-1.5 text-zinc-500 uppercase tracking-wide">
                                                         <span className="w-2 h-2 rounded-full bg-sky-500"></span>
                                                         Homens
                                                     </span>
-                                                    <span className="text-[var(--foreground)]">{totalMale}%</span>
+                                                    <span className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(totalMale * data.page_followers.value / 100)) : `${totalMale}%`}</span>
                                                 </div>
                                                 <div className="w-full h-1.5 bg-[var(--shell-surface)] rounded-full overflow-hidden flex mt-2">
                                                     <div className="h-full bg-orange-400" style={{ width: `${totalFemale}%` }} />
