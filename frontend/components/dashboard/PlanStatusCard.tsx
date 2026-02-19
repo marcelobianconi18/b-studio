@@ -16,7 +16,7 @@ export default function PlanStatusCard() {
                     </div>
                 </div>
                 <div className="flex flex-col">
-                    <h1 className="text-3xl font-black italic tracking-tighter leading-none" style={{ color: "var(--foreground)" }}>ENTERPRISE</h1>
+                    <h1 className="text-3xl font-black tracking-tighter leading-none" style={{ color: "var(--foreground)" }}>ENTERPRISE</h1>
                     <div className="flex items-baseline gap-1 mt-1 opacity-60">
                         <span className="text-sm font-medium tracking-tight" style={{ color: "var(--foreground)" }}>R$ 278,90</span>
                         <span className="text-[10px] uppercase font-bold text-zinc-400">/ mês</span>

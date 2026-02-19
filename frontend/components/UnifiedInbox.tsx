@@ -91,9 +91,9 @@ export default function UnifiedInbox() {
                 {/* List */}
                 <div className="flex-1 overflow-y-auto">
                     {loading ? (
-                        <div className="p-10 text-center text-zinc-500 italic">Escaneando Anúncios Ativos & Posts Orgânicos...</div>
+                        <div className="p-10 text-center text-zinc-500">Escaneando Anúncios Ativos & Posts Orgânicos...</div>
                     ) : sortedComments?.length === 0 ? (
-                        <div className="p-10 text-center text-zinc-500 italic">Nenhuma interação encontrada para este filtro.</div>
+                        <div className="p-10 text-center text-zinc-500">Nenhuma interação encontrada para este filtro.</div>
                     ) : (
                         sortedComments?.map((item: any) => (
                             <div key={item.id} className={`px-6 py-4 border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors flex items-center justify-between group

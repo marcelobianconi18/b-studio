@@ -230,7 +230,7 @@ const BrazilFollowersMap = ({
                 ],
             },
             center: [-52, -15],
-            zoom: 3.8,
+            zoom: 3.42,
             minZoom: 0.8,
             maxZoom: 8,
             dragRotate: false,

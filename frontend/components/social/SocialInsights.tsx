@@ -9,7 +9,7 @@ import { apiUrl } from "@/lib/api";
 
 const BrazilFollowersMap = dynamic(() => import('./BrazilFollowersMap'), {
     ssr: false,
-    loading: () => <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl h-full min-h-[400px] w-full animate-pulse flex items-center justify-center text-zinc-700">Carregando Mapa...</div>
+    loading: () => <div className="liquid-glass h-full min-h-[400px] w-full animate-pulse flex items-center justify-center text-zinc-700">Carregando Mapa...</div>
 });
 import {
     ClockIcon,
@@ -24,6 +24,58 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon
 } from "@heroicons/react/24/solid";
+
+export interface Competitor {
+    id: string;
+    name: string;
+    avatar: string;
+    followers: number;
+    followersChange: number;
+    engagementRate: number;
+    engagementChange: number;
+    totalPosts: number;
+    recentGrowth: number;
+    weeklyPosts: number;
+    totalLikes: number;
+    totalComments: number;
+    avgInteractions: number;
+    swot: {
+        strengths: string[];
+        weaknesses: string[];
+        opportunities: string[];
+        threats: string[];
+    };
+    strategicInsight: string;
+    topPosts: Array<{
+        id: string;
+        image: string;
+        message: string;
+        date: string;
+        likes: number;
+        comments: number;
+        shares: number;
+        reach: number;
+        impressions: number;
+        video_views: number;
+        link_clicks: number;
+        reactions: number;
+        type: "video" | "photo" | "album";
+    }>;
+    audience: {
+        age: { label: string; value: number }[];
+        gender: { label: string; value: number }[];
+        locations: { label: string; value: number }[];
+        // New Overview Fields
+        newFollowers: number;
+        newFollowersGrowth: number;
+        botometer: { real: number; ghosts: number; bots: number };
+        mainCluster: string;
+        mainAge: string;
+        mainCity: string;
+        mainCountry: string;
+        mainLanguage: string;
+    };
+}
 
 export interface InsightsData {
     page_followers: { value: number; change: number };
@@ -73,12 +125,13 @@ export interface InsightsData {
     };
     reactions_by_type?: { [key: string]: number };
     actions_split_changes?: { reactions: number; comments: number; shares: number; };
+    competitors?: Competitor[];
 }
 
 type InsightPost = InsightsData["top_posts"][number];
 type PostType = "video" | "photo" | "album";
 
-const formatNumber = (num: number) => {
+export const formatNumber = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
     if (num >= 1000) return (num / 1000).toFixed(0) + " mil";
     return num.toString();
@@ -362,8 +415,8 @@ const KPICard = ({ title, value, change, icon: _Icon, tooltip }: KPICardProps) =
                 : "Base ativa da conta no período.";
 
     return (
-        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
-            <div className="flex items-center gap-1 mb-2">
+        <div className="liquid-glass px-6 py-5 min-h-[118px] flex flex-col justify-center group hover:scale-[1.02] transition-transform">
+            <div className="flex items-center gap-1 mb-2 relative z-10">
                 <h3 className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">{title}</h3>
                 {tooltip && (
                     <span
@@ -374,8 +427,8 @@ const KPICard = ({ title, value, change, icon: _Icon, tooltip }: KPICardProps) =
                     </span>
                 )}
             </div>
-            <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight">{formatNumber(value)}</div>
-            <p className="mt-2 text-[12px] font-semibold text-zinc-500">{subtitle}</p>
+            <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight relative z-10">{formatNumber(value)}</div>
+            <p className="mt-2 text-[12px] font-semibold text-zinc-500 relative z-10">{subtitle}</p>
         </div>
     );
 };
@@ -493,10 +546,10 @@ const SpeedometerChart = ({ title, data }: { title: string, data: { label: strin
     const needleAngle = winner.start + (winner.end - winner.start) / 2;
 
     return (
-        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl p-4 flex flex-col items-center justify-between h-full relative overflow-hidden group hover:border-blue-500/20 transition-all">
-            <h5 className="text-[10px] uppercase font-bold text-zinc-500 mb-4 text-center tracking-wider">{title}</h5>
+        <div className="liquid-glass p-4 flex flex-col items-center justify-between h-full relative overflow-hidden group hover:scale-[1.02] transition-transform">
+            <h5 className="text-[10px] uppercase font-bold text-zinc-500 mb-4 text-center tracking-wider relative z-10">{title}</h5>
 
-            <div className="relative h-[130px] w-[220px] flex justify-center mb-4">
+            <div className="relative h-[130px] w-[220px] flex justify-center mb-4 z-10">
                 <svg width="220" height="130" className="overflow-visible">
                     <path d={`M ${pol2cart(center, center, radius, 180).x} ${pol2cart(center, center, radius, 180).y} A ${radius} ${radius} 0 0 1 ${pol2cart(center, center, radius, 360).x} ${pol2cart(center, center, radius, 360).y}`} fill="none" stroke="var(--shell-border)" strokeWidth={stroke} opacity={0.3} />
 
@@ -1349,7 +1402,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
         <div className="space-y-6 pb-20">
             {/* Tabs Navigation & Period Selector */}
             {/* Tabs Navigation & Period Selector */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[var(--shell-border)] pb-0 mb-6 gap-4 bg-zinc-900/40 rounded-t-xl px-2 pt-2">
+            <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[var(--shell-border)] pb-0 mb-6 gap-4 bg-zinc-900/40 rounded-t-[2rem] px-2 pt-2 liquid-glass">
                 <div className="flex flex-wrap items-end">
                     {tabItems.map((tab, index) => {
                         const isActive = activeTab === tab.id;
@@ -1456,10 +1509,10 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 }}
                                 className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} rounded-3xl`}
                             >
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 h-full flex flex-col" style={{ backgroundColor: getEditorConfig("publicacoes").bgColor, minHeight: `${getEditorConfig("publicacoes").minHeight}px` }}>
+                                <div className="liquid-glass p-6 h-full flex flex-col" style={{ backgroundColor: getEditorConfig("publicacoes").bgColor, minHeight: `${getEditorConfig("publicacoes").minHeight}px` }}>
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                                         <div>
-                                            <h3 className="text-lg font-black italic tracking-tight text-blue-500">{getEditorConfig("publicacoes").title ?? "Publicações"}</h3>
+                                            <h3 className="text-lg font-black tracking-tight text-blue-500">{getEditorConfig("publicacoes").title ?? "Publicações"}</h3>
                                             <p className="text-[11px] text-zinc-500 mt-1">{getEditorConfig("publicacoes").subtitle ?? "Destaques e resumo do desempenho do período."}</p>
                                         </div>
                                         <button
@@ -1540,7 +1593,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-5">
                                                         <div className="flex items-start justify-between gap-4 mb-4">
                                                             <div>
-                                                                <h4 className="text-sm font-black italic tracking-tight text-[var(--foreground)]">Divisão por ações</h4>
+                                                                <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">Divisão por ações</h4>
                                                                 <p className="text-[10px] text-zinc-500 mt-0.5">O que mais gerou engajamento.</p>
                                                             </div>
                                                             <div className="text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
@@ -1582,7 +1635,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-5">
                                                         <div className="flex items-start justify-between gap-4 mb-4">
                                                             <div>
-                                                                <h4 className="text-sm font-black italic tracking-tight text-[var(--foreground)]">Top 3 posts</h4>
+                                                                <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">Top 3 posts</h4>
                                                                 <p className="text-[10px] text-zinc-500 mt-0.5">Ordenado por interações.</p>
                                                             </div>
                                                             <div className="text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
@@ -1613,7 +1666,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-5 flex-1 flex flex-col min-h-[180px]">
                                                     <div className="flex items-start justify-between gap-4 mb-4">
                                                         <div>
-                                                            <h4 className="text-sm font-black italic tracking-tight text-[var(--foreground)]">Melhores horários para publicações</h4>
+                                                            <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">Melhores horários para publicações</h4>
                                                             <p className="text-[10px] text-zinc-500 mt-0.5">Resumo baseado nos posts com maior interação.</p>
                                                         </div>
                                                         <div className="text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
@@ -1724,30 +1777,36 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     return (
                                         <div className="space-y-3">
                                             <div className="px-1">
-                                                <h4 className="text-sm font-black italic tracking-tight text-blue-500">{getEditorConfig("demografia").title ?? "Demografia"}</h4>
+                                                <h4 className="text-sm font-black tracking-tight text-blue-500">{getEditorConfig("demografia").title ?? "Demografia"}</h4>
                                                 <p className="text-[11px] text-zinc-500 mt-1">{getEditorConfig("demografia").subtitle ?? "Resumo por faixa etária e gênero."}</p>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 relative">
-                                                    <h4 className="text-sm font-black italic tracking-tight text-blue-500 mb-4">Total por Faixa Etária</h4>
-                                                    <div className="mx-auto w-40 h-40 rounded-full flex items-center justify-center" style={{
-                                                        background: "conic-gradient(#14b8a6 0 26%, #06b6d4 26% 45%, #3b82f6 45% 62%, #84cc16 62% 78%, #eab308 78% 90%, #f97316 90% 100%)"
-                                                    }}>
-                                                        <div className="w-24 h-24 rounded-full bg-[var(--shell-surface)] border border-[var(--shell-border)] flex flex-col items-center justify-center">
-                                                            <span className="text-3xl font-black text-[var(--foreground)] leading-none">{topAgePct}%</span>
-                                                            <span className="text-[11px] font-black text-zinc-500 uppercase mt-1">{topAge.range}</span>
+                                                <div className="liquid-glass p-5 relative">
+                                                    <h4 className="text-sm font-black tracking-tight text-blue-500 mb-4">Total por Faixa Etária</h4>
+                                                    <div className="mx-auto w-40 h-40 relative flex items-center justify-center">
+                                                        <div className="absolute inset-0 rounded-full" style={{
+                                                            background: "conic-gradient(#14b8a6 0 26%, #06b6d4 26% 45%, #3b82f6 45% 62%, #84cc16 62% 78%, #eab308 78% 90%, #f97316 90% 100%)",
+                                                            maskImage: "radial-gradient(closest-side, transparent 53%, black 54%)",
+                                                            WebkitMaskImage: "radial-gradient(closest-side, transparent 53%, black 54%)"
+                                                        }} />
+                                                        <div className="relative z-10 flex flex-col items-center justify-center">
+                                                            <span className="text-3xl font-black text-[var(--foreground)] leading-none drop-shadow-md">{topAgePct}%</span>
+                                                            <span className="text-[11px] font-black text-zinc-400 uppercase mt-1 drop-shadow-sm">{topAge.range}</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 relative">
-                                                    <h4 className="text-sm font-black italic tracking-tight text-blue-500 mb-4">Resumo de Gênero</h4>
-                                                    <div className="mx-auto w-40 h-40 rounded-full flex items-center justify-center" style={{
-                                                        background: `conic-gradient(#fb923c 0 ${femalePct}%, #0ea5e9 ${femalePct}% 100%)`
-                                                    }}>
-                                                        <div className="w-24 h-24 rounded-full bg-[var(--shell-surface)] border border-[var(--shell-border)] flex flex-col items-center justify-center">
-                                                            <span className="text-3xl font-black text-[var(--foreground)] leading-none">{Math.max(femalePct, malePct)}%</span>
-                                                            <span className="text-[11px] font-black text-zinc-500 uppercase mt-1">{femalePct >= malePct ? "MULHERES" : "HOMENS"}</span>
+                                                <div className="liquid-glass p-5 relative">
+                                                    <h4 className="text-sm font-black tracking-tight text-blue-500 mb-4">Resumo de Gênero</h4>
+                                                    <div className="mx-auto w-40 h-40 relative flex items-center justify-center">
+                                                        <div className="absolute inset-0 rounded-full" style={{
+                                                            background: `conic-gradient(#fb923c 0 ${femalePct}%, #0ea5e9 ${femalePct}% 100%)`,
+                                                            maskImage: "radial-gradient(closest-side, transparent 53%, black 54%)",
+                                                            WebkitMaskImage: "radial-gradient(closest-side, transparent 53%, black 54%)"
+                                                        }} />
+                                                        <div className="relative z-10 flex flex-col items-center justify-center">
+                                                            <span className="text-3xl font-black text-[var(--foreground)] leading-none drop-shadow-md">{Math.max(femalePct, malePct)}%</span>
+                                                            <span className="text-[11px] font-black text-zinc-400 uppercase mt-1 drop-shadow-sm">{femalePct >= malePct ? "MULHERES" : "HOMENS"}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1776,10 +1835,10 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 }}
                                 className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} rounded-3xl`}
                             >
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6" style={{ minHeight: `${getEditorConfig("publico").minHeight}px`, backgroundColor: getEditorConfig("publico").bgColor }}>
+                                <div className="liquid-glass p-6" style={{ minHeight: `${getEditorConfig("publico").minHeight}px`, backgroundColor: getEditorConfig("publico").bgColor }}>
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                                         <div>
-                                            <h3 className="text-lg font-black italic tracking-tight text-blue-500">{getEditorConfig("publico").title ?? "Público"}</h3>
+                                            <h3 className="text-lg font-black tracking-tight text-blue-500">{getEditorConfig("publico").title ?? "Público"}</h3>
                                             <p className="text-[11px] text-zinc-500 mt-1">{getEditorConfig("publico").subtitle ?? "Principais dados de audiência e distribuição."}</p>
                                         </div>
                                         <button
@@ -1837,9 +1896,9 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 }}
                                 className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} rounded-3xl`}
                             >
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden" style={{ minHeight: `${getEditorConfig("seguidores_periodo").minHeight}px`, backgroundColor: getEditorConfig("seguidores_periodo").bgColor }}>
+                                <div className="liquid-glass overflow-hidden" style={{ minHeight: `${getEditorConfig("seguidores_periodo").minHeight}px`, backgroundColor: getEditorConfig("seguidores_periodo").bgColor }}>
                                     <div className="p-5 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex items-center justify-between">
-                                        <h4 className="text-sm font-black italic tracking-tight text-blue-500">{getEditorConfig("seguidores_periodo").title ?? "Seguidores no Período"}</h4>
+                                        <h4 className="text-sm font-black tracking-tight text-blue-500">{getEditorConfig("seguidores_periodo").title ?? "Seguidores no Período"}</h4>
                                         <span className="text-[10px] font-black uppercase text-zinc-500">Período atual</span>
                                     </div>
                                     <div className="p-5 space-y-3">
@@ -1872,10 +1931,10 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 >
                                     {!getEditorConfig(box.id).hidden && (
                                         <div
-                                            className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6"
+                                            className="liquid-glass p-6"
                                             style={{ minHeight: `${getEditorConfig(box.id).minHeight}px`, backgroundColor: getEditorConfig(box.id).bgColor }}
                                         >
-                                            <h4 className="text-lg font-black italic tracking-tight text-blue-500">{getEditorConfig(box.id).title ?? "Nova Caixa"}</h4>
+                                            <h4 className="text-lg font-black tracking-tight text-blue-500">{getEditorConfig(box.id).title ?? "Nova Caixa"}</h4>
                                             <p className="text-[11px] text-zinc-500 mt-2">{getEditorConfig(box.id).subtitle ?? "Sem conteúdo"}</p>
                                         </div>
                                     )}
@@ -2082,9 +2141,9 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                         {/* LEFT: DESEMPENHO (Detailed Performance Table with Pagination) */}
-                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 flex flex-col h-full">
+                        <div className="liquid-glass p-6 flex flex-col h-full">
 
-                            <h3 className="text-lg font-black italic tracking-tight mb-4 text-blue-500">Desempenho da Publicação</h3>
+                            <h3 className="text-lg font-black tracking-tight mb-4 text-blue-500">Desempenho da Publicação</h3>
 
                             {/* Best Post by Reach Card */}
                             {/* Best Post by Reach Card + Engagement Stats */}
@@ -2108,7 +2167,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     <div className="flex items-center gap-2 text-[10px] text-zinc-500 mb-1">
                                                         <span className="flex items-center gap-1"><span className="w-3 h-3">📅</span> {bestPostPerformance.date}</span>
                                                     </div>
-                                                    <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2 italic">{`"${bestPostPerformance.message}"`}</p>
+                                                    <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2">{`"${bestPostPerformance.message}"`}</p>
                                                     <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                                         Este post alcançou <span className="font-bold">{formatNumber(bestPostPerformance.reach)}</span> pessoas.
                                                     </p>
@@ -2411,7 +2470,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                                 <span className="font-bold text-emerald-400">{dateLabel} <span className="text-zinc-500 mx-1">•</span> {timeLabel}</span>
                                                                                 <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[9px] font-bold">Reach: {formatNumber(post.reach)}</span>
                                                                             </div>
-                                                                            <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px] italic">{`"${post.message}"`}</div>
+                                                                            <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px]">{`"${post.message}"`}</div>
 
                                                                             <div className="space-y-1">
                                                                                 <div className="flex justify-between text-zinc-400">
@@ -2557,9 +2616,9 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                         </div >
 
                         {/* RIGHT: REAÇÕES DESCRITIVAS DESTAQUE (Detailed Reactions) */}
-                        < div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 overflow-hidden flex flex-col h-full" >
+                        < div className="liquid-glass p-6 overflow-hidden flex flex-col h-full" >
 
-                            <h3 className="text-lg font-black italic tracking-tight mb-4 text-emerald-500">{isInstagram ? "Detalhamento de Sinais de Qualidade" : "Detalhamento de Reações"}</h3>
+                            <h3 className="text-lg font-black tracking-tight mb-4 text-emerald-500">{isInstagram ? "Detalhamento de Sinais de Qualidade" : "Detalhamento de Reações"}</h3>
                             {/* 1. Best Post Card + Total Interactions Stats */}
                             {(() => {
                                 const bestPost = [...data.top_posts].sort((a, b) => (b.reactions + b.comments + b.shares) - (a.reactions + a.comments + a.shares))[0];
@@ -2584,7 +2643,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     <div className="flex items-center gap-2 text-[10px] text-zinc-500 mb-1">
                                                         <span className="flex items-center gap-1"><span className="w-3 h-3">📅</span> {bestPost.date}</span>
                                                     </div>
-                                                    <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2 italic">{`"${bestPost.message}"`}</p>
+                                                    <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2">{`"${bestPost.message}"`}</p>
                                                     <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                                         Taxa de engajamento de <span className="font-bold text-blue-600 dark:text-blue-400">{rate}%</span> ({formatNumber(engagement)} interações).
                                                     </p>
@@ -2686,7 +2745,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         {isInstagram ? "Desempenho de Sinais de Qualidade" : "Desempenho de Reações"}
                                     </h4>
                                     <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-zinc-500">
-                                        <button onClick={() => setVisibleReactions(p => ({ ...p, total: !p.total }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800/50 hover:bg-zinc-800 transition-all ${visibleReactions.total ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                        <button onClick={() => setVisibleReactions(p => ({ ...p, total: !p.total }))} className={`flex items-center gap-1.5 px-2 py-1 rounded liquid-glass btn-secondary transition-all ${visibleReactions.total ? 'opacity-100' : 'opacity-50 grayscale'}`}>
                                             <span className="w-2 h-2 rounded-full bg-white border border-zinc-500"></span><span className="text-white">Total</span>
                                         </button>
                                         <button onClick={() => setVisibleReactions(p => ({ ...p, like: !p.like }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 transition-all ${visibleReactions.like ? 'opacity-100' : 'opacity-50 grayscale'}`}>
@@ -2780,7 +2839,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                                 </span>
                                                                                 <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[9px] font-bold">Total: {formatNumber(total)}</span>
                                                                             </div>
-                                                                            <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px] italic">{`"${p.message}"`}</div>
+                                                                            <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px]">{`"${p.message}"`}</div>
                                                                             <div className="grid grid-cols-6 gap-1 pt-2 text-[9px] text-center">
                                                                                 <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.like ? 'opacity-100' : 'opacity-40'}`}>
                                                                                     <div>{isInstagram ? "SALV" : "👍"}</div>
@@ -2896,7 +2955,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 return (
                                                     <div className="hidden lg:flex items-center gap-3 ml-4 pl-4 border-l border-[var(--shell-border)]/50">
                                                         {/* Best Time Card */}
-                                                        <div className="flex items-center gap-3 bg-blue-500/5 hover:bg-blue-500/10 transition-colors border border-blue-500/10 rounded-xl px-4 py-2 group cursor-default shadow-sm">
+                                                        <div className="flex items-center gap-3 liquid-glass btn-secondary transition-colors border border-blue-500/10 rounded-xl px-4 py-2 group cursor-default shadow-sm">
                                                             <div className="bg-blue-500 p-1.5 rounded-lg shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
                                                                 <ArrowTrendingUpIcon className="w-4 h-4 text-white" />
                                                             </div>
@@ -3257,7 +3316,6 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                 </div>
             )}
 
-            {/* TAB CONTENT: PÚBLICO */}
             {
                 activeTab === "publico" && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
@@ -3286,7 +3344,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             isInstagram ? (
                                 <div className="overflow-x-auto">
                                     <div className="grid grid-cols-8 gap-3 min-w-[1760px]">
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Novos Seguidores</h3>
                                             <div>
                                                 <div className="text-4xl xl:text-5xl font-black text-emerald-400 tracking-tighter leading-none mb-3">+{formatNumber(periodFollowers.newFollowers)}</div>
@@ -3295,14 +3353,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Total de Seguidores</h3>
                                             <div>
                                                 <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">{formatNumber(data.page_followers.value)}</div>
                                                 <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Base ativa da conta</div>
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Botômetro</h3>
                                             {instagramAudienceModel ? (
                                                 <div className="space-y-2 w-full">
@@ -3328,7 +3386,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 <div className="text-[10px] text-zinc-500 font-bold uppercase">Sem dados suficientes</div>
                                             )}
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cluster Principal</h3>
                                             {(() => {
                                                 const badge = getGenderBadge(data.demographics.top_audience);
@@ -3348,7 +3406,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 );
                                             })()}
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">
                                                 {audienceViewMode === "base_engajada" ? "Faixa Etária (Engajada)" : "Faixa Etária Principal"}
                                             </h3>
@@ -3363,7 +3421,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
                                             <div className="flex-1 flex items-center">
                                                 <div className="text-3xl xl:text-4xl font-black text-white tracking-tighter break-words leading-none">
@@ -3371,7 +3429,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
                                             <div className="flex-1 flex items-center gap-4">
                                                 <div className="text-6xl leading-none shrink-0 filter drop-shadow-lg">
@@ -3382,7 +3440,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
                                             <div>
                                                 <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">PT-BR</div>
@@ -3394,7 +3452,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             ) : (
                                 <div className="overflow-x-auto">
                                     <div className="grid grid-cols-8 gap-3 min-w-[1760px]">
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Novos Seguidores</h3>
                                             <div>
                                                 <div className="text-4xl xl:text-5xl font-black text-emerald-400 tracking-tighter leading-none mb-3">+{formatNumber(periodFollowers.newFollowers)}</div>
@@ -3403,14 +3461,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Total de Seguidores</h3>
                                             <div>
                                                 <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">{formatNumber(data.page_followers.value)}</div>
                                                 <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Base ativa da conta</div>
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Botômetro</h3>
                                             <div className="space-y-2 w-full">
                                                 <div className="flex items-center justify-between text-[10px] font-bold">
@@ -3432,7 +3490,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cluster Principal</h3>
                                             {(() => {
                                                 const badge = getGenderBadge(data.demographics.top_audience);
@@ -3452,7 +3510,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 );
                                             })()}
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Faixa Etária Principal</h3>
                                             <div>
                                                 <div className="text-5xl font-black text-white tracking-tighter leading-none mb-3">
@@ -3465,7 +3523,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
                                             <div className="flex-1 flex items-center">
                                                 <div className="text-3xl xl:text-4xl font-black text-white tracking-tighter break-words leading-none">
@@ -3473,7 +3531,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
                                             <div className="flex-1 flex items-center gap-4">
                                                 <div className="text-6xl leading-none shrink-0 filter drop-shadow-lg">
@@ -3484,7 +3542,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
                                             <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
                                             <div>
                                                 <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">PT-BR</div>
@@ -3497,7 +3555,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                         )}
 
                         {/* 2. AUDIENCE INTELLIGENCE */}
-                        <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl p-6 relative">
+                        <div className="liquid-glass p-6 relative">
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
                                 <div>
                                     <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">
@@ -3718,7 +3776,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                         {data.demographics && (
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-fr">
                                 {/* 1. City Table (Top Left) */}
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+                                <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-start">
                                         <div>
                                             <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">{isInstagram ? "Audiência por Geografia - Cidade" : "Fãs por Geografia - Cidade"}</h3>
@@ -3800,7 +3858,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 </div>
 
                                 {/* 2. Age Table (Top Right) */}
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+                                <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-center">
                                         <div>
                                             <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">{isInstagram ? "Cidades por Faixa Etária" : "Cidades por Idade"}</h3>
@@ -3889,7 +3947,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <BrazilFollowersMap spanTwoRows={false} />
 
                                 {/* 3. Gender Table (Bottom Left) */}
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+                                <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-start">
                                         <div>
                                             <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">Cidades por Gênero</h3>
@@ -3939,7 +3997,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 </div>
 
                                 {/* 4. Countries Table (Bottom Right) */}
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+                                <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)]">
                                         <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">{isInstagram ? "Audiência por Geografia - País" : "Fãs por Geografia - País"}</h3>
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{isInstagram ? "De onde vem a audiência que o conteúdo alcança." : "De onde vêm os seus fãs"}</p>
@@ -3996,7 +4054,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
 
                                 {/* Seguidores */}
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-3xl overflow-hidden flex flex-col h-full">
+                                <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex items-start justify-between gap-4">
                                         <div>
                                             <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">Seguidores</h3>
@@ -4027,7 +4085,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     <div className="p-6 flex flex-col gap-6">
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <h4 className="text-sm font-black italic tracking-tight text-blue-500">Novos vs Deixaram de seguir</h4>
+                                                <h4 className="text-sm font-black tracking-tight text-blue-500">Novos vs Deixaram de seguir</h4>
                                                 <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-3 py-1">
                                                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
                                                     Novos
@@ -4080,7 +4138,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         </div>
 
                                         <div className="space-y-3">
-                                            <h4 className="text-sm font-black italic tracking-tight text-blue-500">Aumento de seguidores</h4>
+                                            <h4 className="text-sm font-black tracking-tight text-blue-500">Aumento de seguidores</h4>
                                             {(() => {
                                                 const values = followersSeries.map(p => p.cumulative);
                                                 const min = Math.min(...values, 0);

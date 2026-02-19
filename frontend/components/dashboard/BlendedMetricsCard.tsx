@@ -10,7 +10,7 @@ export default function BlendedMetricsCard() {
             <div className="flex justify-between items-start mb-6">
                 <div>
                     <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Cofre (Blended)</h2>
-                    <h1 className="text-xl font-black italic tracking-tighter" style={{ color: "var(--foreground)" }}>RESUMO DE TRÁFEGO</h1>
+                    <h1 className="text-xl font-black tracking-tighter" style={{ color: "var(--foreground)" }}>RESUMO DE TRÁFEGO</h1>
                 </div>
                 <div className="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500/20">
                     ROAS 3.4x

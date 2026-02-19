@@ -62,8 +62,8 @@ export default function PeriodSelector({ value = "30d", onChange, variant = "def
                 className={isFlatRed
                     ? "w-[220px] h-[34px] flex items-center gap-2 bg-white/90 hover:bg-white border-2 border-red-600 rounded-none px-3 transition-all text-black justify-between"
                     : isShellBrand
-                        ? "w-[264px] h-[38px] flex items-center gap-2 bg-[var(--shell-side)] hover:bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-xl px-3 transition-all text-[var(--foreground)] justify-between shadow-sm"
-                    : "flex items-center gap-2 bg-[var(--shell-side)] hover:bg-[var(--shell-border)] border border-[var(--shell-border)] rounded-full pl-3 pr-4 py-1.5 transition-all text-sm font-medium text-[var(--foreground)] min-w-[160px] justify-between"}
+                        ? "w-[264px] h-[38px] flex items-center gap-2 bg-[var(--shell-side-btn)] hover:bg-[oklch(from_var(--shell-side-btn)_l_c_h_/_0.8)] border border-[var(--shell-border)] rounded-xl px-3 transition-all text-[var(--foreground)] justify-between shadow-sm"
+                        : "flex items-center gap-2 bg-[var(--shell-side)] hover:bg-[oklch(from_var(--shell-side)_l_c_h_/_0.8)] border border-[var(--shell-border)] rounded-full pl-3 pr-4 py-1.5 transition-all text-sm font-medium text-[var(--foreground)] min-w-[160px] justify-between"}
             >
                 <div className="flex items-center gap-2">
                     {!isFlatRed && <CalendarDaysIcon className={`w-4 h-4 ${isShellBrand ? "text-blue-400" : "text-zinc-500"}`} />}
@@ -71,14 +71,16 @@ export default function PeriodSelector({ value = "30d", onChange, variant = "def
                         {isFlatRed ? flatRedLabel : isShellBrand ? selected.label.toUpperCase() : selected.label}
                     </span>
                 </div>
-                <ChevronDownIcon className={`w-3 h-3 ${isFlatRed ? "text-zinc-700" : "text-zinc-500"} transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                <ChevronDownIcon className={`w-3 h-3 ${isFlatRed ? "text-zinc-700" : "text-[var(--muted)]"} transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                <div
+                    className="absolute right-0 top-full mt-2 w-64 border border-[var(--shell-border)] rounded-xl shadow-2xl p-2 z-[9999] bg-[var(--shell-surface)] backdrop-blur-xl"
+                >
                     {view === "list" ? (
                         <>
-                            <div className="text-[9px] uppercase font-black tracking-widest text-zinc-500 px-3 py-2">Selecionar Período</div>
+                            <div className="text-[9px] uppercase font-black tracking-widest text-[var(--muted)] px-3 py-2">Selecionar Período</div>
                             <div className="space-y-1">
                                 {OPTIONS.map((option) => (
                                     <button
@@ -88,7 +90,7 @@ export default function PeriodSelector({ value = "30d", onChange, variant = "def
                                             onChange?.(option.value as PeriodValue, option.label);
                                             setIsOpen(false);
                                         }}
-                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors text-xs font-medium ${selected.value === option.value ? "bg-blue-500/10 text-blue-500" : "hover:bg-[var(--shell-side)] text-zinc-400 hover:text-zinc-200"}`}
+                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors text-xs font-medium ${selected.value === option.value ? "bg-blue-500/10 text-blue-500" : "hover:bg-[var(--shell-side)] text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                                     >
                                         <span>{option.label}</span>
                                         {selected.value === option.value && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
@@ -97,7 +99,7 @@ export default function PeriodSelector({ value = "30d", onChange, variant = "def
                                 <div className="h-px bg-[var(--shell-border)] my-1" />
                                 <button
                                     onClick={() => setView("custom")}
-                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-[var(--shell-side)]"
+                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors text-xs font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--shell-side)]"
                                 >
                                     <span>Personalizado...</span>
                                 </button>
@@ -107,14 +109,14 @@ export default function PeriodSelector({ value = "30d", onChange, variant = "def
                         <div className="p-2">
                             <button
                                 onClick={() => setView("list")}
-                                className="flex items-center gap-1 text-[10px] font-bold uppercase text-zinc-500 hover:text-zinc-300 mb-4 px-1"
+                                className="flex items-center gap-1 text-[10px] font-bold uppercase text-[var(--muted)] hover:text-[var(--foreground)] mb-4 px-1"
                             >
                                 <ArrowLeftIcon className="w-3 h-3" /> Voltar
                             </button>
 
                             <div className="space-y-3">
                                 <div>
-                                    <label className="block text-[9px] font-bold uppercase text-zinc-500 mb-1 ml-1">Data Inicial</label>
+                                    <label className="block text-[9px] font-bold uppercase text-[var(--muted)] mb-1 ml-1">Data Inicial</label>
                                     <input
                                         type="date"
                                         value={startDate}
@@ -123,7 +125,7 @@ export default function PeriodSelector({ value = "30d", onChange, variant = "def
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[9px] font-bold uppercase text-zinc-500 mb-1 ml-1">Data Final</label>
+                                    <label className="block text-[9px] font-bold uppercase text-[var(--muted)] mb-1 ml-1">Data Final</label>
                                     <input
                                         type="date"
                                         value={endDate}

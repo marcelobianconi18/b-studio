@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 import Layout from "./layout_main";
 import "./globals.css";
+import "./liquid_glass_style.css";
 
 const sfPro = localFont({
   src: [

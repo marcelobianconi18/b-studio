@@ -3,10 +3,10 @@
  
  -------------- celery@192.168.0.15 v5.6.2 (recovery)
 --- ***** ----- 
--- ******* ---- macOS-26.3-arm64-arm-64bit 2026-02-13 15:15:09
+-- ******* ---- macOS-26.3-arm64-arm-64bit 2026-02-18 15:51:18
 - *** --- * --- 
 - ** ---------- [config]
-- ** ---------- .> app:         b_studio_worker:0x108b871f0
+- ** ---------- .> app:         b_studio_worker:0x106dc9be0
 - ** ---------- .> transport:   redis://localhost:6379/0
 - ** ---------- .> results:     redis://localhost:6379/0
 - *** --- * --- .> concurrency: 10 (prefork)
@@ -17,29 +17,10 @@
                 
 
 [tasks]
+  . tasks.periodic_intelligence_check
   . tasks.publish_post
 
-[2026-02-13 15:15:09,876: INFO/MainProcess] Connected to redis://localhost:6379/0
-[2026-02-13 15:15:09,879: INFO/MainProcess] mingle: searching for neighbors
-[2026-02-13 15:15:10,885: INFO/MainProcess] mingle: all alone
-[2026-02-13 15:15:10,900: INFO/MainProcess] celery@192.168.0.15 ready.
-[2026-02-13 15:15:10,902: INFO/MainProcess] Task tasks.publish_post[53f0158b-9d24-4579-a30c-f78deaa11523] received
-[2026-02-13 15:15:10,903: INFO/ForkPoolWorker-8] Starting publish_post_task for message: Hello from B-Studio ...
-[2026-02-13 15:15:11,274: INFO/ForkPoolWorker-8] Task finished with result: {'error': 'Invalid OAuth access token - Cannot parse access token'}
-[2026-02-13 15:15:11,278: INFO/ForkPoolWorker-8] Task tasks.publish_post[53f0158b-9d24-4579-a30c-f78deaa11523] succeeded in 0.3751977499999999s: {'error': 'Invalid OAuth access token - Cannot parse access token'}
-[2026-02-13 15:15:20,013: INFO/MainProcess] Task tasks.publish_post[9fbd188e-f349-4777-9a7a-2e83d97ddcab] received
-[2026-02-13 15:15:20,019: INFO/ForkPoolWorker-8] Starting publish_post_task for message: Hello from B-Studio ...
-[2026-02-13 15:15:20,173: INFO/ForkPoolWorker-8] Task finished with result: {'error': 'Invalid OAuth access token - Cannot parse access token'}
-[2026-02-13 15:15:20,174: INFO/ForkPoolWorker-8] Task tasks.publish_post[9fbd188e-f349-4777-9a7a-2e83d97ddcab] succeeded in 0.15554574999999993s: {'error': 'Invalid OAuth access token - Cannot parse access token'}
-
-SIGHUP not supported: Restarting with SIGHUP is unstable on this platform!
-[2026-02-13 16:19:00,392: ERROR/MainProcess] Process 'ForkPoolWorker-10' pid:66977 exited with 'exitcode 70'
-[2026-02-13 16:19:00,404: ERROR/MainProcess] Process 'ForkPoolWorker-9' pid:66976 exited with 'exitcode 70'
-[2026-02-13 16:19:00,415: ERROR/MainProcess] Process 'ForkPoolWorker-8' pid:66975 exited with 'exitcode 70'
-[2026-02-13 16:19:00,426: ERROR/MainProcess] Process 'ForkPoolWorker-7' pid:66974 exited with 'exitcode 70'
-[2026-02-13 16:19:00,437: ERROR/MainProcess] Process 'ForkPoolWorker-5' pid:66972 exited with 'exitcode 70'
-[2026-02-13 16:19:00,448: ERROR/MainProcess] Process 'ForkPoolWorker-4' pid:66971 exited with 'exitcode 70'
-[2026-02-13 16:19:00,459: ERROR/MainProcess] Process 'ForkPoolWorker-3' pid:66970 exited with 'exitcode 70'
-[2026-02-13 16:19:00,470: ERROR/MainProcess] Process 'ForkPoolWorker-2' pid:66969 exited with 'exitcode 70'
-[2026-02-13 16:19:00,481: ERROR/MainProcess] Process 'ForkPoolWorker-1' pid:66968 exited with 'exitcode 70'
-[2026-02-13 16:19:01,392: ERROR/MainProcess] Process 'ForkPoolWorker-6' pid:66973 exited with 'exitcode 70'
+[2026-02-18 15:51:18,616: INFO/MainProcess] Connected to redis://localhost:6379/0
+[2026-02-18 15:51:18,619: INFO/MainProcess] mingle: searching for neighbors
+[2026-02-18 15:51:19,626: INFO/MainProcess] mingle: all alone
+[2026-02-18 15:51:19,637: INFO/MainProcess] celery@192.168.0.15 ready.

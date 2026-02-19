@@ -72,7 +72,7 @@ export default function SmartPublisher() {
             {/* Editor Area */}
             <div className="flex-1 space-y-8">
                 <header>
-                    <h1 className="text-3xl font-black italic tracking-tighter mb-2">SMART PUBLISHER</h1>
+                    <h1 className="text-3xl font-black tracking-tighter mb-2">SMART PUBLISHER</h1>
                     <p className="text-zinc-500 text-sm">Create, Preview & Schedule</p>
                 </header>
 

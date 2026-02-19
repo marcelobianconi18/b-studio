@@ -12,6 +12,7 @@ import Sidebar from "@/components/Sidebar";
 import LiquidShell from "@/components/LiquidShell";
 import FacebookInsightsAnalysis from "@/components/social/FacebookInsightsAnalysis";
 import InstagramInsightsAnalysis from "@/components/social/InstagramInsightsAnalysis";
+import CompetitorsAnalysis from "@/components/social/CompetitorsAnalysis";
 import ProfileSelector, { type InsightProfile } from "@/components/ProfileSelector";
 import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 
@@ -42,14 +43,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const getContextLabel = () => {
         if (activeTab === "social") return "Insight";
+        if (activeTab === "concorrentes") return "Insight";
         if (activeTab === "ads_metrics") return "Ads Insight";
         if (activeTab === "ads") return "Ads";
         return "Insight";
     };
 
     const renderSystemSelectors = (
-        <div className="pointer-events-auto w-full max-w-[720px] ml-auto h-full py-2 flex items-end justify-between gap-4">
-            <div className="hidden md:flex items-center gap-2 pr-1 min-w-0 self-end translate-x-[-10px]">
+        <div className="pointer-events-auto w-full max-w-[720px] ml-auto flex items-end justify-between gap-4">
+            <div className="hidden md:flex items-center gap-2 pr-1 min-w-0 translate-x-[-10px]">
                 {selectedInsightProfile.platform === "facebook" ? (
                     <div className="w-9 h-9 rounded-lg bg-[#1877F2] flex items-center justify-center shadow-sm shrink-0">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
@@ -75,7 +77,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </div>
             </div>
 
-            <div className="flex flex-col gap-1 self-end translate-y-12 md:translate-y-12">
+            <div className="flex flex-col gap-1">
                 <div className="flex flex-col gap-0.5">
                     <span className="text-[11px] leading-none font-normal uppercase text-[var(--foreground)]">Cliente:</span>
                     <ProfileSelector variant="shell-brand" selectedProfile={selectedInsightProfile} onChange={setSelectedInsightProfile} />
@@ -89,7 +91,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
 
     return (
-        <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}>
+        <div className="min-h-screen flex flex-col relative" style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}>
+            {/* Liquid Background Blobs */}
+            <div className="liquid-bg-container">
+                <div className="liquid-blob blob-1" />
+                <div className="liquid-blob blob-2" />
+                <div className="liquid-blob blob-3" />
+            </div>
+
             <header
                 className="fixed top-0 left-0 w-full h-20 px-5 md:px-8 flex items-center justify-between z-[60] pointer-events-none"
                 style={{
@@ -105,7 +114,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         B
                     </div>
                     <div className="flex flex-col">
-                        <p className="text-sm font-black italic tracking-tighter" style={{ color: "var(--foreground)" }}>B-Studio</p>
+                        <p className="text-sm font-black tracking-tighter" style={{ color: "var(--foreground)" }}>B-Studio</p>
                         <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>Enterprise</p>
                     </div>
                 </div>
@@ -114,17 +123,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     {TOP_MENU_ITEMS.map((item, idx) => (
                         <button
                             key={item}
-                            className="px-5 py-2 rounded-full text-[13px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border border-transparent hover:border-white/10"
+                            className={`px-5 py-2 rounded-full text-[13px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border border-transparent hover:border-white/10 liquid-glass ${idx === 0 ? 'active-nav-item' : ''}`}
                             style={{
-                                backgroundColor: idx === 0
-                                    ? (theme === "dark" ? "#ffffff" : "var(--ink)")
-                                    : "transparent",
                                 color: idx === 0
                                     ? (theme === "dark" ? "#000000" : "#ffffff")
                                     : "var(--muted)"
                             }}
                         >
-                            {item}
+                            <span className="relative z-10">{item}</span>
                         </button>
                     ))}
                 </nav>
@@ -177,6 +183,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             {selectedInsightProfile.platform === "facebook" ? <FacebookInsightsAnalysis /> : <InstagramInsightsAnalysis />}
                         </LiquidShell>
                     )}
+                    {activeTab === "concorrentes" && (
+                        <LiquidShell
+                            title="CONCORRENTES"
+                            subtitle="ANÁLISE DE MERCADO"
+                            action={renderSystemSelectors}
+                        >
+                            <CompetitorsAnalysis />
+                        </LiquidShell>
+                    )}
                     {activeTab === "inbox" && (
                         <LiquidShell title="MESA DE VENDAS" subtitle="INBOX PRIORITÁRIO" action={renderSystemSelectors}>
                             <UnifiedInbox />
@@ -189,7 +204,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             </div>
                         </LiquidShell>
                     )}
-                    {!(["home", "ads", "social", "inbox", "settings", "profile"] as string[]).includes(activeTab) && children}
+                    {!(["home", "ads", "ads_metrics", "social", "concorrentes", "inbox", "settings", "profile"] as string[]).includes(activeTab) && children}
                 </main>
             </div>
         </div>
@@ -211,15 +226,16 @@ function TopCircleButton({
         <button
             title={label}
             onClick={onClick}
-            className="w-11 h-11 rounded-full flex items-center justify-center relative transition-colors"
+            className="w-11 h-11 rounded-full flex items-center justify-center relative transition-colors liquid-glass"
             style={{
-                backgroundColor: "var(--shell-surface)",
                 color: "var(--foreground)"
             }}
         >
-            {children}
+            <div className="relative z-10">
+                {children}
+            </div>
             {badge && (
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500" />
+                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 z-20" />
             )}
         </button>
     );

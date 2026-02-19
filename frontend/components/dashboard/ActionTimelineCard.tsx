@@ -25,7 +25,7 @@ export default function ActionTimelineCard() {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Timeline</h2>
-                    <h1 className="text-xl font-black italic tracking-tighter" style={{ color: "var(--foreground)" }}>PRÓXIMAS 24H</h1>
+                    <h1 className="text-xl font-black tracking-tighter" style={{ color: "var(--foreground)" }}>PRÓXIMAS 24H</h1>
                 </div>
                 <div className="relative">
                     <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>

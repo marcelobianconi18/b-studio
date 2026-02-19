@@ -37,7 +37,7 @@ export default function TrueRoiDashboard() {
         <div className="bg-zinc-900/40 border border-zinc-800 rounded-3xl p-6 h-full flex flex-col backdrop-blur-md">
             <header className="flex justify-between items-start mb-6">
                 <div>
-                    <h2 className="text-xl font-black italic tracking-tighter flex items-center gap-2 text-white">
+                    <h2 className="text-xl font-black tracking-tighter flex items-center gap-2 text-white">
                         <BanknotesIcon className="w-5 h-5 text-emerald-500" />
                         FINANCIAL WAR ROOM
                     </h2>

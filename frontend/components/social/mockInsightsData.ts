@@ -12,7 +12,168 @@
  * these generators become the offline fallback only.
  */
 
-import type { InsightsData } from "./SocialInsights";
+import type { InsightsData, Competitor } from "./SocialInsights";
+
+/* ------------------------------------------------------------------ */
+/*  Helper: generate competitors                                       */
+/* ------------------------------------------------------------------ */
+
+export function generateMockCompetitors(): Competitor[] {
+    const names = [
+        { name: "Concept Art", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=CA" },
+        { name: "Studio Design", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=SD" },
+        { name: "Criativo Lab", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=CL" },
+        { name: "Hotmart", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=HM" },
+        { name: "Viver de Blog", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=VB" },
+        { name: "Rock Content", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=RC" },
+        { name: "Neil Patel Brasil", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=NP" },
+        { name: "Méliuz", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=MZ" },
+        { name: "Nubank", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=NB" },
+        { name: "XP Investimentos", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=XP" },
+    ];
+
+    // Rich data for the first 3 competitors
+    const richData = [
+        {
+            swot: {
+                strengths: [
+                    "Alta taxa de engajamento em vídeos curtos (Reels)",
+                    "Comunidade fiel e ativa nos comentários",
+                    "Estética visual consistente e reconhecível"
+                ],
+                weaknesses: [
+                    "Baixa frequência de postagem nos finais de semana",
+                    "Pouca diversificação de formatos (foco excessivo em estático)",
+                    "Tempo de resposta aos comentários é alto"
+                ],
+                opportunities: [
+                    "Explorar mais lives para aumentar conexão",
+                    "Colaborações com influenciadores do nicho",
+                    "Utilizar mais recursos interativos nos Stories"
+                ],
+                threats: [
+                    "Mudanças no algoritmo penalizando alcance orgânico",
+                    "Saturação do tema principal de conteúdo"
+                ]
+            },
+            strategicInsight: "📊 **Análise de Mercado:** A *Concept Art* se posicionou como a vitrine estética do setor, focando 100% em visual de alto impacto. Eles dominaram o nicho de 'inspiração', mas criaram uma barreira de distanciamento com a audiência.\n\n⚠️ **Ponto Cego (Blind Spot):** Eles ignoram completamente a etapa de 'educação' e 'conexão'. Seus posts têm muitos likes, mas baixíssima conversão em conversas reais (comentários são vazios de significado).\n\n🚀 **Sua Oportunidade de Ouro:**\nEnquanto eles buscam *admiradores*, você buscará *clientes*.\n1. **Conteúdo Híbrido:** Não poste apenas a foto bonita (como eles). Poste a foto E o bastidor 'feio' de como foi feito. Isso gera autoridade real e quebra a perfeição inalcançável deles.\n2. **Ciclo de Fim de Semana:** Eles 'desligam' na sexta-feira. Programe seus melhores conteúdos de engajamento (lives, caixinhas de pergunta) para Sábado às 10h e Domingo às 18h. Você nadará de braçada num oceano sem concorrentes por 48h."
+        },
+        {
+            swot: {
+                strengths: ["Design de alta qualidade", "Boa autoridade técnica"],
+                weaknesses: ["Textos muito longos e técnicos", "Pouca humanização da marca"],
+                opportunities: ["Simplificar a linguagem", "Mostrar o rosto nos stories"],
+                threats: ["Perda de interesse do público iniciante"]
+            },
+            strategicInsight: "📊 **Análise de Mercado:** O *Studio Design* joga o jogo da 'autoridade técnica'. Seus posts são densos, cheios de jargões e focados em pares (outros designers), não em clientes finais.\n\n⚠️ **Ponto Cego (Blind Spot):** Eles sofrem da 'Maldição do Conhecimento'. O cliente leigo se sente intimidado e confuso ao consumir o conteúdo deles, o que gera admiração mas pouca venda direta.\n\n🚀 **Sua Oportunidade de Ouro:**\nSeja o tradutor do mercado.\n1. **Humanização Didática:** Pegue os temas complexos que eles abordam e explique com analogias do dia a dia. Use vídeos de 'rosto' (que eles não fazem) para gerar confiança.\n2. **Acolhimento na Bio:** Enquanto a bio deles diz 'Especialistas em UX/UI', a sua deve dizer 'Transformamos sua ideia em app'. Ataque a dor do cliente, não a técnica."
+        },
+        {
+            swot: {
+                strengths: ["Uso criativo de Reels", "Tendências em tempo real"],
+                weaknesses: ["Identidade visual inconsistente", "Feed bagunçado"],
+                opportunities: ["Criar quadros fixos", "Melhorar a bio"],
+                threats: ["Cópia de conteúdo por outros"]
+            },
+            strategicInsight: "📊 **Análise de Mercado:** O *Criativo Lab* aposta tudo no viral e na tendência do momento. Eles crescem em 'picos' (viralização), mas sofrem para manter a audiência engajada quando o assunto esfria.\n\n⚠️ **Ponto Cego (Blind Spot):** Eles produzem muito *topo de funil* (atração) mas quase nada de *meio e fundo* (retenção e venda). O feed é uma vitrine de 'trends', não uma construção de autoridade sólida.\n\n🚀 **Sua Oportunidade de Ouro:**\n1. **Seja o Porto Seguro:** Enquanto eles entregam o 'caos criativo', entregue o 'método organizado'. Crie carrosséis que explicam o *porquê* das tendências, não apenas as replicam.\n2. **Converta a Audiência Deles:** Use anúncios direcionados para 'interesses em design/criatividade' com uma copy focada em 'Cansado de seguir trends? Aprenda a criar estratégia'. Você captará a fatia madura do público deles que busca profundidade."
+        }
+    ];
+
+    return names.map((c, i) => {
+        const followers = 500000 + (names.length - i) * 150000 + Math.floor(Math.random() * 50000);
+
+        // Use rich data if available, otherwise generic
+        const swot = richData[i]?.swot || {
+            strengths: ["Boa presença digital", "Postagens frequentes"],
+            weaknesses: ["Interação limitada", "Legendas curtas"],
+            opportunities: ["Expandir para novas redes", "Parcerias locais"],
+            threats: ["Novos entrantes", "Mudança de algoritmo"]
+        };
+
+        const strategicInsight = richData[i]?.strategicInsight || "📊 **Análise Geral:** Este concorrente mantém uma atuação estável. **Sua Ação:** Monitore as hashtags que eles usam e tente superar a qualidade visual dos posts deles nas mesmas temáticas.";
+
+        // Generate 3 random posts for each competitor
+        const topPosts = Array.from({ length: 3 }).map((_, pIdx) => {
+            const isVideo = Math.random() > 0.6;
+            const engagementBase = (Math.random() * 2000) + (15000 / (i + 1)); // Higher rank = higher engagement
+            const likes = Math.floor(engagementBase);
+            const comments = Math.floor(engagementBase * 0.05);
+            const shares = Math.floor(engagementBase * 0.02);
+            const reactions = likes + Math.floor(engagementBase * 0.1); // Likes + others
+            const reach = Math.floor(engagementBase * (2 + Math.random() * 3));
+            const impressions = Math.floor(reach * 1.2);
+            const video_views = isVideo ? Math.floor(reach * 0.8) : 0;
+            const link_clicks = Math.floor(reach * 0.01);
+
+            return {
+                id: `post-${i}-${pIdx}`,
+                image: `https://placehold.co/400x400/png?text=Post+${pIdx + 1}`,
+                message: `Conteúdo estratégico sobre ${["marketing", "vendas", "design", "tecnologia"][Math.floor(Math.random() * 4)]} focando em resultados...`,
+                date: "12/02/2026",
+                likes,
+                comments,
+                shares,
+                reach,
+                impressions,
+                video_views,
+                link_clicks,
+                reactions,
+                type: (isVideo ? "video" : "photo") as "video" | "photo" | "album"
+            };
+        });
+
+        return {
+            id: `comp-${i + 1}`,
+            name: c.name,
+            avatar: c.avatar,
+            followers,
+            followersChange: 1.2 + Math.random() * 2,
+            engagementRate: 2.5 + Math.random() * 3,
+            engagementChange: -5 + Math.random() * 15,
+            totalPosts: 45 + Math.floor(Math.random() * 30),
+            recentGrowth: 2000 + Math.floor(Math.random() * 5000),
+            weeklyPosts: 3 + Math.floor(Math.random() * 10),
+            totalLikes: 1000 + Math.floor(Math.random() * 50000),
+            totalComments: 50 + Math.floor(Math.random() * 2000),
+            avgInteractions: 50 + Math.floor(Math.random() * 500),
+            swot,
+            strategicInsight,
+            topPosts: topPosts,
+            audience: {
+                age: [
+                    { label: "18-24", value: 0.25 + (Math.random() * 0.1) },
+                    { label: "25-34", value: 0.35 + (Math.random() * 0.1) },
+                    { label: "35-44", value: 0.20 + (Math.random() * 0.05) },
+                    { label: "45-54", value: 0.15 + (Math.random() * 0.05) },
+                    { label: "55+", value: 0.05 }
+                ],
+                gender: [
+                    { label: "Mulheres", value: 0.60 + (Math.random() * 0.15) },
+                    { label: "Homens", value: 1 - (0.60 + (Math.random() * 0.15)) }
+                ],
+                locations: [
+                    { label: "São Paulo, SP", value: 0.35 },
+                    { label: "Rio de Janeiro, RJ", value: 0.15 },
+                    { label: "Belo Horizonte, MG", value: 0.10 },
+                    { label: "Curitiba, PR", value: 0.08 },
+                    { label: "Outros", value: 0.32 }
+                ],
+                // New Overview Data
+                newFollowers: Math.floor(Math.random() * 5000) + 500,
+                newFollowersGrowth: 0.4 + (Math.random() * 0.5),
+                botometer: {
+                    real: 0.85 + (Math.random() * 0.10), // 85-95%
+                    ghosts: 0.10 + (Math.random() * 0.05), // 10-15%
+                    bots: 0.05 // Remaining
+                },
+                mainCluster: "Mulheres",
+                mainAge: "25-34",
+                mainCity: "São Paulo/SP",
+                mainCountry: "Brasil",
+                mainLanguage: "PT-BR"
+            }
+        };
+    });
+}
 
 /* ------------------------------------------------------------------ */
 /*  Helper: generate top posts array                                   */
@@ -372,6 +533,7 @@ export function generateFacebookMockData(): InsightsData {
             video_inline: Math.round(rbt.like * 0.22),
             video: Math.round(rbt.like * 0.01),
         },
+        competitors: generateMockCompetitors(),
     };
 }
 
@@ -418,5 +580,6 @@ export function generateInstagramMockData(): InsightsData {
             video_inline: Math.round(rbt.like * 0.62),
             video: Math.round(rbt.like * 0.05),
         },
+        competitors: generateMockCompetitors(),
     };
 }

@@ -62,7 +62,7 @@ export default function InstagramPreview({ image, caption, username = "b_studio_
                     <p className="text-xs font-bold">1,234 curtidas</p>
                     <p className="text-xs leading-snug">
                         <span className="font-bold mr-2 lowercase">{username}</span>
-                        {caption || <span className="text-zinc-400 italic">Escreva uma legenda...</span>}
+                        {caption || <span className="text-zinc-400">Escreva uma legenda...</span>}
                     </p>
                     <p className="text-[10px] text-zinc-500 uppercase mt-2">2 horas atrás</p>
                 </div>

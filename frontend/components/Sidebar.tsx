@@ -8,7 +8,8 @@ import {
     MegaphoneIcon,
     MoonIcon,
     SunIcon,
-    PresentationChartLineIcon
+    PresentationChartLineIcon,
+    UserGroupIcon
 } from "@heroicons/react/24/outline";
 
 interface SidebarProps {
@@ -35,6 +36,7 @@ function DashboardIcon(props: React.ComponentProps<"svg">) {
 const NAV_ITEMS = [
     { id: "home", label: "Dashboard", icon: DashboardIcon },
     { id: "social", label: "Métrica Social", icon: ChartBarSquareIcon },
+    { id: "concorrentes", label: "Concorrentes", icon: UserGroupIcon },
     { id: "ads_metrics", label: "Métrica Ads", icon: PresentationChartLineIcon },
     { id: "ads", label: "Tráfego Pago", icon: MegaphoneIcon },
 ];
@@ -72,11 +74,13 @@ export default function Sidebar({
                         <button
                             key={item.id}
                             onClick={() => onNavigate(item.id)}
-                            className={`flex items-center transition-all duration-200 
+                            className={`flex items-center transition-all duration-300 liquid-glass
                                 ${collapsed
                                     ? "w-12 h-12 rounded-full justify-center"
-                                    : "w-52 h-12 rounded-xl justify-start px-4 gap-3"
-                                }`}
+                                    : "w-52 h-12 rounded-2xl justify-start px-4 gap-3"
+                                } 
+                                ${isActive ? "active-nav-item" : "hover:bg-white/5"}
+                            `}
                             title={item.label}
                             style={{
                                 backgroundColor: isActive
@@ -85,17 +89,12 @@ export default function Sidebar({
                                 color: isActive
                                     ? (theme === "dark" ? "#000000" : "#ffffff")
                                     : "var(--foreground)",
-                                border: theme === "dark"
-                                    ? "1px solid rgba(255,255,255,0.12)"
-                                    : "1px solid rgba(0,0,0,0.05)",
-                                boxShadow: theme === "dark"
-                                    ? "0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
-                                    : "0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5)"
+                                border: "1px solid var(--shell-border)"
                             }}
                         >
-                            <Icon className="w-5 h-5 shrink-0" />
+                            <Icon className={`w-5 h-5 shrink-0 ${isActive ? "scale-110" : "opacity-70"}`} />
                             {!collapsed && (
-                                <span className="text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">
                                     {item.label}
                                 </span>
                             )}
@@ -107,48 +106,42 @@ export default function Sidebar({
             <div className="pb-5 flex flex-col items-center gap-3 w-full">
                 <button
                     onClick={() => onThemeChange("dark")}
-                    className={`flex items-center transition-all duration-200 
+                    className={`flex items-center transition-all duration-300 liquid-glass
                         ${collapsed
                             ? "w-12 h-12 rounded-full justify-center"
-                            : "w-52 h-12 rounded-xl justify-start px-4 gap-3"
-                        }`}
+                            : "w-52 h-12 rounded-2xl justify-start px-4 gap-3"
+                        }
+                        ${theme === "dark" ? "bg-white text-black" : "hover:bg-white/5"}
+                    `}
                     title="Modo escuro"
                     style={{
                         backgroundColor: theme === "dark" ? "#ffffff" : "var(--shell-side-btn)",
                         color: theme === "dark" ? "#000000" : "var(--foreground)",
-                        border: theme === "dark"
-                            ? "1px solid rgba(255,255,255,0.12)"
-                            : "1px solid rgba(0,0,0,0.05)",
-                        boxShadow: theme === "dark"
-                            ? "0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
-                            : "0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5)"
+                        border: "1px solid var(--shell-border)"
                     }}
                 >
-                    <MoonIcon className="w-5 h-5" />
-                    {!collapsed && <span className="text-xs font-bold uppercase tracking-widest">Dark Mode</span>}
+                    <MoonIcon className={`w-5 h-5 ${theme === "dark" ? "scale-110" : "opacity-70"}`} />
+                    {!collapsed && <span className="text-[10px] font-black uppercase tracking-[0.2em]">Dark Mode</span>}
                 </button>
 
                 <button
                     onClick={() => onThemeChange("light")}
-                    className={`flex items-center transition-all duration-200 
+                    className={`flex items-center transition-all duration-300 liquid-glass
                         ${collapsed
                             ? "w-12 h-12 rounded-full justify-center"
-                            : "w-52 h-12 rounded-xl justify-start px-4 gap-3"
-                        }`}
+                            : "w-52 h-12 rounded-2xl justify-start px-4 gap-3"
+                        }
+                        ${theme === "light" ? "bg-[var(--ink)] text-white" : "hover:bg-white/5"}
+                    `}
                     title="Modo claro"
                     style={{
                         backgroundColor: theme === "light" ? "var(--ink)" : "var(--shell-side-btn)",
                         color: theme === "light" ? "#ffffff" : "var(--foreground)",
-                        border: theme === "dark"
-                            ? "1px solid rgba(255,255,255,0.12)"
-                            : "1px solid rgba(0,0,0,0.05)",
-                        boxShadow: theme === "dark"
-                            ? "0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
-                            : "0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5)"
+                        border: "1px solid var(--shell-border)"
                     }}
                 >
-                    <SunIcon className="w-5 h-5" />
-                    {!collapsed && <span className="text-xs font-bold uppercase tracking-widest">Day Light</span>}
+                    <SunIcon className={`w-5 h-5 ${theme === "light" ? "scale-110" : "opacity-70"}`} />
+                    {!collapsed && <span className="text-[10px] font-black uppercase tracking-[0.2em]">Day Light</span>}
                 </button>
             </div>
         </aside>

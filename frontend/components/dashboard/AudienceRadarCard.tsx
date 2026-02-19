@@ -23,7 +23,7 @@ export default function AudienceRadarCard() {
             {/* Header */}
             <div>
                 <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Radar de Audiência</h2>
-                <h1 className="text-xl font-black italic tracking-tighter" style={{ color: "var(--foreground)" }}>SENTIMENTO IA</h1>
+                <h1 className="text-xl font-black tracking-tighter" style={{ color: "var(--foreground)" }}>SENTIMENTO IA</h1>
             </div>
 
             {/* Total Followers */}
@@ -47,7 +47,7 @@ export default function AudienceRadarCard() {
                     <div className="h-full bg-yellow-500 w-[15%]"></div>
                     <div className="h-full bg-red-500 w-[5%] rounded-r-full shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
                 </div>
-                <p className="text-[10px] text-zinc-500/80 mt-2 text-right italic">Baseado em NLP das últimas 24h</p>
+                <p className="text-[10px] text-zinc-500/80 mt-2 text-right">Baseado em NLP das últimas 24h</p>
             </div>
 
             {/* Insight */}
