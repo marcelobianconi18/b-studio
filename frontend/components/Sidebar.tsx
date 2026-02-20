@@ -2,14 +2,14 @@
 
 import {
     ChartBarSquareIcon,
-    ChevronLeftIcon,
-    ChevronRightIcon,
     Cog6ToothIcon,
     MegaphoneIcon,
-    MoonIcon,
-    SunIcon,
     PresentationChartLineIcon,
-    UserGroupIcon
+    UserGroupIcon,
+    InboxArrowDownIcon,
+    HomeIcon,
+    MoonIcon,
+    SunIcon
 } from "@heroicons/react/24/outline";
 
 interface SidebarProps {
@@ -21,24 +21,13 @@ interface SidebarProps {
     onThemeChange: (theme: "light" | "dark") => void;
 }
 
-
-function DashboardIcon(props: React.ComponentProps<"svg">) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-            <rect x="3.5" y="3.5" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-            <rect x="13" y="3" width="8" height="8" rx="2.5" fill="currentColor" stroke="none" />
-            <rect x="3" y="13" width="8" height="8" rx="2.5" fill="currentColor" stroke="none" />
-            <rect x="13.5" y="13.5" width="7" height="7" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-        </svg>
-    );
-}
-
 const NAV_ITEMS = [
-    { id: "home", label: "Dashboard", icon: DashboardIcon },
+    { id: "home", label: "Dashboard", icon: HomeIcon },
     { id: "social", label: "Métrica Social", icon: ChartBarSquareIcon },
     { id: "concorrentes", label: "Concorrentes", icon: UserGroupIcon },
     { id: "ads_metrics", label: "Métrica Ads", icon: PresentationChartLineIcon },
     { id: "ads", label: "Tráfego Pago", icon: MegaphoneIcon },
+    { id: "inbox", label: "Mesa de Vendas", icon: InboxArrowDownIcon },
 ];
 
 export default function Sidebar({
@@ -50,22 +39,9 @@ export default function Sidebar({
     onThemeChange
 }: SidebarProps) {
     return (
-        <aside className={`fixed left-0 top-24 h-[calc(100vh-96px)] z-50 flex flex-col bg-transparent transition-all duration-300 items-center ${collapsed ? "w-16" : "w-60"}`}>
-            <nav className="pt-5 flex-1 flex flex-col items-center gap-3 w-full">
-                <button
-                    type="button"
-                    onClick={onToggleCollapse}
-                    className="w-12 h-12 rounded-full flex items-center justify-center transition-colors"
-                    style={{
-                        backgroundColor: "var(--shell-side-btn)",
-                        color: "var(--foreground)",
-                        boxShadow: "0 1px 4px rgba(12,17,27,0.08)"
-                    }}
-                    title={collapsed ? "Abrir menu" : "Recolher menu"}
-                >
-                    {collapsed ? <ChevronRightIcon className="w-5 h-5" /> : <ChevronLeftIcon className="w-5 h-5" />}
-                </button>
-
+        <aside className="fixed left-6 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center py-6 gap-5 w-[68px] rounded-[40px] glass-capsule">
+            {/* Nav Icons */}
+            <nav className="flex-1 flex flex-col items-center gap-4">
                 {NAV_ITEMS.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
@@ -74,74 +50,75 @@ export default function Sidebar({
                         <button
                             key={item.id}
                             onClick={() => onNavigate(item.id)}
-                            className={`flex items-center transition-all duration-300 liquid-glass
-                                ${collapsed
-                                    ? "w-12 h-12 rounded-full justify-center"
-                                    : "w-52 h-12 rounded-2xl justify-start px-4 gap-3"
-                                } 
-                                ${isActive ? "active-nav-item" : "hover:bg-white/5"}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group
+                                ${isActive
+                                    ? "bg-black/30 text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
+                                    : "text-white/60 hover:text-white hover:bg-white/10"
+                                }
                             `}
                             title={item.label}
-                            style={{
-                                backgroundColor: isActive
-                                    ? (theme === "dark" ? "#ffffff" : "var(--ink)")
-                                    : "var(--shell-side-btn)",
-                                color: isActive
-                                    ? (theme === "dark" ? "#000000" : "#ffffff")
-                                    : "var(--foreground)",
-                                border: "1px solid var(--shell-border)"
-                            }}
                         >
-                            <Icon className={`w-5 h-5 shrink-0 ${isActive ? "scale-110" : "opacity-70"}`} />
-                            {!collapsed && (
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap">
-                                    {item.label}
-                                </span>
-                            )}
+                            <Icon className={`w-6 h-6 transition-transform ${isActive ? "scale-105" : ""}`} strokeWidth={1.5} />
+
+                            {/* Tooltip */}
+                            <span className="absolute left-[60px] bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
+                                {item.label}
+                            </span>
                         </button>
                     );
                 })}
             </nav>
 
-            <div className="pb-5 flex flex-col items-center gap-3 w-full">
+            {/* Bottom Actions */}
+            <div className="flex flex-col items-center gap-4 mt-8">
                 <button
-                    onClick={() => onThemeChange("dark")}
-                    className={`flex items-center transition-all duration-300 liquid-glass
-                        ${collapsed
-                            ? "w-12 h-12 rounded-full justify-center"
-                            : "w-52 h-12 rounded-2xl justify-start px-4 gap-3"
+                    onClick={() => onNavigate("settings")}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group
+                        ${activeTab === "settings"
+                            ? "bg-black/30 text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
+                            : "text-white/60 hover:text-white hover:bg-white/10"
                         }
-                        ${theme === "dark" ? "bg-white text-black" : "hover:bg-white/5"}
                     `}
-                    title="Modo escuro"
-                    style={{
-                        backgroundColor: theme === "dark" ? "#ffffff" : "var(--shell-side-btn)",
-                        color: theme === "dark" ? "#000000" : "var(--foreground)",
-                        border: "1px solid var(--shell-border)"
-                    }}
+                    title="Configurações"
                 >
-                    <MoonIcon className={`w-5 h-5 ${theme === "dark" ? "scale-110" : "opacity-70"}`} />
-                    {!collapsed && <span className="text-[10px] font-black uppercase tracking-[0.2em]">Dark Mode</span>}
+                    <Cog6ToothIcon className="w-6 h-6" strokeWidth={1.5} />
+                    <span className="absolute left-[60px] bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
+                        Configurações
+                    </span>
                 </button>
 
+                {/* Dark Mode */}
+                <button
+                    onClick={() => onThemeChange("dark")}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group
+                        ${theme === "dark"
+                            ? "bg-black/30 text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
+                            : "text-white/60 hover:text-white hover:bg-white/10"
+                        }
+                    `}
+                    title="Modo escuro"
+                >
+                    <MoonIcon className="w-6 h-6" strokeWidth={1.5} />
+                    <span className="absolute left-[60px] bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
+                        Dark Mode
+                    </span>
+                </button>
+
+                {/* Light Mode */}
                 <button
                     onClick={() => onThemeChange("light")}
-                    className={`flex items-center transition-all duration-300 liquid-glass
-                        ${collapsed
-                            ? "w-12 h-12 rounded-full justify-center"
-                            : "w-52 h-12 rounded-2xl justify-start px-4 gap-3"
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group
+                        ${theme === "light"
+                            ? "bg-black/30 text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
+                            : "text-white/60 hover:text-white hover:bg-white/10"
                         }
-                        ${theme === "light" ? "bg-[var(--ink)] text-white" : "hover:bg-white/5"}
                     `}
                     title="Modo claro"
-                    style={{
-                        backgroundColor: theme === "light" ? "var(--ink)" : "var(--shell-side-btn)",
-                        color: theme === "light" ? "#ffffff" : "var(--foreground)",
-                        border: "1px solid var(--shell-border)"
-                    }}
                 >
-                    <SunIcon className={`w-5 h-5 ${theme === "light" ? "scale-110" : "opacity-70"}`} />
-                    {!collapsed && <span className="text-[10px] font-black uppercase tracking-[0.2em]">Day Light</span>}
+                    <SunIcon className="w-6 h-6" strokeWidth={1.5} />
+                    <span className="absolute left-[60px] bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
+                        Day Light
+                    </span>
                 </button>
             </div>
         </aside>

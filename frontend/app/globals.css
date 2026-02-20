@@ -28,17 +28,17 @@
 }
 
 [data-theme="dark"] {
-  /* Dark Mode Palette - Inspired by Anexo 3/4 */
+  /* Dark Mode Palette - Translucent Glass */
   --background: #10141A;
   --foreground: #FFFFFF;
 
-  /* Surface colors for cards/panels on dark mode */
-  --shell-surface: #1A2029;
+  /* Surface colors — more translucent for glass effect */
+  --shell-surface: rgba(16, 20, 26, 0.55);
   /* macOS-like subtle highlight for dark backgrounds */
-  --shell-border: rgba(255, 255, 255, 0.14);
-  --shell-side: #151B24;
-  --shell-side-btn: #232A36;
-  --shell-top: #13181F;
+  --shell-border: rgba(255, 255, 255, 0.1);
+  --shell-side: rgba(16, 20, 26, 0.7);
+  --shell-side-btn: rgba(255, 255, 255, 0.06);
+  --shell-top: rgba(16, 20, 26, 0.5);
 
   /* Accents */
   --ink: #10141A;

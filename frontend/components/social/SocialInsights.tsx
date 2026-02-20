@@ -1400,45 +1400,30 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
     return (
         <div className="space-y-6 pb-20">
-            {/* Tabs Navigation & Period Selector */}
-            {/* Tabs Navigation & Period Selector */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[var(--shell-border)] pb-0 mb-6 gap-4 bg-zinc-900/40 rounded-t-[2rem] px-2 pt-2 liquid-glass">
-                <div className="flex flex-wrap items-end">
-                    {tabItems.map((tab, index) => {
+            {/* Tabs Navigation */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between xl:justify-start gap-4 mb-8">
+                <div className="flex items-center p-1.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-inner overflow-x-auto hide-scrollbar">
+                    {tabItems.map((tab) => {
                         const isActive = activeTab === tab.id;
                         return (
-                            <div key={tab.id} className="relative flex items-center">
-                                {/* Separator before item (if not first, not active, and previous was not active) */}
-                                {index > 0 && !isActive && activeTab !== tabItems[index - 1].id && (
-                                    <div className="w-px h-4 bg-zinc-700 mx-1" />
-                                )}
-
-                                <button
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`
-                                        relative px-4 py-2 text-sm font-medium transition-all duration-200 group flex items-center justify-center min-w-[120px]
-                                        ${isActive
-                                            ? "bg-[var(--shell-surface)] text-white rounded-t-lg z-10 -mb-[1px] pb-[9px] shadow-[0_-1px_0_0_rgba(255,255,255,0.05),-1px_0_0_0_rgba(255,255,255,0.05),1px_0_0_0_rgba(255,255,255,0.05)] border-t border-x border-[var(--shell-border)] border-b-0"
-                                            : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-lg mx-1"
-                                        }
-                                    `}
-                                >
-                                    {isActive && (
-                                        <>
-                                            {/* Corner curves for active tab - Chrome style approximation */}
-                                            <div className="absolute bottom-0 -left-2 w-2 h-2 bg-transparent rounded-br-lg shadow-[2px_2px_0_0_var(--shell-surface)] pointer-events-none z-20" />
-                                            <div className="absolute bottom-0 -right-2 w-2 h-2 bg-transparent rounded-bl-lg shadow-[-2px_2px_0_0_var(--shell-surface)] pointer-events-none z-20" />
-                                        </>
-                                    )}
-
-                                    <span className="relative z-10 truncate max-w-[100px]">{tab.label}</span>
-                                </button>
-                            </div>
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`
+                                    relative px-5 py-2 text-sm font-semibold transition-all duration-300 rounded-full flex items-center justify-center whitespace-nowrap
+                                    ${isActive
+                                        ? "bg-white/20 text-white shadow-[0_2px_10px_rgba(0,0,0,0.1),inset_0_1px_rgba(255,255,255,0.4)]"
+                                        : "text-white/60 hover:text-white hover:bg-white/10"
+                                    }
+                                `}
+                            >
+                                <span className="relative z-10">{tab.label}</span>
+                            </button>
                         );
                     })}
                 </div>
                 {!hideTopPeriodSelector && (
-                    <div className="flex items-center gap-2 pr-2">
+                    <div className="flex items-center gap-2 ml-auto lg:ml-4">
                         <span className="text-[10px] uppercase font-bold text-zinc-500 hidden md:inline">Período:</span>
                         <PeriodSelector value={period} onChange={(value) => setPeriod(value)} />
                     </div>

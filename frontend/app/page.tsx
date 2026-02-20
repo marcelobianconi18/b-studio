@@ -5,9 +5,14 @@ import AudienceRadarCard from "@/components/dashboard/AudienceRadarCard";
 import BlendedMetricsCard from "@/components/dashboard/BlendedMetricsCard";
 import WarRoomTerminalCard from "@/components/dashboard/WarRoomTerminalCard";
 
-export default function Dashboard() {
+interface DashboardProps {
+    headerCenter?: React.ReactNode;
+    action?: React.ReactNode;
+}
+
+export default function Dashboard({ headerCenter, action }: DashboardProps) {
     return (
-        <LiquidShell title="DASHBOARD" subtitle="COMANDO CENTRAL B-STUDIO">
+        <LiquidShell title="DASHBOARD" subtitle="COMANDO CENTRAL B-STUDIO" headerCenter={headerCenter} action={action}>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full w-full">
                 {/* Coluna Esquerda: Status & Calendário */}
                 <div className="flex flex-col gap-6 h-full">

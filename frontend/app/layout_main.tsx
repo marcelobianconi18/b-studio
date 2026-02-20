@@ -49,104 +49,60 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         return "Insight";
     };
 
-    const renderSystemSelectors = (
-        <div className="pointer-events-auto w-full max-w-[720px] ml-auto flex items-end justify-between gap-4">
-            <div className="hidden md:flex items-center gap-2 pr-1 min-w-0 translate-x-[-10px]">
-                {selectedInsightProfile.platform === "facebook" ? (
-                    <div className="w-9 h-9 rounded-lg bg-[#1877F2] flex items-center justify-center shadow-sm shrink-0">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                        </svg>
-                    </div>
-                ) : (
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#515BD4] flex items-center justify-center shadow-sm shrink-0">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <rect x="4.5" y="4.5" width="15" height="15" rx="4.5" stroke="#fff" strokeWidth="2" />
-                            <circle cx="12" cy="12" r="3.4" stroke="#fff" strokeWidth="2" />
-                            <circle cx="17.5" cy="6.7" r="1.2" fill="#fff" />
-                        </svg>
-                    </div>
-                )}
-                <div className="flex flex-col leading-none min-w-0">
-                    <span className="text-[32px] font-black tracking-tight text-[var(--foreground)] truncate">
-                        {selectedInsightProfile.platform === "facebook" ? "Facebook" : "Instagram"}
-                    </span>
-                    <span className="text-[21px] font-normal -mt-1 text-[var(--foreground)]">
-                        {getContextLabel()}
-                    </span>
+    const platformLogo = (
+        <div className="flex items-center gap-3">
+            {selectedInsightProfile.platform === "facebook" ? (
+                <div className="w-8 h-8 rounded-full bg-[#1877F2] flex items-center justify-center shadow-md shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
                 </div>
+            ) : (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#515BD4] flex items-center justify-center shadow-md shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <rect x="4.5" y="4.5" width="15" height="15" rx="4.5" stroke="#fff" strokeWidth="2" />
+                        <circle cx="12" cy="12" r="3.4" stroke="#fff" strokeWidth="2" />
+                        <circle cx="17.5" cy="6.7" r="1.2" fill="#fff" />
+                    </svg>
+                </div>
+            )}
+            <div className="flex flex-col leading-none">
+                <span className="text-xl font-black tracking-widest text-white uppercase drop-shadow-md">
+                    {selectedInsightProfile.platform === "facebook" ? "Facebook" : "Instagram"} <span className="font-light opacity-80">{getContextLabel()}</span>
+                </span>
+            </div>
+        </div>
+    );
+
+    const actionsBar = (
+        <div className="flex items-center gap-3">
+            <div className="flex bg-black/30 backdrop-blur-md rounded-full px-5 h-12 border border-white/10 items-center mr-2 shadow-lg">
+                <ProfileSelector variant="shell-brand" selectedProfile={selectedInsightProfile} onChange={setSelectedInsightProfile} />
+                <div className="w-[2px] h-5 bg-white/10 mx-4" />
+                <PeriodSelector variant="shell-brand" value={selectedPeriod} onChange={(value) => setSelectedPeriod(value)} />
             </div>
 
-            <div className="flex flex-col gap-1">
-                <div className="flex flex-col gap-0.5">
-                    <span className="text-[11px] leading-none font-normal uppercase text-[var(--foreground)]">Cliente:</span>
-                    <ProfileSelector variant="shell-brand" selectedProfile={selectedInsightProfile} onChange={setSelectedInsightProfile} />
-                </div>
-                <div className="flex flex-col gap-0.5">
-                    <span className="text-[11px] leading-none font-normal uppercase text-[var(--foreground)]">Período:</span>
-                    <PeriodSelector variant="shell-brand" value={selectedPeriod} onChange={(value) => setSelectedPeriod(value)} />
-                </div>
-            </div>
+            <TopCircleButton label="Notificações" badge>
+                <BellAlertIcon className="w-5 h-5" strokeWidth={1.5} />
+            </TopCircleButton>
+
+            <button
+                onClick={() => setActiveTab("profile")}
+                className="w-11 h-11 rounded-full ml-1 overflow-hidden border-[3px] border-white/20 hover:border-white/40 transition-colors shadow-lg"
+                title="Perfil"
+            >
+                <img src="https://i.pravatar.cc/150?img=47" alt="User Avatar" className="w-full h-full object-cover" />
+            </button>
         </div>
     );
 
     return (
         <div className="min-h-screen flex flex-col relative" style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}>
-            {/* Liquid Background Blobs */}
+            {/* Liquid Background */}
             <div className="liquid-bg-container">
                 <div className="liquid-blob blob-1" />
                 <div className="liquid-blob blob-2" />
-                <div className="liquid-blob blob-3" />
             </div>
-
-            <header
-                className="fixed top-0 left-0 w-full h-20 px-5 md:px-8 flex items-center justify-between z-[60] pointer-events-none"
-                style={{
-                    backgroundColor: "transparent",
-                    border: "none"
-                }}
-            >
-                <div className="flex items-center gap-4 min-w-[240px] pointer-events-auto">
-                    <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-lg shadow-lg"
-                        style={{ backgroundColor: "var(--ink)" }}
-                    >
-                        B
-                    </div>
-                    <div className="flex flex-col">
-                        <p className="text-sm font-black tracking-tighter" style={{ color: "var(--foreground)" }}>B-Studio</p>
-                        <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>Enterprise</p>
-                    </div>
-                </div>
-
-                <nav className="hidden md:flex items-center justify-center gap-12 absolute left-1/2 -translate-x-1/2 pointer-events-auto w-full max-w-5xl">
-                    {TOP_MENU_ITEMS.map((item, idx) => (
-                        <button
-                            key={item}
-                            className={`px-5 py-2 rounded-full text-[13px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border border-transparent hover:border-white/10 liquid-glass ${idx === 0 ? 'active-nav-item' : ''}`}
-                            style={{
-                                color: idx === 0
-                                    ? (theme === "dark" ? "#000000" : "#ffffff")
-                                    : "var(--muted)"
-                            }}
-                        >
-                            <span className="relative z-10">{item}</span>
-                        </button>
-                    ))}
-                </nav>
-
-                <div className="flex items-center gap-2 md:gap-3 ml-auto pointer-events-auto">
-                    <TopCircleButton label="Mensagens do sistema" badge>
-                        <EnvelopeIcon className="w-5 h-5" />
-                    </TopCircleButton>
-                    <TopCircleButton label="Avisos do sistema" badge>
-                        <BellAlertIcon className="w-5 h-5" />
-                    </TopCircleButton>
-                    <TopCircleButton label="Perfil do usuario" onClick={() => setActiveTab("profile")}>
-                        <UserCircleIcon className="w-5 h-5" />
-                    </TopCircleButton>
-                </div>
-            </header>
 
             <Sidebar
                 activeTab={activeTab}
@@ -157,18 +113,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 onThemeChange={setTheme}
             />
 
-            <div className={`flex-1 transition-all duration-300 pt-24 ${collapsed ? "ml-16" : "ml-60"}`}>
-                <main className="p-1 md:p-2 min-h-[calc(100vh-96px)] flex flex-col">
-                    {activeTab === "home" && <Dashboard />}
+            <div className="flex-1 transition-all duration-300 pt-6 ml-[104px]">
+                <main className="p-2 min-h-[calc(100vh-24px)] flex flex-col">
+                    {activeTab === "home" && <Dashboard headerCenter={platformLogo} action={actionsBar} />}
                     {activeTab === "ads_metrics" && (
-                        <LiquidShell title="MÉTRICA ADS" subtitle="ANÁLISE DE PERFORMANCE" action={renderSystemSelectors}>
+                        <LiquidShell title="MÉTRICA ADS" subtitle="ANÁLISE DE PERFORMANCE" headerCenter={platformLogo} action={actionsBar}>
                             <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
                                 Módulo de Métrica Ads em breve.
                             </div>
                         </LiquidShell>
                     )}
                     {activeTab === "ads" && (
-                        <LiquidShell title="TRÁFEGO PAGO" subtitle="GESTÃO DE CAMPANHAS E ROI" action={renderSystemSelectors}>
+                        <LiquidShell title="TRÁFEGO PAGO" subtitle="GESTÃO DE CAMPANHAS E ROI" headerCenter={platformLogo} action={actionsBar}>
                             <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
                                 Módulo de Tráfego Pago em breve.
                             </div>
@@ -178,27 +134,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         <LiquidShell
                             title="MÉTRICA SOCIAL"
                             subtitle={selectedInsightProfile.platform === "facebook" ? "Facebook Insights & Crescimento" : "Instagram Insights & Crescimento"}
-                            action={renderSystemSelectors}
+                            headerCenter={platformLogo}
+                            action={actionsBar}
                         >
                             {selectedInsightProfile.platform === "facebook" ? <FacebookInsightsAnalysis /> : <InstagramInsightsAnalysis />}
                         </LiquidShell>
                     )}
                     {activeTab === "concorrentes" && (
-                        <LiquidShell
-                            title="CONCORRENTES"
-                            subtitle="ANÁLISE DE MERCADO"
-                            action={renderSystemSelectors}
-                        >
+                        <LiquidShell title="CONCORRENTES" subtitle="ANÁLISE DE MERCADO" headerCenter={platformLogo} action={actionsBar}>
                             <CompetitorsAnalysis />
                         </LiquidShell>
                     )}
                     {activeTab === "inbox" && (
-                        <LiquidShell title="MESA DE VENDAS" subtitle="INBOX PRIORITÁRIO" action={renderSystemSelectors}>
+                        <LiquidShell title="MESA DE VENDAS" subtitle="INBOX PRIORITÁRIO" headerCenter={platformLogo} action={actionsBar}>
                             <UnifiedInbox />
                         </LiquidShell>
                     )}
                     {activeTab === "profile" && (
-                        <LiquidShell title="PERFIL" subtitle="GERENCIAMENTO DE CONTA" action={renderSystemSelectors}>
+                        <LiquidShell title="PERFIL" subtitle="GERENCIAMENTO DE CONTA" headerCenter={platformLogo} action={actionsBar}>
                             <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
                                 Módulo de Perfil em breve.
                             </div>
@@ -226,16 +179,13 @@ function TopCircleButton({
         <button
             title={label}
             onClick={onClick}
-            className="w-11 h-11 rounded-full flex items-center justify-center relative transition-colors liquid-glass"
-            style={{
-                color: "var(--foreground)"
-            }}
+            className="w-8 h-8 rounded-full flex items-center justify-center relative transition-all text-white/50 hover:text-white hover:bg-white/10"
         >
             <div className="relative z-10">
                 {children}
             </div>
             {badge && (
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 z-20" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 z-20" />
             )}
         </button>
     );
