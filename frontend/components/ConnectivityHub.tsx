@@ -160,13 +160,13 @@ export default function ConnectivityHub() {
 
                                 {/* Status Bit */}
                                 <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 border-[#050505] shadow-sm
-                                    ${isConnected(platform.id) ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}
+                                    ${isConnected(platform.id) ? 'bg-white/10 animate-pulse' : 'bg-white/10'}
                                 `} />
                             </button>
 
                             {/* Tooltip */}
                             <div className="absolute top-20 left-1/2 -translate-x-1/2 px-3 py-1 bg-zinc-900 border border-zinc-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap shadow-2xl">
-                                <span className="text-[10px] font-black text-white uppercase tracking-tighter">{platform.name}</span>
+                                <span className="text-[10px] font-black text-[var(--foreground)] uppercase tracking-tighter">{platform.name}</span>
                             </div>
                         </div>
                     ))}

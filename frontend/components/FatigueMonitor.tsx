@@ -42,40 +42,40 @@ export default function FatigueMonitor() {
                 <h2 className="text-sm font-bold uppercase text-zinc-500 tracking-widest flex items-center gap-2">
                     <ChartBarIcon className="w-4 h-4" /> Central de Liquidez de Ativos
                 </h2>
-                <button onClick={checkFatigue} className="text-zinc-600 hover:text-white transition-colors">
+                <button onClick={checkFatigue} className="text-zinc-600 hover:text-[var(--foreground)] transition-colors">
                     <ArrowPathIcon className="w-4 h-4" />
                 </button>
             </div>
             <div className="flex flex-col items-center justify-center h-48 text-center">
-                <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3">
-                    <CheckBadgeIcon className="w-6 h-6 text-emerald-500" />
+                <div className="w-12 h-12 bg-white/10/10 rounded-full flex items-center justify-center mb-3">
+                    <CheckBadgeIcon className="w-6 h-6 text-[var(--foreground)]" />
                 </div>
-                <h3 className="text-zinc-300 font-bold">Todos os Criativos Saudáveis</h3>
+                <h3 className="text-[var(--foreground)] font-bold">Todos os Criativos Saudáveis</h3>
                 <p className="text-zinc-500 text-xs mt-1">Escaneados {data?.checked_count || 0} anúncios ativos. Nenhuma fadiga detectada.</p>
             </div>
         </div>
     );
 
     return (
-        <div className="p-6 bg-gradient-to-br from-red-900/10 to-black border border-red-500/20 rounded-3xl h-full">
+        <div className="p-6 bg-gradient-to-br from-red-900/10 to-black border border-white/20/20 rounded-3xl h-full">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-sm font-bold uppercase text-red-500 tracking-widest flex items-center gap-2">
+                <h2 className="text-sm font-bold uppercase text-[var(--foreground)] tracking-widest flex items-center gap-2">
                     <ExclamationTriangleIcon className="w-4 h-4" /> Alerta de Fadiga Criativa
                 </h2>
-                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
+                <span className="bg-white/10 text-[var(--foreground)] text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
                     {data.fatigued_ads.length} Anúncios Morrendo
                 </span>
             </div>
 
             <div className="space-y-4">
                 {data.fatigued_ads.map((ad: any) => (
-                    <div key={ad.ad_id} className="bg-black/50 border border-red-500/30 p-4 rounded-xl">
+                    <div key={ad.ad_id} className="bg-black/50 border border-white/20/30 p-4 rounded-xl">
                         <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-bold text-zinc-200 text-sm truncate w-2/3">{ad.ad_name}</h3>
-                            <span className="text-[10px] text-red-400 font-mono">{ad.severity} RISCO</span>
+                            <h3 className="font-bold text-[var(--foreground)] text-sm truncate w-2/3">{ad.ad_name}</h3>
+                            <span className="text-[10px] text-[var(--foreground)] font-mono">{ad.severity} RISCO</span>
                         </div>
                         <p className="text-xs text-zinc-500 mb-2">{ad.reason}</p>
-                        <div className="bg-red-500/10 rounded px-2 py-1 text-[10px] font-mono text-red-300 inline-block mb-3">
+                        <div className="bg-white/10/10 rounded px-2 py-1 text-[10px] font-mono text-[var(--foreground)] inline-block mb-3">
                             {ad.metrics}
                         </div>
 
@@ -94,9 +94,9 @@ export default function FatigueMonitor() {
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[10px] text-zinc-300 truncate">{data.replacements[0].message}</p>
+                                        <p className="text-[10px] text-[var(--foreground)] truncate">{data.replacements[0].message}</p>
                                     </div>
-                                    <button className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded hover:bg-zinc-200 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded hover:bg-[var(--accent-primary)] opacity-0 group-hover:opacity-100 transition-opacity">
                                         USAR
                                     </button>
                                 </div>

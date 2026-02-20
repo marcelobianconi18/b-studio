@@ -9,7 +9,7 @@ import { apiUrl } from "@/lib/api";
 
 const BrazilFollowersMap = dynamic(() => import('./BrazilFollowersMap'), {
     ssr: false,
-    loading: () => <div className="liquid-glass h-full min-h-[400px] w-full animate-pulse flex items-center justify-center text-zinc-700">Carregando Mapa...</div>
+    loading: () => <div className="liquid-glass h-full min-h-[400px] w-full animate-pulse flex items-center justify-center text-[var(--foreground)]">Carregando Mapa...</div>
 });
 import {
     ClockIcon,
@@ -298,12 +298,12 @@ const getCountryFlagEmoji = (countryName: string) => {
 const getGenderBadge = (clusterLabel: string) => {
     const key = normalizeLookupKey(clusterLabel);
     if (key.includes("mulher") || key.includes("femin")) {
-        return { symbol: "♀", label: "Mulheres", className: "bg-violet-500/10 border-violet-500/25 text-violet-300" };
+        return { symbol: "♀", label: "Mulheres", className: "bg-[var(--shell-border)]/10 border-[var(--shell-border)]/25 text-[var(--foreground)]" };
     }
     if (key.includes("homem") || key.includes("masc")) {
-        return { symbol: "♂", label: "Homens", className: "bg-blue-500/10 border-blue-500/25 text-blue-300" };
+        return { symbol: "♂", label: "Homens", className: "bg-[var(--foreground)]/10 border-[var(--foreground)]/20 text-[var(--foreground)]" };
     }
-    return { symbol: "♀♂", label: "Gênero", className: "bg-zinc-500/10 border-zinc-500/25 text-zinc-300" };
+    return { symbol: "♀♂", label: "Gênero", className: "bg-[var(--shell-border)]/10 border-[var(--shell-border)]/25 text-[var(--foreground)]" };
 };
 
 const mulberry32 = (seed: number) => {
@@ -417,18 +417,18 @@ const KPICard = ({ title, value, change, icon: _Icon, tooltip }: KPICardProps) =
     return (
         <div className="liquid-glass px-6 py-5 min-h-[118px] flex flex-col justify-center group hover:scale-[1.02] transition-transform">
             <div className="flex items-center gap-1 mb-2 relative z-10">
-                <h3 className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">{title}</h3>
+                <h3 className="text-[var(--muted)] text-[11px] font-bold uppercase tracking-[0.14em]">{title}</h3>
                 {tooltip && (
                     <span
                         title={tooltip}
-                        className="w-4 h-4 rounded-full border border-[var(--shell-border)] text-[9px] font-black text-zinc-500 flex items-center justify-center cursor-help"
+                        className="w-4 h-4 rounded-full border border-[var(--shell-border)] text-[9px] font-black text-[var(--muted)] flex items-center justify-center cursor-help"
                     >
                         ?
                     </span>
                 )}
             </div>
             <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight relative z-10">{formatNumber(value)}</div>
-            <p className="mt-2 text-[12px] font-semibold text-zinc-500 relative z-10">{subtitle}</p>
+            <p className="mt-2 text-[12px] font-semibold text-[var(--muted)] relative z-10">{subtitle}</p>
         </div>
     );
 };
@@ -454,12 +454,12 @@ const PopulationPyramid = ({
             {/* Legend */}
             <div className="flex justify-center gap-8 mb-5 border-b border-[var(--shell-border)] pb-4">
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm bg-sky-500" />
-                    <span className="text-[10px] font-bold uppercase text-zinc-500">Masculino</span>
+                    <div className="w-3 h-3 rounded-sm bg-[var(--shell-border)]" />
+                    <span className="text-[10px] font-bold uppercase text-[var(--muted)]">Masculino</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm bg-orange-400" />
-                    <span className="text-[10px] font-bold uppercase text-zinc-500">Feminino</span>
+                    <div className="w-3 h-3 rounded-sm bg-[var(--shell-border)]" />
+                    <span className="text-[10px] font-bold uppercase text-[var(--muted)]">Feminino</span>
                 </div>
             </div>
 
@@ -469,30 +469,30 @@ const PopulationPyramid = ({
                     <div
                         key={item.range}
                         className={`flex items-center w-full relative h-6 border-b border-[var(--shell-border)] last:border-0 transition-colors group ${decisorRange === item.range
-                            ? "bg-emerald-500/10 hover:bg-emerald-500/15"
+                            ? "bg-[var(--foreground)]/20 hover:bg-[var(--foreground)]/20"
                             : influencerRange === item.range
-                                ? "bg-blue-500/10 hover:bg-blue-500/15"
+                                ? "bg-[var(--foreground)]/10 hover:bg-[var(--foreground)]/10"
                                 : "hover:bg-[var(--shell-side)]"
                             }`}
                     >
 
                         {/* Left Side: Male (Blue) */}
                         <div className="flex-1 flex justify-end items-center gap-3 pr-4 h-full">
-                            <span className={`text-[11px] font-black text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors ${valueMode === "abs" ? "w-14" : "w-10"} text-right shrink-0`}>
+                            <span className={`text-[11px] font-black text-[var(--muted)] group-hover:text-[var(--foreground)] dark:group-hover:text-[var(--foreground)] transition-colors ${valueMode === "abs" ? "w-14" : "w-10"} text-right shrink-0`}>
                                 {valueMode === "abs" ? formatNumber(Math.round(item.male * totalBase / 100)) : `${item.male}%`}
                             </span>
                             <div
-                                className="h-5 bg-sky-500 rounded-l-sm transition-all duration-500 shadow-sm relative group-hover:shadow-md group-hover:bg-sky-400"
+                                className="h-5 bg-[var(--shell-border)] rounded-l-sm transition-all duration-500 shadow-sm relative group-hover:shadow-md group-hover:bg-[var(--shell-border)]"
                                 style={{ width: `${(item.male / maxVal) * 100}%`, minWidth: '4px' }}
                             />
                         </div>
 
                         {/* Central Axis: Age Range */}
                         <div className={`w-16 text-center text-[10px] font-bold shrink-0 ${decisorRange === item.range
-                            ? "text-emerald-300"
+                            ? "text-[var(--foreground)]"
                             : influencerRange === item.range
-                                ? "text-blue-300"
-                                : "text-zinc-400"
+                                ? "text-[var(--foreground)]"
+                                : "text-[var(--muted)]"
                             }`}>
                             {item.range}
                         </div>
@@ -500,10 +500,10 @@ const PopulationPyramid = ({
                         {/* Right Side: Female (Orange) */}
                         <div className="flex-1 flex justify-start items-center gap-3 pl-4 h-full">
                             <div
-                                className="h-5 bg-orange-400 rounded-r-sm transition-all duration-500 shadow-sm relative group-hover:shadow-md group-hover:bg-orange-300"
+                                className="h-5 bg-[var(--shell-border)] rounded-r-sm transition-all duration-500 shadow-sm relative group-hover:shadow-md group-hover:bg-[var(--shell-border)]"
                                 style={{ width: `${(item.female / maxVal) * 100}%`, minWidth: '4px' }}
                             />
-                            <span className={`text-[11px] font-black text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors ${valueMode === "abs" ? "w-14" : "w-10"} text-left shrink-0`}>
+                            <span className={`text-[11px] font-black text-[var(--muted)] group-hover:text-[var(--foreground)] dark:group-hover:text-[var(--foreground)] transition-colors ${valueMode === "abs" ? "w-14" : "w-10"} text-left shrink-0`}>
                                 {valueMode === "abs" ? formatNumber(Math.round(item.female * totalBase / 100)) : `${item.female}%`}
                             </span>
                         </div>
@@ -547,7 +547,7 @@ const SpeedometerChart = ({ title, data }: { title: string, data: { label: strin
 
     return (
         <div className="liquid-glass p-4 flex flex-col items-center justify-between h-full relative overflow-hidden group hover:scale-[1.02] transition-transform">
-            <h5 className="text-[10px] uppercase font-bold text-zinc-500 mb-4 text-center tracking-wider relative z-10">{title}</h5>
+            <h5 className="text-[10px] uppercase font-bold text-[var(--muted)] mb-4 text-center tracking-wider relative z-10">{title}</h5>
 
             <div className="relative h-[130px] w-[220px] flex justify-center mb-4 z-10">
                 <svg width="220" height="130" className="overflow-visible">
@@ -605,7 +605,7 @@ const SpeedometerChart = ({ title, data }: { title: string, data: { label: strin
                 {data.map((d, i) => (
                     <div key={i} className="flex items-center gap-1">
                         <div className="w-2 h-2 rounded-full" style={{ background: d.color }}></div>
-                        <span className="text-[9px] font-bold text-zinc-500 uppercase">{d.label}</span>
+                        <span className="text-[9px] font-bold text-[var(--muted)] uppercase">{d.label}</span>
                     </div>
                 ))}
             </div>
@@ -619,7 +619,7 @@ const PaginationControl = ({ currentPage, totalItems, pageSize, onPageChange }: 
     const endItem = Math.min(currentPage * pageSize, totalItems);
 
     return (
-        <div className="flex items-center justify-end gap-4 p-4 border-t border-[var(--shell-border)] bg-[var(--shell-surface)] text-zinc-500 text-xs font-bold font-mono">
+        <div className="flex items-center justify-end gap-4 p-4 border-t border-[var(--shell-border)] bg-[var(--shell-surface)] text-[var(--muted)] text-xs font-bold font-mono">
             <span>
                 {startItem} - {endItem} / {totalItems}
             </span>
@@ -627,14 +627,14 @@ const PaginationControl = ({ currentPage, totalItems, pageSize, onPageChange }: 
                 <button
                     onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="p-1 hover:text-[var(--foreground)] disabled:opacity-30 disabled:hover:text-zinc-500 transition-colors"
+                    className="p-1 hover:text-[var(--foreground)] disabled:opacity-30 disabled:hover:text-[var(--muted)] transition-colors"
                 >
                     <ChevronLeftIcon className="w-4 h-4" />
                 </button>
                 <button
                     onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="p-1 hover:text-[var(--foreground)] disabled:opacity-30 disabled:hover:text-zinc-500 transition-colors"
+                    className="p-1 hover:text-[var(--foreground)] disabled:opacity-30 disabled:hover:text-[var(--muted)] transition-colors"
                 >
                     <ChevronRightIcon className="w-4 h-4" />
                 </button>
@@ -932,9 +932,9 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
         if (!data || !data.top_posts) return null;
 
         const stats: Record<PostType, { count: number; reach: number; engagement: number; clicks: number; label: string; color: string }> = {
-            video: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'REELS/VÍDEO', color: '#facc15' },
-            photo: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'FOTO', color: '#ef4444' },
-            album: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'CARROSSEL', color: '#22c55e' }
+            video: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'REELS/VÍDEO', color: "#AAB3C0" },
+            photo: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'FOTO', color: "#AAB3C0" },
+            album: { count: 0, reach: 0, engagement: 0, clicks: 0, label: 'CARROSSEL', color: "#AAB3C0" }
         };
 
         data.top_posts.forEach((p: InsightPost) => {
@@ -1124,7 +1124,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                 issue: "Retenção inicial abaixo do ideal",
                 recommendation: "Abrir Reels com promessa forte e prova visual nos primeiros 2s.",
                 priority: "ALTA",
-                tone: "text-rose-500",
+                tone: "text-[var(--foreground)]",
             });
         }
 
@@ -1133,7 +1133,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                 issue: "Baixa taxa de sinal qualificado",
                 recommendation: "Aumentar conteúdo utilitário com CTA explícito para salvar e compartilhar no DM.",
                 priority: "ALTA",
-                tone: "text-rose-500",
+                tone: "text-[var(--foreground)]",
             });
         }
 
@@ -1142,7 +1142,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                 issue: "Vazamento entre retenção e conversão",
                 recommendation: "Inserir CTA de conversão em 2 momentos do conteúdo e reforçar na legenda.",
                 priority: "MÉDIA",
-                tone: "text-amber-400",
+                tone: "text-[var(--foreground)]",
             });
         }
 
@@ -1151,7 +1151,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                 issue: "Ritmo de formatos pouco distribuído",
                 recommendation: "Padronizar mix semanal: 2 Reels, 1 Carrossel, 1 conteúdo de prova social.",
                 priority: "BAIXA",
-                tone: "text-emerald-500",
+                tone: "text-[var(--foreground)]",
             });
         }
 
@@ -1163,14 +1163,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
             totalPosts: 36,
             totalInteractions: 11712,
             split: [
-                { label: "Curtidas", percentage: 93.49, tone: "text-blue-400", color: "#60a5fa" },
-                { label: "Comentários", percentage: 5.41, tone: "text-zinc-400", color: "#a1a1aa" },
-                { label: "Salvos", percentage: 1.1, tone: "text-emerald-400", color: "#10b981" },
+                { label: "Curtidas", percentage: 93.49, tone: "text-[var(--foreground)]", color: "#0ea5e9" },
+                { label: "Comentários", percentage: 5.41, tone: "text-[var(--muted)]", color: "#8b5cf6" },
+                { label: "Salvos", percentage: 1.1, tone: "text-[var(--foreground)]", color: "#f59e0b" },
             ],
             postTypeSplit: [
-                { label: "Reels/Vídeo", count: 16, tone: "text-blue-400", color: "#60a5fa" },
-                { label: "Imagens", count: 11, tone: "text-orange-400", color: "#fb923c" },
-                { label: "Carrosséis", count: 9, tone: "text-emerald-400", color: "#10b981" },
+                { label: "Reels/Vídeo", count: 16, tone: "text-[var(--foreground)]", color: "#10b981" },
+                { label: "Imagens", count: 11, tone: "text-[var(--foreground)]", color: "#ef4444" },
+                { label: "Carrosséis", count: 9, tone: "text-[var(--foreground)]", color: "#facc15" },
             ],
             avgInteractionsPerPost: 325,
             avgViewsPerPost: 7190,
@@ -1239,8 +1239,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
         const qualityScore = Math.round((engagementNorm * 0.34 + deepSignalNorm * 0.2 + retentionNorm * 0.28 + churnNorm * 0.18) * 100);
         const qualityLabel = qualityScore >= 80 ? "Oceano Azul" : qualityScore >= 40 ? "Atenção" : "Perigo";
-        const qualityTone = qualityScore >= 80 ? "text-emerald-400" : qualityScore >= 40 ? "text-amber-400" : "text-rose-400";
-        const qualityColor = qualityScore >= 80 ? "#10b981" : qualityScore >= 40 ? "#f59e0b" : "#f43f5e";
+        const qualityTone = qualityScore >= 80 ? "text-[var(--foreground)]" : qualityScore >= 40 ? "text-[var(--foreground)]" : "text-[var(--foreground)]";
+        const qualityColor = qualityScore >= 80 ? "#AAB3C0" : qualityScore >= 40 ? "#AAB3C0" : "#AAB3C0";
         const qualitySubtitle = qualityScore >= 80
             ? "Base limpa, engajada e com baixa perda."
             : qualityScore >= 40
@@ -1278,7 +1278,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
         outsideShare = Number(outsideShare.toFixed(1));
         const geoRiskLevel = outsideShare >= 35 ? "ALTO" : outsideShare >= 20 ? "MÉDIO" : "BAIXO";
-        const geoRiskTone = outsideShare >= 35 ? "text-rose-400" : outsideShare >= 20 ? "text-amber-400" : "text-emerald-400";
+        const geoRiskTone = outsideShare >= 35 ? "text-[var(--foreground)]" : outsideShare >= 20 ? "text-[var(--foreground)]" : "text-[var(--foreground)]";
         const geoMessage = outsideShare >= 35
             ? `${outsideShare}% da audiência está fora da malha Sul/Sudeste.`
             : outsideShare >= 20
@@ -1396,7 +1396,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
         [isInstagram],
     );
 
-    if (!data) return <div className="p-20 text-center animate-pulse text-zinc-500">Carregando Insights do {isInstagram ? "Instagram" : "Facebook"}...</div>;
+    if (!data) return <div className="p-20 text-center animate-pulse text-[var(--muted)]">Carregando Insights do {isInstagram ? "Instagram" : "Facebook"}...</div>;
 
     return (
         <div className="space-y-6 pb-20">
@@ -1412,8 +1412,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 className={`
                                     relative px-5 py-2 text-sm font-semibold transition-all duration-300 rounded-full flex items-center justify-center whitespace-nowrap
                                     ${isActive
-                                        ? "bg-white/20 text-white shadow-[0_2px_10px_rgba(0,0,0,0.1),inset_0_1px_rgba(255,255,255,0.4)]"
-                                        : "text-white/60 hover:text-white hover:bg-white/10"
+                                        ? "bg-white/20 text-[var(--foreground)] shadow-[0_2px_10px_rgba(0,0,0,0.1),inset_0_1px_rgba(255,255,255,0.4)]"
+                                        : "text-[var(--foreground)]/60 hover:text-[var(--foreground)] hover:bg-white/10"
                                     }
                                 `}
                             >
@@ -1424,7 +1424,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                 </div>
                 {!hideTopPeriodSelector && (
                     <div className="flex items-center gap-2 ml-auto lg:ml-4">
-                        <span className="text-[10px] uppercase font-bold text-zinc-500 hidden md:inline">Período:</span>
+                        <span className="text-[10px] uppercase font-bold text-[var(--muted)] hidden md:inline">Período:</span>
                         <PeriodSelector value={period} onChange={(value) => setPeriod(value)} />
                     </div>
                 )}
@@ -1492,18 +1492,18 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     gridColumn: getEditorConfig("publicacoes").widthSpan === 2 ? "span 2 / span 2" : undefined,
                                     display: getEditorConfig("publicacoes").hidden ? "none" : undefined,
                                 }}
-                                className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} rounded-3xl`}
+                                className={`${isGeneralArrangeMode ? "cursor-grab active:cursor-grabbing" : ""} bento-cell liquid-glass`}
                             >
-                                <div className="liquid-glass p-6 h-full flex flex-col" style={{ backgroundColor: getEditorConfig("publicacoes").bgColor, minHeight: `${getEditorConfig("publicacoes").minHeight}px` }}>
+                                <div className="p-6 h-full flex flex-col" style={{ backgroundColor: getEditorConfig("publicacoes").bgColor, minHeight: `${getEditorConfig("publicacoes").minHeight}px` }}>
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                                         <div>
-                                            <h3 className="text-lg font-black tracking-tight text-blue-500">{getEditorConfig("publicacoes").title ?? "Publicações"}</h3>
-                                            <p className="text-[11px] text-zinc-500 mt-1">{getEditorConfig("publicacoes").subtitle ?? "Destaques e resumo do desempenho do período."}</p>
+                                            <h3 className="text-lg font-black tracking-tight text-[var(--foreground)]">{getEditorConfig("publicacoes").title ?? "Publicações"}</h3>
+                                            <p className="text-[11px] text-[var(--muted)] mt-1">{getEditorConfig("publicacoes").subtitle ?? "Destaques e resumo do desempenho do período."}</p>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => setActiveTab("publicacoes")}
-                                            className="px-3 py-2 rounded-xl bg-[var(--shell-side)] border border-[var(--shell-border)] text-[11px] font-black text-zinc-500 hover:text-[var(--foreground)] hover:border-blue-500/30 transition-colors self-start"
+                                            className="px-3 py-2 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] text-[11px] font-black text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--foreground)]/20 transition-colors self-start"
                                         >
                                             Ver detalhes
                                         </button>
@@ -1552,78 +1552,78 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         return (
                                             <div className="flex flex-col gap-6 flex-1">
                                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                                    <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
-                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Média de Alcance</div>
+                                                    <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-4">
+                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Média de Alcance</div>
                                                         <div className="text-2xl font-black text-[var(--foreground)] mt-2">{formatNumber(Math.round(avgReach))}</div>
-                                                        <div className="text-[10px] text-zinc-500 mt-1">por post</div>
+                                                        <div className="text-[10px] text-[var(--muted)] mt-1">por post</div>
                                                     </div>
-                                                    <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
-                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Média de Interações</div>
+                                                    <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-4">
+                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Média de Interações</div>
                                                         <div className="text-2xl font-black text-[var(--foreground)] mt-2">{formatNumber(Math.round(avgInteractions))}</div>
-                                                        <div className="text-[10px] text-zinc-500 mt-1">{isInstagram ? "salvos + com. + comp. DM" : "reac. + com. + comp."}</div>
+                                                        <div className="text-[10px] text-[var(--muted)] mt-1">{isInstagram ? "salvos + com. + comp. DM" : "reac. + com. + comp."}</div>
                                                     </div>
-                                                    <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
-                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Melhor por Alcance</div>
+                                                    <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-4">
+                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Melhor por Alcance</div>
                                                         <div className="text-2xl font-black text-[var(--foreground)] mt-2">{bestByReach ? formatNumber(bestByReach.reach) : "—"}</div>
-                                                        <div className="text-[10px] text-zinc-500 mt-1 truncate" title={bestByReach?.message}>{bestByReach?.message || "Sem dados"}</div>
+                                                        <div className="text-[10px] text-[var(--muted)] mt-1 truncate" title={bestByReach?.message}>{bestByReach?.message || "Sem dados"}</div>
                                                     </div>
-                                                    <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
-                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Melhor por Interações</div>
+                                                    <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-4">
+                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Melhor por Interações</div>
                                                         <div className="text-2xl font-black text-[var(--foreground)] mt-2">{bestByInteractions ? formatNumber(interactions(bestByInteractions)) : "—"}</div>
-                                                        <div className="text-[10px] text-zinc-500 mt-1 truncate" title={bestByInteractions?.message}>{bestByInteractions?.message || "Sem dados"}</div>
+                                                        <div className="text-[10px] text-[var(--muted)] mt-1 truncate" title={bestByInteractions?.message}>{bestByInteractions?.message || "Sem dados"}</div>
                                                     </div>
                                                 </div>
 
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-5">
+                                                    <div className="rounded-2xl border border-[var(--shell-border)]/50 bg-[var(--shell-side)] p-5">
                                                         <div className="flex items-start justify-between gap-4 mb-4">
                                                             <div>
                                                                 <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">Divisão por ações</h4>
-                                                                <p className="text-[10px] text-zinc-500 mt-0.5">O que mais gerou engajamento.</p>
+                                                                <p className="text-[10px] text-[var(--muted)] mt-0.5">O que mais gerou engajamento.</p>
                                                             </div>
-                                                            <div className="text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+                                                            <div className="text-[10px] font-black text-[var(--muted)] bento-cell rounded-full px-2 py-1">
                                                                 {formatNumber(data.actions_split.reactions + data.actions_split.comments + data.actions_split.shares)}
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-3">
                                                             <div className="space-y-1">
-                                                                <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500">
+                                                                <div className="flex justify-between text-[10px] font-bold uppercase text-[var(--muted)]">
                                                                     <span>{isInstagram ? "Salvamentos" : "Reações"}</span>
                                                                     <span>{formatNumber(data.actions_split.reactions)}</span>
                                                                 </div>
-                                                                <div className="h-3 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(data.actions_split.reactions / maxAction) * 100}%` }}></div>
+                                                                <div className="h-3 w-full bg-[var(--shell-border)]/20 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" style={{ width: `${(data.actions_split.reactions / maxAction) * 100}%` }}></div>
                                                                 </div>
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500">
+                                                                <div className="flex justify-between text-[10px] font-bold uppercase text-[var(--muted)]">
                                                                     <span>Comentários</span>
                                                                     <span>{formatNumber(data.actions_split.comments)}</span>
                                                                 </div>
-                                                                <div className="h-3 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(data.actions_split.comments / maxAction) * 100}%` }}></div>
+                                                                <div className="h-3 w-full bg-[var(--shell-border)]/20 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-purple-500 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.4)]" style={{ width: `${(data.actions_split.comments / maxAction) * 100}%` }}></div>
                                                                 </div>
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500">
+                                                                <div className="flex justify-between text-[10px] font-bold uppercase text-[var(--muted)]">
                                                                     <span>{isInstagram ? "Compart. DM" : "Compart."}</span>
                                                                     <span>{formatNumber(data.actions_split.shares)}</span>
                                                                 </div>
-                                                                <div className="h-3 w-full bg-zinc-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                                                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(data.actions_split.shares / maxAction) * 100}%` }}></div>
+                                                                <div className="h-3 w-full bg-[var(--shell-border)]/20 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-orange-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.4)]" style={{ width: `${(data.actions_split.shares / maxAction) * 100}%` }}></div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-5">
+                                                    <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-5">
                                                         <div className="flex items-start justify-between gap-4 mb-4">
                                                             <div>
                                                                 <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">Top 3 posts</h4>
-                                                                <p className="text-[10px] text-zinc-500 mt-0.5">Ordenado por interações.</p>
+                                                                <p className="text-[10px] text-[var(--muted)] mt-0.5">Ordenado por interações.</p>
                                                             </div>
-                                                            <div className="text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+                                                            <div className="text-[10px] font-black text-[var(--muted)] bento-cell rounded-full px-2 py-1">
                                                                 {posts.length} posts
                                                             </div>
                                                         </div>
@@ -1631,12 +1631,12 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         <div className="space-y-3">
                                                             {top3.map((post) => (
                                                                 <div key={post.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--shell-surface)] transition-colors">
-                                                                    <div className="w-11 h-11 rounded-lg bg-zinc-200 dark:bg-zinc-800 overflow-hidden shrink-0">
+                                                                    <div className="w-11 h-11 rounded-lg bg-[var(--accent-primary)] dark:bg-[var(--shell-side)] overflow-hidden shrink-0">
                                                                         <img src={post.image} alt="" className="w-full h-full object-cover opacity-90" />
                                                                     </div>
                                                                     <div className="min-w-0 flex-1">
                                                                         <div className="text-[11px] font-black text-[var(--foreground)] truncate" title={post.message}>{post.message}</div>
-                                                                        <div className="flex items-center gap-3 text-[10px] text-zinc-500 mt-0.5 font-mono">
+                                                                        <div className="flex items-center gap-3 text-[10px] text-[var(--muted)] mt-0.5 font-mono">
                                                                             <span title="Alcance">A {formatNumber(post.reach)}</span>
                                                                             <span title="Interações">I {formatNumber(interactions(post))}</span>
                                                                             <span className="truncate" title={post.date}>{post.date}</span>
@@ -1648,13 +1648,13 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     </div>
                                                 </div>
 
-                                                <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-5 flex-1 flex flex-col min-h-[180px]">
+                                                <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-5 flex-1 flex flex-col min-h-[180px]">
                                                     <div className="flex items-start justify-between gap-4 mb-4">
                                                         <div>
                                                             <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">Melhores horários para publicações</h4>
-                                                            <p className="text-[10px] text-zinc-500 mt-0.5">Resumo baseado nos posts com maior interação.</p>
+                                                            <p className="text-[10px] text-[var(--muted)] mt-0.5">Resumo baseado nos posts com maior interação.</p>
                                                         </div>
-                                                        <div className="text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+                                                        <div className="text-[10px] font-black text-[var(--muted)] bento-cell rounded-full px-2 py-1">
                                                             Dia líder: {bestDayLabel}
                                                         </div>
                                                     </div>
@@ -1677,37 +1677,37 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                     >
                                                                         <div className="flex items-start justify-between gap-2">
                                                                             <div>
-                                                                                <div className="text-[10px] text-zinc-500 font-bold uppercase">#{index + 1} Horário</div>
+                                                                                <div className="text-[10px] text-[var(--muted)] font-bold uppercase">#{index + 1} Horário</div>
                                                                                 <div className="text-sm font-black text-[var(--foreground)] mt-1">{slot.label}</div>
                                                                             </div>
                                                                             <div className="text-right">
-                                                                                <div className="text-[10px] text-zinc-500 font-bold uppercase">Score</div>
-                                                                                <div className="text-2xl font-black text-blue-500 leading-none mt-1">{score}</div>
+                                                                                <div className="text-[10px] text-[var(--muted)] font-bold uppercase">Score</div>
+                                                                                <div className="text-2xl font-black text-[var(--foreground)] leading-none mt-1">{score}</div>
                                                                             </div>
                                                                         </div>
 
-                                                                        <div className="text-[10px] text-zinc-500 mt-2">
+                                                                        <div className="text-[10px] text-[var(--muted)] mt-2">
                                                                             {slot.posts} posts · {formatNumber(slot.interactions)} interações · {formatNumber(slot.reach)} de alcance
                                                                         </div>
 
                                                                         <div className="mt-auto pt-3 space-y-2">
                                                                             <div className="flex items-center justify-between gap-2 text-[10px]">
-                                                                                <span className="text-zinc-500 font-bold uppercase flex items-center gap-1.5">
-                                                                                    <ClockIcon className="w-3.5 h-3.5 text-zinc-400" />
+                                                                                <span className="text-[var(--muted)] font-bold uppercase flex items-center gap-1.5">
+                                                                                    <ClockIcon className="w-3.5 h-3.5 text-[var(--muted)]" />
                                                                                     Melhor para
                                                                                 </span>
                                                                                 <span className="font-black text-[var(--foreground)]">{bestFor}</span>
                                                                             </div>
                                                                             <div className="flex items-center justify-between gap-2 text-[10px]">
-                                                                                <span className="text-zinc-500 font-bold uppercase flex items-center gap-1.5">
-                                                                                    <DocumentTextIcon className="w-3.5 h-3.5 text-zinc-400" />
+                                                                                <span className="text-[var(--muted)] font-bold uppercase flex items-center gap-1.5">
+                                                                                    <DocumentTextIcon className="w-3.5 h-3.5 text-[var(--muted)]" />
                                                                                     Tipo líder
                                                                                 </span>
                                                                                 <span className="font-black text-[var(--foreground)]">{topTypeLabel}</span>
                                                                             </div>
                                                                             <div className="flex items-center justify-between gap-2 text-[10px]">
-                                                                                <span className="text-zinc-500 font-bold uppercase flex items-center gap-1.5">
-                                                                                    <ChatBubbleLeftEllipsisIcon className="w-3.5 h-3.5 text-zinc-400" />
+                                                                                <span className="text-[var(--muted)] font-bold uppercase flex items-center gap-1.5">
+                                                                                    <ChatBubbleLeftEllipsisIcon className="w-3.5 h-3.5 text-[var(--muted)]" />
                                                                                     Interação/alc.
                                                                                 </span>
                                                                                 <span className="font-black text-[var(--foreground)]">{(engagementRate * 100).toFixed(0)}%</span>
@@ -1718,7 +1718,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             })}
                                                         </div>
                                                     ) : (
-                                                        <div className="text-xs text-zinc-500">Sem dados suficientes para calcular horários.</div>
+                                                        <div className="text-xs text-[var(--muted)]">Sem dados suficientes para calcular horários.</div>
                                                     )}
                                                 </div>
                                             </div>
@@ -1762,12 +1762,12 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     return (
                                         <div className="space-y-3">
                                             <div className="px-1">
-                                                <h4 className="text-sm font-black tracking-tight text-blue-500">{getEditorConfig("demografia").title ?? "Demografia"}</h4>
-                                                <p className="text-[11px] text-zinc-500 mt-1">{getEditorConfig("demografia").subtitle ?? "Resumo por faixa etária e gênero."}</p>
+                                                <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">{getEditorConfig("demografia").title ?? "Demografia"}</h4>
+                                                <p className="text-[11px] text-[var(--muted)] mt-1">{getEditorConfig("demografia").subtitle ?? "Resumo por faixa etária e gênero."}</p>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div className="liquid-glass p-5 relative">
-                                                    <h4 className="text-sm font-black tracking-tight text-blue-500 mb-4">Total por Faixa Etária</h4>
+                                                    <h4 className="text-sm font-black tracking-tight text-[var(--foreground)] mb-4">Total por Faixa Etária</h4>
                                                     <div className="mx-auto w-40 h-40 relative flex items-center justify-center">
                                                         <div className="absolute inset-0 rounded-full" style={{
                                                             background: "conic-gradient(#14b8a6 0 26%, #06b6d4 26% 45%, #3b82f6 45% 62%, #84cc16 62% 78%, #eab308 78% 90%, #f97316 90% 100%)",
@@ -1776,13 +1776,13 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         }} />
                                                         <div className="relative z-10 flex flex-col items-center justify-center">
                                                             <span className="text-3xl font-black text-[var(--foreground)] leading-none drop-shadow-md">{topAgePct}%</span>
-                                                            <span className="text-[11px] font-black text-zinc-400 uppercase mt-1 drop-shadow-sm">{topAge.range}</span>
+                                                            <span className="text-[11px] font-black text-[var(--muted)] uppercase mt-1 drop-shadow-sm">{topAge.range}</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <div className="liquid-glass p-5 relative">
-                                                    <h4 className="text-sm font-black tracking-tight text-blue-500 mb-4">Resumo de Gênero</h4>
+                                                    <h4 className="text-sm font-black tracking-tight text-[var(--foreground)] mb-4">Resumo de Gênero</h4>
                                                     <div className="mx-auto w-40 h-40 relative flex items-center justify-center">
                                                         <div className="absolute inset-0 rounded-full" style={{
                                                             background: `conic-gradient(#fb923c 0 ${femalePct}%, #0ea5e9 ${femalePct}% 100%)`,
@@ -1791,7 +1791,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         }} />
                                                         <div className="relative z-10 flex flex-col items-center justify-center">
                                                             <span className="text-3xl font-black text-[var(--foreground)] leading-none drop-shadow-md">{Math.max(femalePct, malePct)}%</span>
-                                                            <span className="text-[11px] font-black text-zinc-400 uppercase mt-1 drop-shadow-sm">{femalePct >= malePct ? "MULHERES" : "HOMENS"}</span>
+                                                            <span className="text-[11px] font-black text-[var(--muted)] uppercase mt-1 drop-shadow-sm">{femalePct >= malePct ? "MULHERES" : "HOMENS"}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1823,13 +1823,13 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <div className="liquid-glass p-6" style={{ minHeight: `${getEditorConfig("publico").minHeight}px`, backgroundColor: getEditorConfig("publico").bgColor }}>
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
                                         <div>
-                                            <h3 className="text-lg font-black tracking-tight text-blue-500">{getEditorConfig("publico").title ?? "Público"}</h3>
-                                            <p className="text-[11px] text-zinc-500 mt-1">{getEditorConfig("publico").subtitle ?? "Principais dados de audiência e distribuição."}</p>
+                                            <h3 className="text-lg font-black tracking-tight text-[var(--foreground)]">{getEditorConfig("publico").title ?? "Público"}</h3>
+                                            <p className="text-[11px] text-[var(--muted)] mt-1">{getEditorConfig("publico").subtitle ?? "Principais dados de audiência e distribuição."}</p>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => setActiveTab("publico")}
-                                            className="px-3 py-2 rounded-xl bg-[var(--shell-side)] border border-[var(--shell-border)] text-[11px] font-black text-zinc-500 hover:text-[var(--foreground)] hover:border-blue-500/30 transition-colors self-start"
+                                            className="px-3 py-2 rounded-xl bento-cell bg-[var(--shell-side)] text-[11px] font-black text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--foreground)]/20 transition-colors self-start"
                                         >
                                             Ver detalhes
                                         </button>
@@ -1837,25 +1837,25 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                                     {data.demographics ? (
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
-                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">País Principal</div>
+                                            <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-4">
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">País Principal</div>
                                                 <div className="text-lg font-black text-[var(--foreground)] mt-2 truncate" title={data.demographics.top_country}>{data.demographics.top_country}</div>
                                             </div>
-                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
-                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Cidade Principal</div>
+                                            <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-4">
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Cidade Principal</div>
                                                 <div className="text-lg font-black text-[var(--foreground)] mt-2 truncate" title={data.demographics.top_city}>{data.demographics.top_city}</div>
                                             </div>
-                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
-                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Idioma</div>
+                                            <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-4">
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Idioma</div>
                                                 <div className="text-lg font-black text-[var(--foreground)] mt-2 truncate" title={data.demographics.top_language}>{data.demographics.top_language}</div>
                                             </div>
-                                            <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4">
-                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Faixa Etária</div>
+                                            <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-4">
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Faixa Etária</div>
                                                 <div className="text-lg font-black text-[var(--foreground)] mt-2 truncate" title={data.demographics.top_age_group}>{data.demographics.top_age_group}</div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-2xl p-4 text-sm text-zinc-500">
+                                        <div className="bento-cell bg-[var(--shell-side)] rounded-2xl p-4 text-sm text-[var(--muted)]">
                                             Dados de audiência indisponíveis para este período.
                                         </div>
                                     )}
@@ -1883,24 +1883,24 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             >
                                 <div className="liquid-glass overflow-hidden" style={{ minHeight: `${getEditorConfig("seguidores_periodo").minHeight}px`, backgroundColor: getEditorConfig("seguidores_periodo").bgColor }}>
                                     <div className="p-5 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex items-center justify-between">
-                                        <h4 className="text-sm font-black tracking-tight text-blue-500">{getEditorConfig("seguidores_periodo").title ?? "Seguidores no Período"}</h4>
-                                        <span className="text-[10px] font-black uppercase text-zinc-500">Período atual</span>
+                                        <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">{getEditorConfig("seguidores_periodo").title ?? "Seguidores no Período"}</h4>
+                                        <span className="text-[10px] font-black uppercase text-[var(--muted)]">Período atual</span>
                                     </div>
                                     <div className="p-5 space-y-3">
-                                        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-                                            <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Novos Seguidores</div>
-                                            <div className="text-4xl font-black tracking-tight text-emerald-400 mt-2">+{formatNumber(periodFollowers.newFollowers)}</div>
+                                        <div className="rounded-2xl border border-var(--foreground)/20 bg-[var(--foreground)]/20 p-4">
+                                            <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--foreground)]">Novos Seguidores</div>
+                                            <div className="text-4xl font-black tracking-tight text-[var(--foreground)] mt-2">+{formatNumber(periodFollowers.newFollowers)}</div>
                                         </div>
                                         <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-4 flex items-end justify-between">
                                             <div>
-                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Crescimento</div>
-                                                <div className={`text-3xl font-black tracking-tight mt-2 ${periodFollowers.growthPct >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Crescimento</div>
+                                                <div className={`text-3xl font-black tracking-tight mt-2 ${periodFollowers.growthPct >= 0 ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}`}>
                                                     {periodFollowers.growthPct >= 0 ? "+" : ""}{periodFollowers.growthPct.toFixed(1)}%
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Saldo Líquido</div>
-                                                <div className={`text-lg font-black mt-2 ${periodFollowers.net >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Saldo Líquido</div>
+                                                <div className={`text-lg font-black mt-2 ${periodFollowers.net >= 0 ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}`}>
                                                     {periodFollowers.net >= 0 ? "+" : ""}{formatNumber(periodFollowers.net)}
                                                 </div>
                                             </div>
@@ -1919,8 +1919,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                             className="liquid-glass p-6"
                                             style={{ minHeight: `${getEditorConfig(box.id).minHeight}px`, backgroundColor: getEditorConfig(box.id).bgColor }}
                                         >
-                                            <h4 className="text-lg font-black tracking-tight text-blue-500">{getEditorConfig(box.id).title ?? "Nova Caixa"}</h4>
-                                            <p className="text-[11px] text-zinc-500 mt-2">{getEditorConfig(box.id).subtitle ?? "Sem conteúdo"}</p>
+                                            <h4 className="text-lg font-black tracking-tight text-[var(--foreground)]">{getEditorConfig(box.id).title ?? "Nova Caixa"}</h4>
+                                            <p className="text-[11px] text-[var(--muted)] mt-2">{getEditorConfig(box.id).subtitle ?? "Sem conteúdo"}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1938,42 +1938,42 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                     {isInstagram && instagramPublicationsTopStats && (
                         <div className="grid grid-cols-1 lg:grid-cols-8 gap-4 items-stretch">
                             <div className="lg:col-span-4 space-y-4">
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
-                                    <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Total de Posts</div>
+                                <div className="bento-cell rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
+                                    <div className="text-[var(--muted)] text-[11px] font-bold uppercase tracking-[0.14em]">Total de Posts</div>
                                     <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight mt-2">
                                         {instagramPublicationsTopStats.totalPosts.toLocaleString("pt-BR")}
                                     </div>
                                     <div className="mt-2 flex items-end justify-between gap-3">
-                                        <span className="text-[12px] font-semibold text-zinc-500">Média de Engajamento/Post</span>
-                                        <span className="text-2xl font-black text-emerald-400">
+                                        <span className="text-[12px] font-semibold text-[var(--muted)]">Média de Engajamento/Post</span>
+                                        <span className="text-2xl font-black text-[var(--foreground)]">
                                             {instagramPublicationsTopStats.avgEngagementPerPost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5">
-                                    <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em] mb-4">Médias por Post</div>
+                                <div className="bento-cell rounded-2xl px-6 py-5">
+                                    <div className="text-[var(--muted)] text-[11px] font-bold uppercase tracking-[0.14em] mb-4">Médias por Post</div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] px-5 py-4 flex flex-col justify-center min-h-[118px]">
-                                            <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Interações</div>
+                                            <div className="text-[var(--muted)] text-[11px] font-bold uppercase tracking-[0.14em]">Interações</div>
                                             <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight mt-2">
                                                 {instagramPublicationsTopStats.avgInteractionsPerPost.toLocaleString("pt-BR")}
                                             </div>
-                                            <div className="mt-2 text-[12px] font-semibold text-zinc-500">Média por post</div>
+                                            <div className="mt-2 text-[12px] font-semibold text-[var(--muted)]">Média por post</div>
                                         </div>
                                         <div className="rounded-2xl border border-[var(--shell-border)] bg-[var(--shell-side)] px-5 py-4 flex flex-col justify-center min-h-[118px]">
-                                            <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Visualizações</div>
+                                            <div className="text-[var(--muted)] text-[11px] font-bold uppercase tracking-[0.14em]">Visualizações</div>
                                             <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] tracking-tight mt-2">
                                                 {instagramPublicationsTopStats.avgViewsPerPost.toLocaleString("pt-BR")}
                                             </div>
-                                            <div className="mt-2 text-[12px] font-semibold text-zinc-500">Média por post</div>
+                                            <div className="mt-2 text-[12px] font-semibold text-[var(--muted)]">Média por post</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="lg:col-span-4 lg:justify-self-end w-full h-full grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="w-full h-full flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] relative">
+                                <div className="w-full h-full flex flex-col justify-center items-center gap-6 p-6 rounded-2xl border border-[var(--shell-border)]/50 bg-[var(--shell-side)] relative">
                                     {(() => {
                                         const segments = instagramPublicationsTopStats.split.map((item) => {
                                             const value = Math.max(0, item.percentage);
@@ -1982,11 +1982,13 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         const totalPercentage = Math.max(1, segments.reduce((acc, segment) => acc + segment.percentage, 0));
                                         let cursor = 0;
                                         const donutGradient = segments
-                                            .map((segment) => {
+                                            .map((segment, idx) => {
                                                 const normalized = (segment.percentage / totalPercentage) * 100;
                                                 const start = cursor;
                                                 cursor += normalized;
-                                                return `${segment.color} ${start}% ${cursor}%`;
+                                                const gap = segments.length > 1 ? 1.5 : 0; // 1.5% gap
+                                                const isLast = idx === segments.length - 1;
+                                                return `${segment.color} ${start}% ${cursor - (isLast ? 0 : gap)}%, transparent ${cursor - (isLast ? 0 : gap)}% ${cursor}%`;
                                             })
                                             .join(", ");
                                         const main = instagramPublicationsTopStats.split.reduce((prev, curr) =>
@@ -1996,11 +1998,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         return (
                                             <>
                                                 <div className="w-full text-left">
-                                                    <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-1 tracking-widest">Total de Interações</h4>
+                                                    <h4 className="text-[10px] font-bold uppercase text-[var(--muted)] mb-1 tracking-widest">Total de Interações</h4>
                                                     <div className="text-3xl font-black text-[var(--foreground)] tracking-tight">
                                                         {instagramPublicationsTopStats.totalInteractions.toLocaleString("pt-BR")}
                                                     </div>
-                                                    <div className="text-[10px] text-zinc-500 mt-1">
+                                                    <div className="text-[10px] text-[var(--muted)] mt-1">
                                                         {main.label} é o maior sinal, com <strong className="text-[var(--foreground)]">{main.percentage.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%</strong> do total.
                                                     </div>
                                                 </div>
@@ -2010,11 +2012,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         className="w-full h-full rounded-full -rotate-90 transition-all duration-700"
                                                         style={{ background: `conic-gradient(${donutGradient})` }}
                                                     />
-                                                    <div className="absolute inset-[28px] rounded-full bg-[var(--shell-surface)] border border-[var(--shell-border)] flex flex-col items-center justify-center text-center px-2">
-                                                        <div className="text-4xl leading-none font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">
+                                                    <div className="absolute inset-[28px] rounded-full border border-[var(--shell-border)]/50 bg-[var(--shell-side)] flex flex-col items-center justify-center text-center px-2">
+                                                        <div className="text-4xl leading-none font-black text-[var(--foreground)]  tracking-tight tabular-nums">
                                                             {main.percentage.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}%
                                                         </div>
-                                                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mt-1">
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] dark:text-[var(--muted)] mt-1">
                                                             {main.label}
                                                         </div>
                                                     </div>
@@ -2025,7 +2027,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         <div key={item.label} className="flex items-center justify-between text-xs">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                                                                <span className="text-zinc-500 uppercase font-bold tracking-wide">{item.label}</span>
+                                                                <span className="text-[var(--muted)] uppercase font-bold tracking-wide">{item.label}</span>
                                                             </div>
                                                             <span className={`font-black ${item.tone}`}>
                                                                 {item.percentage.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
@@ -2046,7 +2048,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     })()}
                                 </div>
 
-                                <div className="w-full h-full flex flex-col justify-center items-center gap-6 p-6 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] relative">
+                                <div className="w-full h-full flex flex-col justify-center items-center gap-6 p-6 rounded-2xl border border-[var(--shell-border)]/50 bg-[var(--shell-side)] relative">
                                     {(() => {
                                         const totalPosts = Math.max(1, instagramPublicationsTopStats.totalPosts);
                                         const segments = instagramPublicationsTopStats.postTypeSplit.map((item) => {
@@ -2056,11 +2058,13 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         const totalPercentage = Math.max(1, segments.reduce((acc, segment) => acc + segment.percentage, 0));
                                         let cursor = 0;
                                         const donutGradient = segments
-                                            .map((segment) => {
+                                            .map((segment, idx) => {
                                                 const normalized = (segment.percentage / totalPercentage) * 100;
                                                 const start = cursor;
                                                 cursor += normalized;
-                                                return `${segment.color} ${start}% ${cursor}%`;
+                                                const gap = segments.length > 1 ? 1.5 : 0;
+                                                const isLast = idx === segments.length - 1;
+                                                return `${segment.color} ${start}% ${cursor - (isLast ? 0 : gap)}%, transparent ${cursor - (isLast ? 0 : gap)}% ${cursor}%`;
                                             })
                                             .join(", ");
                                         const main = segments.reduce((prev, curr) =>
@@ -2070,11 +2074,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         return (
                                             <>
                                                 <div className="w-full text-left">
-                                                    <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-1 tracking-widest">Tipo de Posts</h4>
+                                                    <h4 className="text-[10px] font-bold uppercase text-[var(--muted)] mb-1 tracking-widest">Tipo de Posts</h4>
                                                     <div className="text-3xl font-black text-[var(--foreground)] tracking-tight">
                                                         {instagramPublicationsTopStats.totalPosts.toLocaleString("pt-BR")}
                                                     </div>
-                                                    <div className="text-[10px] text-zinc-500 mt-1">
+                                                    <div className="text-[10px] text-[var(--muted)] mt-1">
                                                         {main.label} lidera com <strong className="text-[var(--foreground)]">{main.count}</strong> de {instagramPublicationsTopStats.totalPosts} posts.
                                                     </div>
                                                 </div>
@@ -2084,11 +2088,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         className="w-full h-full rounded-full -rotate-90 transition-all duration-700"
                                                         style={{ background: `conic-gradient(${donutGradient})` }}
                                                     />
-                                                    <div className="absolute inset-[28px] rounded-full bg-[var(--shell-surface)] border border-[var(--shell-border)] flex flex-col items-center justify-center text-center px-2">
-                                                        <div className="text-4xl leading-none font-black text-zinc-900 dark:text-white tracking-tight tabular-nums">
+                                                    <div className="absolute inset-[28px] rounded-full border border-[var(--shell-border)]/50 bg-[var(--shell-side)] flex flex-col items-center justify-center text-center px-2">
+                                                        <div className="text-4xl leading-none font-black text-[var(--foreground)]  tracking-tight tabular-nums">
                                                             {main.count}
                                                         </div>
-                                                        <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mt-1">
+                                                        <div className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] dark:text-[var(--muted)] mt-1">
                                                             {main.label}
                                                         </div>
                                                     </div>
@@ -2099,7 +2103,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         <div key={item.label} className="flex items-center justify-between text-xs">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                                                                <span className="text-zinc-500 uppercase font-bold tracking-wide">{item.label}</span>
+                                                                <span className="text-[var(--muted)] uppercase font-bold tracking-wide">{item.label}</span>
                                                             </div>
                                                             <span className={`font-black ${item.tone}`}>
                                                                 {item.count}
@@ -2128,7 +2132,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                         {/* LEFT: DESEMPENHO (Detailed Performance Table with Pagination) */}
                         <div className="liquid-glass p-6 flex flex-col h-full">
 
-                            <h3 className="text-lg font-black tracking-tight mb-4 text-blue-500">Desempenho da Publicação</h3>
+                            <h3 className="text-lg font-black tracking-tight mb-4 text-[var(--foreground)]">Desempenho da Publicação</h3>
 
                             {/* Best Post by Reach Card */}
                             {/* Best Post by Reach Card + Engagement Stats */}
@@ -2139,21 +2143,21 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 return (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         {/* Left: Best Post Card */}
-                                        <div className="bg-blue-50 dark:bg-blue-500/5 rounded-xl p-4 border border-blue-100 dark:border-blue-500/20 flex flex-col justify-center">
-                                            <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wide">
+                                        <div className="bg-white/10 dark:bg-[var(--foreground)]/10 rounded-xl p-4 border border-white/20 dark:border-[var(--foreground)]/20 flex flex-col justify-center">
+                                            <div className="flex items-center gap-2 mb-3 text-[var(--foreground)]  font-bold text-xs uppercase tracking-wide">
                                                 <HandThumbUpIcon className="w-4 h-4" />
                                                 Melhor post por alcance
                                             </div>
                                             <div className="flex gap-4">
-                                                <div className="w-24 h-24 shrink-0 rounded-lg bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                                                <div className="w-24 h-24 shrink-0 rounded-lg bg-[var(--accent-primary)] dark:bg-[var(--shell-side)] overflow-hidden">
                                                     <img src={bestPostPerformance.image} className="w-full h-full object-cover" alt="Best post" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 text-[10px] text-zinc-500 mb-1">
+                                                    <div className="flex items-center gap-2 text-[10px] text-[var(--muted)] mb-1">
                                                         <span className="flex items-center gap-1"><span className="w-3 h-3">📅</span> {bestPostPerformance.date}</span>
                                                     </div>
                                                     <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2">{`"${bestPostPerformance.message}"`}</p>
-                                                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                                    <p className="text-[11px] text-[var(--foreground)] dark:text-[var(--muted)] leading-relaxed">
                                                         Este post alcançou <span className="font-bold">{formatNumber(bestPostPerformance.reach)}</span> pessoas.
                                                     </p>
                                                 </div>
@@ -2162,14 +2166,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                                         {/* Right: Engagement Stats Highlights */}
                                         <div className="bg-[var(--shell-side)] rounded-xl p-6 flex flex-col justify-center text-center border border-[var(--shell-border)]">
-                                            <span className="text-zinc-500 text-xs font-bold uppercase mb-1">{isInstagram ? "Engajamento Total" : "Total Engagement"}</span>
+                                            <span className="text-[var(--muted)] text-xs font-bold uppercase mb-1">{isInstagram ? "Engajamento Total" : "Total Engagement"}</span>
                                             <div className="flex items-center justify-center gap-2 mb-3">
                                                 <span className="text-5xl font-black text-[var(--foreground)] tracking-tight">{Math.round(data.engagements.value).toLocaleString('pt-BR')}</span>
-                                                <span className={`text-sm font-bold ${data.engagements.change > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                <span className={`text-sm font-bold ${data.engagements.change > 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}`}>
                                                     {data.engagements.change > 0 ? '↑' : '↓'} {Math.abs(data.engagements.change)}%
                                                 </span>
                                             </div>
-                                            <div className="flex justify-center gap-4 text-[11px] text-zinc-500 font-medium pt-3 border-t border-[var(--shell-border)]">
+                                            <div className="flex justify-center gap-4 text-[11px] text-[var(--muted)] font-medium pt-3 border-t border-[var(--shell-border)]">
                                                 <span title={isInstagram ? "Saves" : "Reactions"}>{isInstagram ? "🔖" : "👍"} {data.actions_split.reactions.toLocaleString('pt-BR')}</span>
                                                 <span title="Comments">💬 {data.actions_split.comments.toLocaleString('pt-BR')}</span>
                                                 <span title={isInstagram ? "DM Shares" : "Shares"}>{isInstagram ? "✈️" : "🔗"} {data.actions_split.shares.toLocaleString('pt-BR')}</span>
@@ -2183,7 +2187,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm whitespace-nowrap">
                                     <thead className="bg-[var(--shell-surface)] z-10">
-                                        <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-zinc-500 text-xs">
+                                        <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-[var(--muted)] text-xs">
                                             <th className="pb-3 pl-2">Post</th>
                                             <th className="pb-3 px-2">{isInstagram ? "Conteúdo" : "Message"}</th>
                                             <th className="pb-3 px-2">{isInstagram ? "Data" : "Date"}</th>
@@ -2200,22 +2204,22 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         {data.top_posts.slice(performancePage * ITEMS_PER_PAGE, (performancePage + 1) * ITEMS_PER_PAGE).map((post) => (
                                             <tr key={post.id} className="group hover:bg-[var(--shell-side)] transition-colors">
                                                 <td className="py-3 pl-2">
-                                                    <div className="w-10 h-10 rounded-lg bg-zinc-800 overflow-hidden relative shrink-0">
+                                                    <div className="w-10 h-10 rounded-lg bg-[var(--shell-side)] overflow-hidden relative shrink-0">
                                                         <img src={post.image} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                                                     </div>
                                                 </td>
                                                 <td className="py-3 px-2">
                                                     <p className="font-bold truncate max-w-[100px] text-[var(--foreground)]" title={post.message}>{post.message}</p>
-                                                    <a href={post.link} className="text-[10px] text-blue-500 hover:underline block mt-0.5">Link do post</a>
+                                                    <a href={post.link} className="text-[10px] text-[var(--foreground)] hover:underline block mt-0.5">Link do post</a>
                                                 </td>
-                                                <td className="py-3 px-2 text-xs text-zinc-500">{post.date}</td>
-                                                <td className="py-3 text-right px-2 text-zinc-400 font-mono">{(post.impressions || Math.round(post.reach * 1.2)).toLocaleString('pt-BR')}</td>
+                                                <td className="py-3 px-2 text-xs text-[var(--muted)]">{post.date}</td>
+                                                <td className="py-3 text-right px-2 text-[var(--muted)] font-mono">{(post.impressions || Math.round(post.reach * 1.2)).toLocaleString('pt-BR')}</td>
                                                 <td className="py-3 text-right px-2 font-mono text-[var(--foreground)] font-bold">{post.reach.toLocaleString('pt-BR')}</td>
-                                                <td className="py-3 text-right px-2 font-mono text-zinc-400">{post.reactions.toLocaleString('pt-BR')}</td>
-                                                <td className="py-3 text-right px-2 font-mono text-zinc-400">{post.comments.toLocaleString('pt-BR')}</td>
-                                                <td className="py-3 text-right px-2 font-mono text-zinc-400">{post.shares.toLocaleString('pt-BR')}</td>
-                                                <td className="py-3 text-right px-2 font-mono text-purple-500">{post.video_views.toLocaleString('pt-BR')}</td>
-                                                <td className="py-3 text-right px-2 font-mono text-zinc-400">{post.link_clicks.toLocaleString('pt-BR')}</td>
+                                                <td className="py-3 text-right px-2 font-mono text-[var(--muted)]">{post.reactions.toLocaleString('pt-BR')}</td>
+                                                <td className="py-3 text-right px-2 font-mono text-[var(--muted)]">{post.comments.toLocaleString('pt-BR')}</td>
+                                                <td className="py-3 text-right px-2 font-mono text-[var(--muted)]">{post.shares.toLocaleString('pt-BR')}</td>
+                                                <td className="py-3 text-right px-2 font-mono text-[var(--foreground)]">{post.video_views.toLocaleString('pt-BR')}</td>
+                                                <td className="py-3 text-right px-2 font-mono text-[var(--muted)]">{post.link_clicks.toLocaleString('pt-BR')}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -2224,14 +2228,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                             {/* Performance Pagination Footer */}
                             <div className="mt-4 flex items-center justify-end gap-4 border-t border-[var(--shell-border)] pt-4">
-                                <span className="text-xs font-bold text-zinc-500">
+                                <span className="text-xs font-bold text-[var(--muted)]">
                                     {performancePage * ITEMS_PER_PAGE + 1} - {Math.min((performancePage + 1) * ITEMS_PER_PAGE, data.top_posts.length)} / {data.top_posts.length}
                                 </span>
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => setPerformancePage(Math.max(0, performancePage - 1))}
                                         disabled={performancePage === 0}
-                                        className="p-1 rounded hover:bg-[var(--shell-side)] disabled:opacity-30 disabled:hover:bg-transparent text-zinc-400"
+                                        className="p-1 rounded hover:bg-[var(--shell-side)] disabled:opacity-30 disabled:hover:bg-transparent text-[var(--muted)]"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                                             <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
@@ -2240,7 +2244,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     <button
                                         onClick={() => setPerformancePage(Math.min(Math.ceil(data.top_posts.length / ITEMS_PER_PAGE) - 1, performancePage + 1))}
                                         disabled={(performancePage + 1) * ITEMS_PER_PAGE >= data.top_posts.length}
-                                        className="p-1 rounded hover:bg-[var(--shell-side)] disabled:opacity-30 disabled:hover:bg-transparent text-zinc-400"
+                                        className="p-1 rounded hover:bg-[var(--shell-side)] disabled:opacity-30 disabled:hover:bg-transparent text-[var(--muted)]"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                                             <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
@@ -2253,33 +2257,33 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             <div className="mb-8 mt-8">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                     <h4 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
-                                        <ArrowTrendingUpIcon className="w-4 h-4 text-emerald-500" />
+                                        <ArrowTrendingUpIcon className="w-4 h-4 text-[var(--foreground)]" />
                                         Melhores por Interações
                                     </h4>
-                                    <div className="flex flex-wrap items-center gap-3 text-[10px] font-medium text-zinc-500">
+                                    <div className="flex flex-wrap items-center gap-3 text-[10px] font-medium text-[var(--muted)]">
                                         <button
                                             onClick={() => setVisibleMetrics(prev => ({ ...prev, reach: !prev.reach }))}
                                             className={`flex items-center gap-1.5 transition-all hover:opacity-80 ${visibleMetrics.reach ? 'opacity-100' : 'opacity-40 grayscale'}`}
                                         >
-                                            <span className="w-2 h-2 rounded-full bg-cyan-400"></span>Alcance
+                                            <span className="w-2 h-2 rounded-full bg-[var(--shell-border)]"></span>Alcance
                                         </button>
                                         <button
                                             onClick={() => setVisibleMetrics(prev => ({ ...prev, reactions: !prev.reactions }))}
                                             className={`flex items-center gap-1.5 transition-all hover:opacity-80 ${visibleMetrics.reactions ? 'opacity-100' : 'opacity-40 grayscale'}`}
                                         >
-                                            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>{isInstagram ? "Salvos" : "Reações"}
+                                            <span className="w-2 h-2 rounded-full bg-white/20"></span>{isInstagram ? "Salvos" : "Reações"}
                                         </button>
                                         <button
                                             onClick={() => setVisibleMetrics(prev => ({ ...prev, comments: !prev.comments }))}
                                             className={`flex items-center gap-1.5 transition-all hover:opacity-80 ${visibleMetrics.comments ? 'opacity-100' : 'opacity-40 grayscale'}`}
                                         >
-                                            <span className="w-2 h-2 rounded-full bg-purple-400"></span>Comentários
+                                            <span className="w-2 h-2 rounded-full bg-[var(--shell-border)]"></span>Comentários
                                         </button>
                                         <button
                                             onClick={() => setVisibleMetrics(prev => ({ ...prev, shares: !prev.shares }))}
                                             className={`flex items-center gap-1.5 transition-all hover:opacity-80 ${visibleMetrics.shares ? 'opacity-100' : 'opacity-40 grayscale'}`}
                                         >
-                                            <span className="w-2 h-2 rounded-full bg-amber-400"></span>{isInstagram ? "Comp. DM" : "Compart."}
+                                            <span className="w-2 h-2 rounded-full bg-[var(--shell-border)]"></span>{isInstagram ? "Comp. DM" : "Compart."}
                                         </button>
                                     </div>
                                 </div>
@@ -2324,20 +2328,20 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         return (
                                             <div className="w-full h-full relative">
                                                 {/* Y-Axis Grid & Labels */}
-                                                <div className="absolute inset-0 flex flex-col justify-between text-[9px] text-zinc-500 pointer-events-none pb-6 pr-4">
+                                                <div className="absolute inset-0 flex flex-col justify-between text-[9px] text-[var(--muted)] pointer-events-none pb-6 pr-4">
                                                     {[1, 0.75, 0.5, 0.25, 0].map((percent) => {
                                                         const val = Math.round(maxReach * percent);
                                                         return (
                                                             <div key={percent} className="flex items-center w-full relative h-0">
                                                                 <span className="w-8 text-right mr-2 shrink-0">{formatAxisValue(val)}</span>
-                                                                <div className="w-full h-px bg-[var(--shell-border)] border-t border-dashed border-zinc-700/30"></div>
+                                                                <div className="w-full h-px bg-[var(--shell-border)] border-t border-dashed border-[var(--shell-border)]"></div>
                                                             </div>
                                                         );
                                                     })}
                                                 </div>
 
                                                 {/* Right Axis (Engagement) - Optional visual aid */}
-                                                {/* <div className="absolute top-0 right-0 bottom-24 w-px bg-zinc-800/50"></div> */}
+                                                {/* <div className="absolute top-0 right-0 bottom-24 w-px bg-[var(--shell-side)]"></div> */}
 
                                                 {/* Chart Area - 2 Layers: SVG Lines + HTML Overlay */}
                                                 <div className="absolute top-0 left-8 right-8 bottom-24">
@@ -2349,7 +2353,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             <polyline
                                                                 points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reach, maxReach)}`).join(" ")}
                                                                 fill="none"
-                                                                stroke="#22d3ee"
+                                                                stroke="#F0F3F7"
                                                                 strokeWidth="0.8" // Scaled relative to 100x100 box, usually need smaller value or vector-effect
                                                                 vectorEffect="non-scaling-stroke" // Keeps stroke width constant in px
                                                                 strokeLinecap="round"
@@ -2364,7 +2368,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             <polyline
                                                                 points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reactions, maxEngagement)}`).join(" ")}
                                                                 fill="none"
-                                                                stroke="#34d399"
+                                                                stroke="#AAB3C0"
                                                                 vectorEffect="non-scaling-stroke"
                                                                 strokeLinecap="round"
                                                                 strokeLinejoin="round"
@@ -2378,7 +2382,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             <polyline
                                                                 points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.comments, maxEngagement)}`).join(" ")}
                                                                 fill="none"
-                                                                stroke="#c084fc"
+                                                                stroke="var(--foreground)"
                                                                 vectorEffect="non-scaling-stroke"
                                                                 strokeLinecap="round"
                                                                 strokeLinejoin="round"
@@ -2392,7 +2396,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             <polyline
                                                                 points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.shares, maxEngagement)}`).join(" ")}
                                                                 fill="none"
-                                                                stroke="#fbbf24"
+                                                                stroke="#F0F3F7"
                                                                 vectorEffect="non-scaling-stroke"
                                                                 strokeLinecap="round"
                                                                 strokeLinejoin="round"
@@ -2423,26 +2427,26 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                     <div className="absolute top-0 bottom-0 w-full">
                                                                         {/* Reach Dot */}
                                                                         <div
-                                                                            className={`absolute -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-cyan-400 rounded-full border-2 border-[var(--shell-surface)] transition-all duration-300 group-hover:scale-150 z-30 ${visibleMetrics.reach ? 'opacity-100' : 'opacity-0'}`}
+                                                                            className={`absolute -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-[var(--shell-border)] rounded-full border-2 border-[var(--shell-surface)] transition-all duration-300 group-hover:scale-150 z-30 ${visibleMetrics.reach ? 'opacity-100' : 'opacity-0'}`}
                                                                             style={{ top: `${yReach}%`, left: '50%' }}
                                                                         />
 
                                                                         {/* Other Metrics Dots */}
                                                                         {visibleMetrics.reactions && (
                                                                             <div
-                                                                                className="absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[var(--shell-surface)] z-10"
+                                                                                className="absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white/20 rounded-full border-2 border-[var(--shell-surface)] z-10"
                                                                                 style={{ top: `${getY(post.reactions, maxEngagement)}%`, left: '50%' }}
                                                                             />
                                                                         )}
                                                                         {visibleMetrics.comments && (
                                                                             <div
-                                                                                className="absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-purple-400 rounded-full border-2 border-[var(--shell-surface)] z-10"
+                                                                                className="absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-[var(--shell-border)] rounded-full border-2 border-[var(--shell-surface)] z-10"
                                                                                 style={{ top: `${getY(post.comments, maxEngagement)}%`, left: '50%' }}
                                                                             />
                                                                         )}
                                                                         {visibleMetrics.shares && (
                                                                             <div
-                                                                                className="absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-[var(--shell-surface)] z-10"
+                                                                                className="absolute -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-[var(--shell-border)] rounded-full border-2 border-[var(--shell-surface)] z-10"
                                                                                 style={{ top: `${getY(post.shares, maxEngagement)}%`, left: '50%' }}
                                                                             />
                                                                         )}
@@ -2450,34 +2454,34 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                                                                     {/* Tooltip (Positioned relative to the vertical slice) */}
                                                                     <div className="absolute left-1/2 top-0 -translate-x-1/2 transform transition-all duration-200 opacity-0 group-hover:opacity-100 group-hover:translate-y-2 z-50 pointer-events-none w-0 flex justify-center">
-                                                                        <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700 text-white text-[10px] rounded-lg p-3 shadow-2xl whitespace-nowrap min-w-[180px]">
-                                                                            <div className="flex justify-between items-center mb-2 pb-2 border-b border-zinc-700">
-                                                                                <span className="font-bold text-emerald-400">{dateLabel} <span className="text-zinc-500 mx-1">•</span> {timeLabel}</span>
-                                                                                <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[9px] font-bold">Reach: {formatNumber(post.reach)}</span>
+                                                                        <div className="bg-[var(--shell-surface)] backdrop-blur-md border border-[var(--shell-border)] text-[var(--foreground)] text-[10px] rounded-lg p-3 shadow-2xl whitespace-nowrap min-w-[180px]">
+                                                                            <div className="flex justify-between items-center mb-2 pb-2 border-b border-[var(--shell-border)]">
+                                                                                <span className="font-bold text-[var(--foreground)]">{dateLabel} <span className="text-[var(--muted)] mx-1">•</span> {timeLabel}</span>
+                                                                                <span className="bg-[var(--foreground)]/10 text-[var(--foreground)] px-1.5 py-0.5 rounded text-[9px] font-bold">Reach: {formatNumber(post.reach)}</span>
                                                                             </div>
-                                                                            <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px]">{`"${post.message}"`}</div>
+                                                                            <div className="font-medium text-[var(--foreground)] mb-2 truncate max-w-[200px]">{`"${post.message}"`}</div>
 
                                                                             <div className="space-y-1">
-                                                                                <div className="flex justify-between text-zinc-400">
+                                                                                <div className="flex justify-between text-[var(--muted)]">
                                                                                     <span>Interações Totais:</span>
-                                                                                    <strong className="text-white">{formatNumber(interactions)}</strong>
+                                                                                    <strong className="text-[var(--foreground)]">{formatNumber(interactions)}</strong>
                                                                                 </div>
                                                                                 <div className="grid grid-cols-4 gap-2 pt-2 text-[9px] text-center">
-                                                                                    <div className="bg-zinc-800 rounded p-1 flex flex-col items-center">
-                                                                                        <div className="w-2 h-2 rounded-full bg-emerald-400 mb-1"></div>
-                                                                                        <div className="font-bold text-white mt-0.5">{formatNumber(post.reactions)}</div>
+                                                                                    <div className="bg-[var(--shell-side)] rounded p-1 flex flex-col items-center">
+                                                                                        <div className="w-2 h-2 rounded-full bg-white/20 mb-1"></div>
+                                                                                        <div className="font-bold text-[var(--foreground)] mt-0.5">{formatNumber(post.reactions)}</div>
                                                                                     </div>
-                                                                                    <div className="bg-zinc-800 rounded p-1 flex flex-col items-center">
-                                                                                        <div className="w-2 h-2 rounded-full bg-purple-400 mb-1"></div>
-                                                                                        <div className="font-bold text-white mt-0.5">{formatNumber(post.comments)}</div>
+                                                                                    <div className="bg-[var(--shell-side)] rounded p-1 flex flex-col items-center">
+                                                                                        <div className="w-2 h-2 rounded-full bg-[var(--shell-border)] mb-1"></div>
+                                                                                        <div className="font-bold text-[var(--foreground)] mt-0.5">{formatNumber(post.comments)}</div>
                                                                                     </div>
-                                                                                    <div className="bg-zinc-800 rounded p-1 flex flex-col items-center">
-                                                                                        <div className="w-2 h-2 rounded-full bg-amber-400 mb-1"></div>
-                                                                                        <div className="font-bold text-white mt-0.5">{formatNumber(post.shares)}</div>
+                                                                                    <div className="bg-[var(--shell-side)] rounded p-1 flex flex-col items-center">
+                                                                                        <div className="w-2 h-2 rounded-full bg-[var(--shell-border)] mb-1"></div>
+                                                                                        <div className="font-bold text-[var(--foreground)] mt-0.5">{formatNumber(post.shares)}</div>
                                                                                     </div>
-                                                                                    <div className="bg-zinc-800 rounded p-1 flex flex-col items-center">
-                                                                                        <div className="w-2 h-2 rounded-full bg-cyan-400 mb-1"></div>
-                                                                                        <div className="font-bold text-white mt-0.5">{post.link_clicks}</div>
+                                                                                    <div className="bg-[var(--shell-side)] rounded p-1 flex flex-col items-center">
+                                                                                        <div className="w-2 h-2 rounded-full bg-[var(--shell-border)] mb-1"></div>
+                                                                                        <div className="font-bold text-[var(--foreground)] mt-0.5">{post.link_clicks}</div>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -2500,24 +2504,24 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         return (
                                                             <div key={p.id} className="absolute bottom-0 flex flex-col items-center justify-end group z-20 hover:z-50 pointer-events-auto" style={{ left: `${getX(p.timestamp)}%`, transform: 'translateX(-50%)', height: '100%' }}>
                                                                 {/* Image Preview Tooltip */}
-                                                                <div className="absolute bottom-[70px] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none w-32 h-32 bg-zinc-900 rounded-lg shadow-2xl overflow-hidden border-2 border-zinc-700 z-50 transform translate-y-2 group-hover:translate-y-0">
+                                                                <div className="absolute bottom-[70px] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none w-32 h-32 bg-[var(--shell-surface)] rounded-lg shadow-2xl overflow-hidden border-2 border-[var(--shell-border)] z-50 transform translate-y-2 group-hover:translate-y-0">
                                                                     <img src={p.image} alt={p.message} className="w-full h-full object-cover" />
                                                                 </div>
 
                                                                 {/* Vertical Dashed Line */}
-                                                                <div className="absolute bottom-14 w-px border-l border-dashed border-zinc-400/30 h-[320px]"></div>
+                                                                <div className="absolute bottom-14 w-px border-l border-dashed border-[var(--shell-border)]/30 h-[320px]"></div>
 
                                                                 {/* Icon */}
-                                                                <EyeIcon className="w-4 h-4 text-[var(--foreground)] mb-1 bg-[var(--shell-side)] relative z-10 rounded-full cursor-pointer hover:text-blue-500 transition-colors" />
+                                                                <EyeIcon className="w-4 h-4 text-[var(--foreground)] mb-1 bg-[var(--shell-side)] relative z-10 rounded-full cursor-pointer hover:text-[var(--foreground)] transition-colors" />
 
                                                                 {/* Time */}
-                                                                <span className="text-[10px] font-mono font-bold text-zinc-500 mb-2 bg-[var(--shell-side)] relative z-10 px-1 rounded">{hour}h</span>
+                                                                <span className="text-[10px] font-mono font-bold text-[var(--muted)] mb-2 bg-[var(--shell-side)] relative z-10 px-1 rounded">{hour}h</span>
 
                                                                 {/* Date Badge */}
-                                                                <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20 relative z-10 transform hover:scale-110 transition-transform duration-200">
+                                                                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20 relative z-10 transform hover:scale-110 transition-transform duration-200">
                                                                     <div className="w-[30px] h-[30px] bg-white rounded-lg flex flex-col items-center justify-center pb-0.5">
-                                                                        <span className="text-[7px] font-black text-zinc-400 uppercase leading-none mb-0.5 tracking-tighter">{month}</span>
-                                                                        <span className="text-sm font-black text-zinc-900 leading-none tracking-tight">{day}</span>
+                                                                        <span className="text-[7px] font-black text-[var(--muted)] uppercase leading-none mb-0.5 tracking-tighter">{month}</span>
+                                                                        <span className="text-sm font-black text-[var(--foreground)] leading-none tracking-tight">{day}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -2533,7 +2537,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 {speedData && (
                                     <div className="mt-8 pt-8 border-t border-[var(--shell-border)]">
                                         <h4 className="text-sm font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
-                                            <ArrowTrendingUpIcon className="w-4 h-4 text-emerald-500" />
+                                            <ArrowTrendingUpIcon className="w-4 h-4 text-[var(--foreground)]" />
                                             Performance por Tipo de Mídia
                                         </h4>
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 min-h-[320px]">
@@ -2542,15 +2546,15 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                             <SpeedometerChart title={isInstagram ? "Toques no Link" : "Cliques (Tráfego)"} data={speedData.clicks} />
                                         </div>
 
-                                        <div className="mt-6 bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-4">
+                                        <div className="mt-6 bento-cell bg-[var(--shell-side)] rounded-xl p-4">
                                             <div className="flex items-center justify-between mb-3">
-                                                <h5 className="text-xs font-black uppercase tracking-widest text-zinc-500">Eficiência por Formato (Média/Post)</h5>
-                                                <span className="text-[10px] font-bold text-zinc-500">Comparativo de produtividade criativa</span>
+                                                <h5 className="text-xs font-black uppercase tracking-widest text-[var(--muted)]">Eficiência por Formato (Média/Post)</h5>
+                                                <span className="text-[10px] font-bold text-[var(--muted)]">Comparativo de produtividade criativa</span>
                                             </div>
                                             <div className="overflow-x-auto">
                                                 <table className="w-full text-left text-sm whitespace-nowrap">
                                                     <thead>
-                                                        <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                                                        <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
                                                             <th className="pb-2 pr-3">Formato</th>
                                                             <th className="pb-2 pr-3 text-right">Posts</th>
                                                             <th className="pb-2 pr-3 text-right">Alcance Médio</th>
@@ -2563,11 +2567,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         {formatEfficiencyRows.map((row, idx) => (
                                                             <tr key={row.label}>
                                                                 <td className="py-2 pr-3 font-black text-[var(--foreground)]">{row.label}</td>
-                                                                <td className="py-2 pr-3 text-right font-mono text-zinc-400">{row.posts}</td>
-                                                                <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.avgReach)}</td>
-                                                                <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.avgEngagement)}</td>
-                                                                <td className="py-2 pr-3 text-right font-mono text-zinc-400">{formatNumber(row.avgClicks)}</td>
-                                                                <td className={`py-2 pr-3 text-right font-mono font-black ${idx === 0 ? "text-emerald-400" : "text-blue-400"}`}>{row.efficiency.toFixed(2)}%</td>
+                                                                <td className="py-2 pr-3 text-right font-mono text-[var(--muted)]">{row.posts}</td>
+                                                                <td className="py-2 pr-3 text-right font-mono text-[var(--muted)]">{formatNumber(row.avgReach)}</td>
+                                                                <td className="py-2 pr-3 text-right font-mono text-[var(--muted)]">{formatNumber(row.avgEngagement)}</td>
+                                                                <td className="py-2 pr-3 text-right font-mono text-[var(--muted)]">{formatNumber(row.avgClicks)}</td>
+                                                                <td className={`py-2 pr-3 text-right font-mono font-black ${idx === 0 ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}`}>{row.efficiency.toFixed(2)}%</td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
@@ -2577,20 +2581,20 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                                         {isInstagram && (
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
-                                                    <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Retenção 0-3s</div>
-                                                    <div className="text-5xl leading-[0.9] font-black text-emerald-500 mt-2">{videoRetentionSummary.retention3s}%</div>
-                                                    <div className="mt-2 text-[12px] font-semibold text-zinc-500">Taxa de permanência inicial</div>
+                                                <div className="bento-cell rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
+                                                    <div className="text-[var(--muted)] text-[11px] font-bold uppercase tracking-[0.14em]">Retenção 0-3s</div>
+                                                    <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] mt-2">{videoRetentionSummary.retention3s}%</div>
+                                                    <div className="mt-2 text-[12px] font-semibold text-[var(--muted)]">Taxa de permanência inicial</div>
                                                 </div>
-                                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
-                                                    <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Tempo Médio</div>
-                                                    <div className="text-5xl leading-[0.9] font-black text-blue-500 mt-2">{videoRetentionSummary.avgWatchSeconds}s</div>
-                                                    <div className="mt-2 text-[12px] font-semibold text-zinc-500">Visualização média por Reel</div>
+                                                <div className="bento-cell rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
+                                                    <div className="text-[var(--muted)] text-[11px] font-bold uppercase tracking-[0.14em]">Tempo Médio</div>
+                                                    <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] mt-2">{videoRetentionSummary.avgWatchSeconds}s</div>
+                                                    <div className="mt-2 text-[12px] font-semibold text-[var(--muted)]">Visualização média por Reel</div>
                                                 </div>
-                                                <div className="bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
-                                                    <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.14em]">Re-watch</div>
-                                                    <div className="text-5xl leading-[0.9] font-black text-indigo-500 mt-2">{videoRetentionSummary.rewatchRate}%</div>
-                                                    <div className="mt-2 text-[12px] font-semibold text-zinc-500">Taxa estimada de loop/revisita</div>
+                                                <div className="bento-cell rounded-2xl px-6 py-5 min-h-[118px] flex flex-col justify-center">
+                                                    <div className="text-[var(--muted)] text-[11px] font-bold uppercase tracking-[0.14em]">Re-watch</div>
+                                                    <div className="text-5xl leading-[0.9] font-black text-[var(--foreground)] mt-2">{videoRetentionSummary.rewatchRate}%</div>
+                                                    <div className="mt-2 text-[12px] font-semibold text-[var(--muted)]">Taxa estimada de loop/revisita</div>
                                                 </div>
                                             </div>
                                         )}
@@ -2603,7 +2607,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                         {/* RIGHT: REAÇÕES DESCRITIVAS DESTAQUE (Detailed Reactions) */}
                         < div className="liquid-glass p-6 overflow-hidden flex flex-col h-full" >
 
-                            <h3 className="text-lg font-black tracking-tight mb-4 text-emerald-500">{isInstagram ? "Detalhamento de Sinais de Qualidade" : "Detalhamento de Reações"}</h3>
+                            <h3 className="text-lg font-black tracking-tight mb-4 text-[var(--foreground)]">{isInstagram ? "Detalhamento de Sinais de Qualidade" : "Detalhamento de Reações"}</h3>
                             {/* 1. Best Post Card + Total Interactions Stats */}
                             {(() => {
                                 const bestPost = [...data.top_posts].sort((a, b) => (b.reactions + b.comments + b.shares) - (a.reactions + a.comments + a.shares))[0];
@@ -2615,22 +2619,22 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                                 return (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div className="flex-1 bg-blue-50 dark:bg-blue-500/5 rounded-xl p-4 border border-blue-100 dark:border-blue-500/20">
-                                            <div className="flex items-center gap-2 mb-3 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wide">
+                                        <div className="flex-1 bg-white/10 dark:bg-[var(--foreground)]/10 rounded-xl p-4 border border-white/20 dark:border-[var(--foreground)]/20">
+                                            <div className="flex items-center gap-2 mb-3 text-[var(--foreground)]  font-bold text-xs uppercase tracking-wide">
                                                 <HandThumbUpIcon className="w-4 h-4" />
                                                 {isInstagram ? "Melhor post por sinal qualificado" : "Melhor post por engajamento"}
                                             </div>
                                             <div className="flex gap-4">
-                                                <div className="w-24 h-24 shrink-0 rounded-lg bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                                                <div className="w-24 h-24 shrink-0 rounded-lg bg-[var(--accent-primary)] dark:bg-[var(--shell-side)] overflow-hidden">
                                                     <img src={bestPost.image} className="w-full h-full object-cover" alt="Best post" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 text-[10px] text-zinc-500 mb-1">
+                                                    <div className="flex items-center gap-2 text-[10px] text-[var(--muted)] mb-1">
                                                         <span className="flex items-center gap-1"><span className="w-3 h-3">📅</span> {bestPost.date}</span>
                                                     </div>
                                                     <p className="text-xs font-medium text-[var(--foreground)] line-clamp-2 mb-2">{`"${bestPost.message}"`}</p>
-                                                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                                        Taxa de engajamento de <span className="font-bold text-blue-600 dark:text-blue-400">{rate}%</span> ({formatNumber(engagement)} interações).
+                                                    <p className="text-[11px] text-[var(--foreground)] dark:text-[var(--muted)] leading-relaxed">
+                                                        Taxa de engajamento de <span className="font-bold text-[var(--foreground)] ">{rate}%</span> ({formatNumber(engagement)} interações).
                                                     </p>
                                                 </div>
                                             </div>
@@ -2638,11 +2642,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                                         {/* Right: Summary Stats Highlight */}
                                         <div className="w-full bg-[var(--shell-side)] rounded-xl p-6 flex flex-col justify-center text-center border border-[var(--shell-border)]">
-                                            <span className="text-zinc-500 text-xs font-bold uppercase mb-1">Total de Interações</span>
+                                            <span className="text-[var(--muted)] text-xs font-bold uppercase mb-1">Total de Interações</span>
                                             <div className="flex items-center justify-center gap-2 mb-3">
                                                 <span className="text-5xl font-black text-[var(--foreground)] tracking-tight">{totalInteractions.toLocaleString('pt-BR')}</span>
                                             </div>
-                                            <div className="text-[11px] text-zinc-500 pt-3 border-t border-[var(--shell-border)]">
+                                            <div className="text-[11px] text-[var(--muted)] pt-3 border-t border-[var(--shell-border)]">
                                                 Média: <span className="font-bold text-[var(--foreground)]">{avgInteractions.toLocaleString('pt-BR')}</span> / post
                                             </div>
                                         </div>
@@ -2659,9 +2663,9 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm whitespace-nowrap">
                                     <thead className="bg-[var(--shell-surface)] z-10">
-                                        <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-zinc-500 text-xs">
+                                        <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-[var(--muted)] text-xs">
                                             <th className="pb-3 pl-2 min-w-[200px]">Post</th>
-                                            <th className="pb-3 text-right px-2 text-blue-500">{isInstagram ? "Total Qualif." : "Total"}</th>
+                                            <th className="pb-3 text-right px-2 text-[var(--foreground)]">{isInstagram ? "Total Qualif." : "Total"}</th>
                                             <th className="pb-3 text-right px-2" title={isInstagram ? "Salvamentos" : "Like"}>{isInstagram ? "Salvos" : <span className="text-2xl">👍</span>}</th>
                                             <th className="pb-3 text-right px-2" title={isInstagram ? "Compartilhamentos por DM" : "Love"}>{isInstagram ? "Comp. DM" : <span className="text-2xl">❤️</span>}</th>
                                             <th className="pb-3 text-right px-2" title={isInstagram ? "Visitas ao Perfil" : "Haha"}>{isInstagram ? "Perfil" : <span className="text-2xl">😂</span>}</th>
@@ -2674,21 +2678,21 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         {data.top_posts.slice(reactionsPage * ITEMS_PER_PAGE, (reactionsPage + 1) * ITEMS_PER_PAGE).map((post) => (
                                             <tr key={post.id} className="group hover:bg-[var(--shell-side)] transition-colors">
                                                 <td className="py-3 pl-2 flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg bg-zinc-800 overflow-hidden relative shrink-0">
+                                                    <div className="w-10 h-10 rounded-lg bg-[var(--shell-side)] overflow-hidden relative shrink-0">
                                                         <img src={post.image} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                                                     </div>
                                                     <div className="max-w-[180px] overflow-hidden">
                                                         <p className="font-bold truncate text-[var(--foreground)] text-sm" title={post.message}>{post.message}</p>
-                                                        <a href="#" className="text-xs text-blue-500 hover:underline">Link do post</a>
+                                                        <a href="#" className="text-xs text-[var(--foreground)] hover:underline">Link do post</a>
                                                     </div>
                                                 </td>
-                                                <td className="py-3 text-right px-2 font-bold text-blue-500">{formatNumber(isInstagram ? getQualitySignalsTotal(post) : post.reactions)}</td>
-                                                <td className="py-3 text-right px-2 text-zinc-400 font-mono">{post.reaction_breakdown?.like || 0}</td>
-                                                <td className="py-3 text-right px-2 text-zinc-400 font-mono">{post.reaction_breakdown?.love || 0}</td>
-                                                <td className="py-3 text-right px-2 text-zinc-400 font-mono">{post.reaction_breakdown?.haha || 0}</td>
-                                                <td className="py-3 text-right px-2 text-zinc-400 font-mono">{post.reaction_breakdown?.wow || 0}</td>
-                                                <td className="py-3 text-right px-2 text-zinc-400 font-mono">{post.reaction_breakdown?.sad || 0}</td>
-                                                <td className="py-3 text-right px-2 text-zinc-400 font-mono">{post.reaction_breakdown?.angry || 0}</td>
+                                                <td className="py-3 text-right px-2 font-bold text-[var(--foreground)]">{formatNumber(isInstagram ? getQualitySignalsTotal(post) : post.reactions)}</td>
+                                                <td className="py-3 text-right px-2 text-[var(--muted)] font-mono">{post.reaction_breakdown?.like || 0}</td>
+                                                <td className="py-3 text-right px-2 text-[var(--muted)] font-mono">{post.reaction_breakdown?.love || 0}</td>
+                                                <td className="py-3 text-right px-2 text-[var(--muted)] font-mono">{post.reaction_breakdown?.haha || 0}</td>
+                                                <td className="py-3 text-right px-2 text-[var(--muted)] font-mono">{post.reaction_breakdown?.wow || 0}</td>
+                                                <td className="py-3 text-right px-2 text-[var(--muted)] font-mono">{post.reaction_breakdown?.sad || 0}</td>
+                                                <td className="py-3 text-right px-2 text-[var(--muted)] font-mono">{post.reaction_breakdown?.angry || 0}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -2697,14 +2701,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                             {/* Pagination Footer */}
                             <div className="mt-4 flex items-center justify-end gap-4 border-t border-[var(--shell-border)] pt-4">
-                                <span className="text-xs font-bold text-zinc-500">
+                                <span className="text-xs font-bold text-[var(--muted)]">
                                     {reactionsPage * ITEMS_PER_PAGE + 1} - {Math.min((reactionsPage + 1) * ITEMS_PER_PAGE, data.top_posts.length)} / {data.top_posts.length}
                                 </span>
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => setReactionsPage(Math.max(0, reactionsPage - 1))}
                                         disabled={reactionsPage === 0}
-                                        className="p-1 rounded hover:bg-[var(--shell-side)] disabled:opacity-30 disabled:hover:bg-transparent text-zinc-400"
+                                        className="p-1 rounded hover:bg-[var(--shell-side)] disabled:opacity-30 disabled:hover:bg-transparent text-[var(--muted)]"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                                             <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
@@ -2713,7 +2717,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     <button
                                         onClick={() => setReactionsPage(Math.min(Math.ceil(data.top_posts.length / ITEMS_PER_PAGE) - 1, reactionsPage + 1))}
                                         disabled={(reactionsPage + 1) * ITEMS_PER_PAGE >= data.top_posts.length}
-                                        className="p-1 rounded hover:bg-[var(--shell-side)] disabled:opacity-30 disabled:hover:bg-transparent text-zinc-400"
+                                        className="p-1 rounded hover:bg-[var(--shell-side)] disabled:opacity-30 disabled:hover:bg-transparent text-[var(--muted)]"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                                             <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
@@ -2726,30 +2730,30 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             <div className="mb-8 mt-8">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                     <h4 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
-                                        <ArrowTrendingUpIcon className="w-4 h-4 text-emerald-500" />
+                                        <ArrowTrendingUpIcon className="w-4 h-4 text-[var(--foreground)]" />
                                         {isInstagram ? "Desempenho de Sinais de Qualidade" : "Desempenho de Reações"}
                                     </h4>
-                                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-zinc-500">
+                                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-medium text-[var(--muted)]">
                                         <button onClick={() => setVisibleReactions(p => ({ ...p, total: !p.total }))} className={`flex items-center gap-1.5 px-2 py-1 rounded liquid-glass btn-secondary transition-all ${visibleReactions.total ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                            <span className="w-2 h-2 rounded-full bg-white border border-zinc-500"></span><span className="text-white">Total</span>
+                                            <span className="w-2 h-2 rounded-full bg-white border border-[var(--shell-border)]"></span><span className="text-[var(--foreground)]">Total</span>
                                         </button>
-                                        <button onClick={() => setVisibleReactions(p => ({ ...p, like: !p.like }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 transition-all ${visibleReactions.like ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                            <span className="w-2 h-2 rounded-full bg-blue-400"></span><span className="text-blue-400">{isInstagram ? "Salvos" : "Like"}</span>
+                                        <button onClick={() => setVisibleReactions(p => ({ ...p, like: !p.like }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--foreground)]/10 hover:bg-[var(--foreground)]/10 transition-all ${visibleReactions.like ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                            <span className="w-2 h-2 rounded-full bg-white/10"></span><span className="text-[var(--foreground)]">{isInstagram ? "Salvos" : "Like"}</span>
                                         </button>
-                                        <button onClick={() => setVisibleReactions(p => ({ ...p, love: !p.love }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 transition-all ${visibleReactions.love ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                            <span className="w-2 h-2 rounded-full bg-rose-400"></span><span className="text-rose-400">{isInstagram ? "Comp. DM" : "Love"}</span>
+                                        <button onClick={() => setVisibleReactions(p => ({ ...p, love: !p.love }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--shell-border)]/10 hover:bg-[var(--shell-border)]/20 transition-all ${visibleReactions.love ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                            <span className="w-2 h-2 rounded-full bg-[var(--shell-border)]"></span><span className="text-[var(--foreground)]">{isInstagram ? "Comp. DM" : "Love"}</span>
                                         </button>
-                                        <button onClick={() => setVisibleReactions(p => ({ ...p, haha: !p.haha }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-yellow-500/10 hover:bg-yellow-500/20 transition-all ${visibleReactions.haha ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                            <span className="w-2 h-2 rounded-full bg-yellow-400"></span><span className="text-yellow-400">{isInstagram ? "Perfil" : "Haha"}</span>
+                                        <button onClick={() => setVisibleReactions(p => ({ ...p, haha: !p.haha }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--foreground)]/10 hover:bg-[var(--foreground)]/10 transition-all ${visibleReactions.haha ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                            <span className="w-2 h-2 rounded-full bg-white/10"></span><span className="text-[var(--foreground)]">{isInstagram ? "Perfil" : "Haha"}</span>
                                         </button>
-                                        <button onClick={() => setVisibleReactions(p => ({ ...p, wow: !p.wow }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-orange-500/10 hover:bg-orange-500/20 transition-all ${visibleReactions.wow ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                            <span className="w-2 h-2 rounded-full bg-orange-400"></span><span className="text-orange-400">{isInstagram ? "Link" : "Wow"}</span>
+                                        <button onClick={() => setVisibleReactions(p => ({ ...p, wow: !p.wow }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--shell-border)]/10 hover:bg-[var(--shell-border)]/20 transition-all ${visibleReactions.wow ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                            <span className="w-2 h-2 rounded-full bg-[var(--shell-border)]"></span><span className="text-[var(--foreground)]">{isInstagram ? "Link" : "Wow"}</span>
                                         </button>
-                                        <button onClick={() => setVisibleReactions(p => ({ ...p, sad: !p.sad }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 transition-all ${visibleReactions.sad ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                            <span className="w-2 h-2 rounded-full bg-cyan-400"></span><span className="text-cyan-400">{isInstagram ? "Resp." : "Sad"}</span>
+                                        <button onClick={() => setVisibleReactions(p => ({ ...p, sad: !p.sad }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--shell-border)]/10 hover:bg-[var(--shell-border)]/20 transition-all ${visibleReactions.sad ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                            <span className="w-2 h-2 rounded-full bg-[var(--shell-border)]"></span><span className="text-[var(--foreground)]">{isInstagram ? "Resp." : "Sad"}</span>
                                         </button>
-                                        <button onClick={() => setVisibleReactions(p => ({ ...p, angry: !p.angry }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-all ${visibleReactions.angry ? 'opacity-100' : 'opacity-50 grayscale'}`}>
-                                            <span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-red-500">{isInstagram ? "Follows" : "Angry"}</span>
+                                        <button onClick={() => setVisibleReactions(p => ({ ...p, angry: !p.angry }))} className={`flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--foreground)]/10 hover:bg-[var(--foreground)]/10 transition-all ${visibleReactions.angry ? 'opacity-100' : 'opacity-50 grayscale'}`}>
+                                            <span className="w-2 h-2 rounded-full bg-white/10"></span><span className="text-[var(--foreground)]">{isInstagram ? "Follows" : "Angry"}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -2774,11 +2778,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         return (
                                             <div className="w-full h-full relative">
                                                 {/* Y-Axis Grid */}
-                                                <div className="absolute inset-0 flex flex-col justify-between text-[9px] text-zinc-500 pointer-events-none pb-6 pr-4">
+                                                <div className="absolute inset-0 flex flex-col justify-between text-[9px] text-[var(--muted)] pointer-events-none pb-6 pr-4">
                                                     {[1, 0.5, 0].map((t) => (
                                                         <div key={t} className="flex items-center w-full relative h-0">
                                                             <span className="w-6 text-right mr-2 shrink-0">{formatNumber(Math.round(maxChartTotal * t))}</span>
-                                                            <div className="w-full h-px bg-[var(--shell-border)] border-t border-dashed border-zinc-700/30"></div>
+                                                            <div className="w-full h-px bg-[var(--shell-border)] border-t border-dashed border-[var(--shell-border)]"></div>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -2788,12 +2792,12 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     {/* Layer 1: SVG Lines */}
                                                     <svg className="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
                                                         {visibleReactions.total && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(isInstagram ? getQualitySignalsTotal(p) : p.reactions)}`).join(" ")} fill="none" stroke="white" strokeWidth="0.5" vectorEffect="non-scaling-stroke" strokeDasharray="4 4" className="opacity-30" />}
-                                                        {visibleReactions.like && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.like || 0)}`).join(" ")} fill="none" stroke="#60a5fa" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
-                                                        {visibleReactions.love && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.love || 0)}`).join(" ")} fill="none" stroke="#fb7185" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
-                                                        {visibleReactions.haha && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.haha || 0)}`).join(" ")} fill="none" stroke="#facc15" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
-                                                        {visibleReactions.wow && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.wow || 0)}`).join(" ")} fill="none" stroke="#fb923c" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
-                                                        {visibleReactions.sad && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.sad || 0)}`).join(" ")} fill="none" stroke="#22d3ee" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
-                                                        {visibleReactions.angry && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.angry || 0)}`).join(" ")} fill="none" stroke="#ef4444" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
+                                                        {visibleReactions.like && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.like || 0)}`).join(" ")} fill="none" stroke="#AAB3C0" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
+                                                        {visibleReactions.love && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.love || 0)}`).join(" ")} fill="none" stroke="var(--foreground)" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
+                                                        {visibleReactions.haha && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.haha || 0)}`).join(" ")} fill="none" stroke="#F0F3F7" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
+                                                        {visibleReactions.wow && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.wow || 0)}`).join(" ")} fill="none" stroke="#AAB3C0" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
+                                                        {visibleReactions.sad && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.sad || 0)}`).join(" ")} fill="none" stroke="var(--foreground)" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
+                                                        {visibleReactions.angry && <polyline points={sortedPosts.map(p => `${getX(p.timestamp)},${getY(p.reaction_breakdown?.angry || 0)}`).join(" ")} fill="none" stroke="#F0F3F7" strokeWidth="0.8" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" style={{ strokeWidth: '3px' }} />}
                                                     </svg>
 
                                                     {/* Layer 2: HTML Overlay */}
@@ -2807,48 +2811,48 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                     <div className="absolute top-0 bottom-0 w-full">
                                                                         {/* Dots */}
                                                                         {visibleReactions.total && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full opacity-50" style={{ top: `${getY(total)}%`, left: '50%' }} />}
-                                                                        {visibleReactions.like && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.like || 0)}%`, left: '50%' }} />}
-                                                                        {visibleReactions.love && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-rose-400 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.love || 0)}%`, left: '50%' }} />}
-                                                                        {visibleReactions.haha && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-yellow-400 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.haha || 0)}%`, left: '50%' }} />}
-                                                                        {visibleReactions.wow && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-orange-400 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.wow || 0)}%`, left: '50%' }} />}
-                                                                        {visibleReactions.sad && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.sad || 0)}%`, left: '50%' }} />}
-                                                                        {visibleReactions.angry && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-red-500 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.angry || 0)}%`, left: '50%' }} />}
+                                                                        {visibleReactions.like && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white/10 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.like || 0)}%`, left: '50%' }} />}
+                                                                        {visibleReactions.love && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[var(--shell-border)] rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.love || 0)}%`, left: '50%' }} />}
+                                                                        {visibleReactions.haha && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white/10 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.haha || 0)}%`, left: '50%' }} />}
+                                                                        {visibleReactions.wow && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[var(--shell-border)] rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.wow || 0)}%`, left: '50%' }} />}
+                                                                        {visibleReactions.sad && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[var(--shell-border)] rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.sad || 0)}%`, left: '50%' }} />}
+                                                                        {visibleReactions.angry && <div className="absolute -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white/10 rounded-full border border-[var(--shell-surface)] z-10 transition-transform group-hover:scale-150" style={{ top: `${getY(p.reaction_breakdown?.angry || 0)}%`, left: '50%' }} />}
                                                                     </div>
 
                                                                     {/* Tooltip */}
                                                                     <div className="absolute left-1/2 top-0 -translate-x-1/2 transform transition-all duration-200 opacity-0 group-hover:opacity-100 group-hover:translate-y-2 z-50 pointer-events-none w-0 flex justify-center">
-                                                                        <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700 text-white text-[10px] rounded-lg p-3 shadow-2xl whitespace-nowrap min-w-[180px]">
-                                                                            <div className="flex justify-between items-center mb-2 pb-2 border-b border-zinc-700">
-                                                                                <span className="font-bold text-emerald-400">
-                                                                                    {new Date(p.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} <span className="text-zinc-500 mx-1">•</span> {new Date(p.timestamp).getHours()}h
+                                                                        <div className="bg-[var(--shell-surface)] backdrop-blur-md border border-[var(--shell-border)] text-[var(--foreground)] text-[10px] rounded-lg p-3 shadow-2xl whitespace-nowrap min-w-[180px]">
+                                                                            <div className="flex justify-between items-center mb-2 pb-2 border-b border-[var(--shell-border)]">
+                                                                                <span className="font-bold text-[var(--foreground)]">
+                                                                                    {new Date(p.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} <span className="text-[var(--muted)] mx-1">•</span> {new Date(p.timestamp).getHours()}h
                                                                                 </span>
-                                                                                <span className="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[9px] font-bold">Total: {formatNumber(total)}</span>
+                                                                                <span className="bg-[var(--shell-side)] text-[var(--muted)] px-1.5 py-0.5 rounded text-[9px] font-bold">Total: {formatNumber(total)}</span>
                                                                             </div>
-                                                                            <div className="font-medium text-zinc-300 mb-2 truncate max-w-[200px]">{`"${p.message}"`}</div>
+                                                                            <div className="font-medium text-[var(--foreground)] mb-2 truncate max-w-[200px]">{`"${p.message}"`}</div>
                                                                             <div className="grid grid-cols-6 gap-1 pt-2 text-[9px] text-center">
-                                                                                <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.like ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div className={`bg-[var(--shell-side)] rounded p-1 ${visibleReactions.like ? 'opacity-100' : 'opacity-40'}`}>
                                                                                     <div>{isInstagram ? "SALV" : "👍"}</div>
-                                                                                    <div className="font-bold text-blue-400 mt-0.5">{formatNumber(p.reaction_breakdown?.like || 0)}</div>
+                                                                                    <div className="font-bold text-[var(--foreground)] mt-0.5">{formatNumber(p.reaction_breakdown?.like || 0)}</div>
                                                                                 </div>
-                                                                                <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.love ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div className={`bg-[var(--shell-side)] rounded p-1 ${visibleReactions.love ? 'opacity-100' : 'opacity-40'}`}>
                                                                                     <div>{isInstagram ? "DM" : "❤️"}</div>
-                                                                                    <div className="font-bold text-rose-400 mt-0.5">{formatNumber(p.reaction_breakdown?.love || 0)}</div>
+                                                                                    <div className="font-bold text-[var(--foreground)] mt-0.5">{formatNumber(p.reaction_breakdown?.love || 0)}</div>
                                                                                 </div>
-                                                                                <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.haha ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div className={`bg-[var(--shell-side)] rounded p-1 ${visibleReactions.haha ? 'opacity-100' : 'opacity-40'}`}>
                                                                                     <div>{isInstagram ? "PERFIL" : "😂"}</div>
-                                                                                    <div className="font-bold text-yellow-400 mt-0.5">{formatNumber(p.reaction_breakdown?.haha || 0)}</div>
+                                                                                    <div className="font-bold text-[var(--foreground)] mt-0.5">{formatNumber(p.reaction_breakdown?.haha || 0)}</div>
                                                                                 </div>
-                                                                                <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.wow ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div className={`bg-[var(--shell-side)] rounded p-1 ${visibleReactions.wow ? 'opacity-100' : 'opacity-40'}`}>
                                                                                     <div>{isInstagram ? "LINK" : "😮"}</div>
-                                                                                    <div className="font-bold text-orange-400 mt-0.5">{formatNumber(p.reaction_breakdown?.wow || 0)}</div>
+                                                                                    <div className="font-bold text-[var(--foreground)] mt-0.5">{formatNumber(p.reaction_breakdown?.wow || 0)}</div>
                                                                                 </div>
-                                                                                <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.sad ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div className={`bg-[var(--shell-side)] rounded p-1 ${visibleReactions.sad ? 'opacity-100' : 'opacity-40'}`}>
                                                                                     <div>{isInstagram ? "RESP" : "😢"}</div>
-                                                                                    <div className="font-bold text-cyan-400 mt-0.5">{formatNumber(p.reaction_breakdown?.sad || 0)}</div>
+                                                                                    <div className="font-bold text-[var(--foreground)] mt-0.5">{formatNumber(p.reaction_breakdown?.sad || 0)}</div>
                                                                                 </div>
-                                                                                <div className={`bg-zinc-800 rounded p-1 ${visibleReactions.angry ? 'opacity-100' : 'opacity-40'}`}>
+                                                                                <div className={`bg-[var(--shell-side)] rounded p-1 ${visibleReactions.angry ? 'opacity-100' : 'opacity-40'}`}>
                                                                                     <div>{isInstagram ? "FOLLOW" : "😡"}</div>
-                                                                                    <div className="font-bold text-red-500 mt-0.5">{formatNumber(p.reaction_breakdown?.angry || 0)}</div>
+                                                                                    <div className="font-bold text-[var(--foreground)] mt-0.5">{formatNumber(p.reaction_breakdown?.angry || 0)}</div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -2870,24 +2874,24 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         return (
                                                             <div key={p.id} className="absolute bottom-0 flex flex-col items-center justify-end group z-20 hover:z-50 pointer-events-auto" style={{ left: `${getX(p.timestamp)}%`, transform: 'translateX(-50%)', height: '100%' }}>
                                                                 {/* Image Preview Tooltip */}
-                                                                <div className="absolute bottom-[70px] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none w-32 h-32 bg-zinc-900 rounded-lg shadow-2xl overflow-hidden border-2 border-zinc-700 z-50 transform translate-y-2 group-hover:translate-y-0">
+                                                                <div className="absolute bottom-[70px] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none w-32 h-32 bg-[var(--shell-surface)] rounded-lg shadow-2xl overflow-hidden border-2 border-[var(--shell-border)] z-50 transform translate-y-2 group-hover:translate-y-0">
                                                                     <img src={p.image} alt={p.message} className="w-full h-full object-cover" />
                                                                 </div>
 
                                                                 {/* Vertical Dashed Line */}
-                                                                <div className="absolute bottom-14 w-px border-l border-dashed border-zinc-400/30 h-[320px]"></div>
+                                                                <div className="absolute bottom-14 w-px border-l border-dashed border-[var(--shell-border)]/30 h-[320px]"></div>
 
                                                                 {/* Icon */}
-                                                                <EyeIcon className="w-4 h-4 text-[var(--foreground)] mb-1 bg-[var(--shell-side)] relative z-10 rounded-full cursor-pointer hover:text-blue-500 transition-colors" />
+                                                                <EyeIcon className="w-4 h-4 text-[var(--foreground)] mb-1 bg-[var(--shell-side)] relative z-10 rounded-full cursor-pointer hover:text-[var(--foreground)] transition-colors" />
 
                                                                 {/* Time */}
-                                                                <span className="text-[10px] font-mono font-bold text-zinc-500 mb-2 bg-[var(--shell-side)] relative z-10 px-1 rounded">{hour}h</span>
+                                                                <span className="text-[10px] font-mono font-bold text-[var(--muted)] mb-2 bg-[var(--shell-side)] relative z-10 px-1 rounded">{hour}h</span>
 
                                                                 {/* Date Badge */}
-                                                                <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20 relative z-10 transform hover:scale-110 transition-transform duration-200">
+                                                                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20 relative z-10 transform hover:scale-110 transition-transform duration-200">
                                                                     <div className="w-[30px] h-[30px] bg-white rounded-lg flex flex-col items-center justify-center pb-0.5">
-                                                                        <span className="text-[7px] font-black text-zinc-400 uppercase leading-none mb-0.5 tracking-tighter">{month}</span>
-                                                                        <span className="text-sm font-black text-zinc-900 leading-none tracking-tight">{day}</span>
+                                                                        <span className="text-[7px] font-black text-[var(--muted)] uppercase leading-none mb-0.5 tracking-tighter">{month}</span>
+                                                                        <span className="text-sm font-black text-[var(--foreground)] leading-none tracking-tight">{day}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -2906,14 +2910,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <div className="mt-8 pt-8 border-t border-[var(--shell-border)]">
                                     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
                                         <h4 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
-                                            <ClockIcon className="w-4 h-4 text-emerald-500" />
+                                            <ClockIcon className="w-4 h-4 text-[var(--foreground)]" />
                                             Melhores Horários
                                         </h4>
                                         <div className="flex items-center gap-4">
                                             {/* Metric Toggle */}
                                             <div className="flex bg-[var(--shell-hover)] rounded-lg p-0.5 border border-[var(--shell-border)]">
-                                                <button onClick={() => setHeatmapMetric('interactions')} className={`px-2 py-1 text-[10px] uppercase font-bold rounded-md transition-all ${heatmapMetric === 'interactions' ? 'bg-[var(--shell-active)] text-emerald-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>Interação</button>
-                                                <button onClick={() => setHeatmapMetric('reach')} className={`px-2 py-1 text-[10px] uppercase font-bold rounded-md transition-all ${heatmapMetric === 'reach' ? 'bg-[var(--shell-active)] text-blue-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}>Visualização</button>
+                                                <button onClick={() => setHeatmapMetric('interactions')} className={`px-2 py-1 text-[10px] uppercase font-bold rounded-md transition-all ${heatmapMetric === 'interactions' ? 'bg-[var(--shell-active)] text-[var(--foreground)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--foreground)]'}`}>Interação</button>
+                                                <button onClick={() => setHeatmapMetric('reach')} className={`px-2 py-1 text-[10px] uppercase font-bold rounded-md transition-all ${heatmapMetric === 'reach' ? 'bg-[var(--shell-active)] text-[var(--foreground)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--foreground)]'}`}>Visualização</button>
                                             </div>
                                             {/* Summary Text */}
                                             {(() => {
@@ -2940,27 +2944,27 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 return (
                                                     <div className="hidden lg:flex items-center gap-3 ml-4 pl-4 border-l border-[var(--shell-border)]/50">
                                                         {/* Best Time Card */}
-                                                        <div className="flex items-center gap-3 liquid-glass btn-secondary transition-colors border border-blue-500/10 rounded-xl px-4 py-2 group cursor-default shadow-sm">
-                                                            <div className="bg-blue-500 p-1.5 rounded-lg shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
-                                                                <ArrowTrendingUpIcon className="w-4 h-4 text-white" />
+                                                        <div className="flex items-center gap-3 liquid-glass btn-secondary transition-colors border border-[var(--foreground)]/20 rounded-xl px-4 py-2 group cursor-default shadow-sm">
+                                                            <div className="bg-white/10 p-1.5 rounded-lg shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                                                                <ArrowTrendingUpIcon className="w-4 h-4 text-[var(--foreground)]" />
                                                             </div>
                                                             <div className="flex flex-col">
-                                                                <span className="text-[9px] font-bold text-blue-400/80 uppercase tracking-widest leading-none mb-1">Melhor Horário</span>
+                                                                <span className="text-[9px] font-bold text-[var(--foreground)]/80 uppercase tracking-widest leading-none mb-1">Melhor Horário</span>
                                                                 <span className="text-sm font-black text-[var(--foreground)] tracking-tight leading-none">
-                                                                    {best.hour} <span className="text-zinc-500 font-medium text-[10px] mx-0.5">•</span> {best.day}
+                                                                    {best.hour} <span className="text-[var(--muted)] font-medium text-[10px] mx-0.5">•</span> {best.day}
                                                                 </span>
                                                             </div>
                                                         </div>
 
                                                         {/* Worst Time Card */}
-                                                        <div className="flex items-center gap-3 bg-red-500/5 hover:bg-red-500/10 transition-colors border border-red-500/10 rounded-xl px-4 py-2 group cursor-default shadow-sm">
-                                                            <div className="bg-red-500 p-1.5 rounded-lg shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform">
-                                                                <ArrowTrendingDownIcon className="w-4 h-4 text-white" />
+                                                        <div className="flex items-center gap-3 bg-[var(--foreground)]/10 hover:bg-[var(--foreground)]/10 transition-colors border border-[var(--foreground)]/20 rounded-xl px-4 py-2 group cursor-default shadow-sm">
+                                                            <div className="bg-white/10 p-1.5 rounded-lg shadow-lg shadow-red-500/20 group-hover:scale-110 transition-transform">
+                                                                <ArrowTrendingDownIcon className="w-4 h-4 text-[var(--foreground)]" />
                                                             </div>
                                                             <div className="flex flex-col">
-                                                                <span className="text-[9px] font-bold text-red-500/80 uppercase tracking-widest leading-none mb-1">Menor Volume</span>
+                                                                <span className="text-[9px] font-bold text-[var(--foreground)]/80 uppercase tracking-widest leading-none mb-1">Menor Volume</span>
                                                                 <span className="text-sm font-black text-[var(--foreground)] tracking-tight leading-none">
-                                                                    {worst.hour} <span className="text-zinc-500 font-medium text-[10px] mx-0.5">•</span> {worst.day}
+                                                                    {worst.hour} <span className="text-[var(--muted)] font-medium text-[10px] mx-0.5">•</span> {worst.day}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -2974,7 +2978,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         <div className="min-w-[500px]">
                                             <div className="flex gap-4">
                                                 {/* Y-Axis Labels (Hours) */}
-                                                <div className="flex flex-col justify-between py-2 text-[9px] font-mono text-zinc-500 text-right pr-2">
+                                                <div className="flex flex-col justify-between py-2 text-[9px] font-mono text-[var(--muted)] text-right pr-2">
                                                     {Array.from({ length: 12 }).map((_, i) => (
                                                         <div key={i} className="h-6 flex items-center justify-end">{i * 2}h</div>
                                                     ))}
@@ -3010,16 +3014,16 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                 // Color mapping based on score 1-10 - MONOCHROMATIC BLUE GRADIENT
                                                                 // Weaker (1) -> Stronger (10)
                                                                 let bgClass = "";
-                                                                if (score === 1) bgClass = "bg-sky-200 border-sky-300";           // Lightest/White-ish Blue
-                                                                else if (score === 2) bgClass = "bg-sky-300 border-sky-400";
-                                                                else if (score === 3) bgClass = "bg-sky-400 border-sky-500";
-                                                                else if (score === 4) bgClass = "bg-blue-400 border-blue-500";
-                                                                else if (score === 5) bgClass = "bg-blue-500 border-blue-600";
-                                                                else if (score === 6) bgClass = "bg-blue-600 border-blue-700";
-                                                                else if (score === 7) bgClass = "bg-blue-700 border-blue-800";
-                                                                else if (score === 8) bgClass = "bg-blue-800 border-blue-900";
-                                                                else if (score === 9) bgClass = "bg-blue-900 border-blue-950";
-                                                                else if (score === 10) bgClass = "bg-blue-950 border-black shadow-[0_0_12px_rgba(30,58,138,0.5)]"; // Deepest Blue
+                                                                if (score === 1) bgClass = "bg-[var(--shell-border)] border-[var(--shell-border)]";           // Lightest/White-ish Blue
+                                                                else if (score === 2) bgClass = "bg-[var(--shell-border)] border-[var(--shell-border)]";
+                                                                else if (score === 3) bgClass = "bg-[var(--shell-border)] border-[var(--shell-border)]";
+                                                                else if (score === 4) bgClass = "bg-white/10 border-white/20";
+                                                                else if (score === 5) bgClass = "bg-white/10 border-white/20";
+                                                                else if (score === 6) bgClass = "bg-white/10 border-white/20";
+                                                                else if (score === 7) bgClass = "bg-white/10 border-white/20";
+                                                                else if (score === 8) bgClass = "bg-white/10 border-white/20";
+                                                                else if (score === 9) bgClass = "bg-white/10 border-white/20";
+                                                                else if (score === 10) bgClass = "bg-white/10 border-black shadow-[0_0_12px_rgba(30,58,138,0.5)]"; // Deepest Blue
 
                                                                 return (
                                                                     <div
@@ -3029,24 +3033,24 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                         {/* Enhanced Tooltip - Show for ALL cells now */}
                                                                         {true && (
                                                                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[999] pointer-events-none w-max">
-                                                                                <div className="bg-zinc-900/95 backdrop-blur-md text-white text-[10px] rounded-xl p-3 shadow-2xl border border-zinc-700/50 text-center min-w-[120px]">
-                                                                                    <p className="font-bold text-xs mb-1 text-zinc-300 border-b border-zinc-800 pb-1">{fullDayName}, {hourIdx * 2}h</p>
+                                                                                <div className="bg-[var(--shell-surface)] backdrop-blur-md text-[var(--foreground)] text-[10px] rounded-xl p-3 shadow-2xl border border-[var(--shell-border)] text-center min-w-[120px]">
+                                                                                    <p className="font-bold text-xs mb-1 text-[var(--foreground)] border-b border-[var(--shell-border)] pb-1">{fullDayName}, {hourIdx * 2}h</p>
                                                                                     <div className="flex items-center justify-between gap-4 mt-2">
-                                                                                        <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">Score</span>
+                                                                                        <span className="text-[var(--muted)] uppercase tracking-widest text-[9px] font-bold">Score</span>
                                                                                         <div className="flex gap-0.5">
                                                                                             {/* Mini Score Bar */}
                                                                                             {Array.from({ length: 10 }).map((_, i) => (
-                                                                                                <div key={i} className={`w-1 h-3 rounded-[1px] ${i < score ? (i > 7 ? 'bg-blue-500' : 'bg-emerald-500') : 'bg-zinc-800'}`}></div>
+                                                                                                <div key={i} className={`w-1 h-3 rounded-[1px] ${i < score ? (i > 7 ? 'bg-white/10' : 'bg-white/20') : 'bg-[var(--shell-side)]'}`}></div>
                                                                                             ))}
                                                                                         </div>
                                                                                     </div>
                                                                                     <div className="flex items-center justify-between gap-4 mt-1">
-                                                                                        <span className="text-zinc-500 uppercase tracking-widest text-[9px] font-bold">Vol</span>
-                                                                                        <span className="font-mono font-bold text-white">{formatNumber(val)}</span>
+                                                                                        <span className="text-[var(--muted)] uppercase tracking-widest text-[9px] font-bold">Vol</span>
+                                                                                        <span className="font-mono font-bold text-[var(--foreground)]">{formatNumber(val)}</span>
                                                                                     </div>
                                                                                 </div>
                                                                                 {/* Arrow */}
-                                                                                <div className="w-3 h-3 bg-zinc-900 border-r border-b border-zinc-700/50 rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-1.5 backdrop-blur-md"></div>
+                                                                                <div className="w-3 h-3 bg-[var(--shell-surface)] border-r border-b border-[var(--shell-border)] rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-1.5 backdrop-blur-md"></div>
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -3054,16 +3058,16 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             })}
 
                                                             {/* Day Label (Bottom) */}
-                                                            <div className="text-center mt-2 text-[10px] font-bold text-zinc-500">{dayAbbr}</div>
+                                                            <div className="text-center mt-2 text-[10px] font-bold text-[var(--muted)]">{dayAbbr}</div>
                                                         </div>
                                                     );
                                                 })}
                                             </div>
 
                                             {/* Legend 1-10 Scale */}
-                                            <div className="flex items-center justify-between mt-6 text-[9px] text-zinc-500 font-medium font-mono uppercase tracking-wider bg-zinc-900/30 rounded-full p-2 border border-zinc-800/50">
+                                            <div className="flex items-center justify-between mt-6 text-[9px] text-[var(--muted)] font-medium font-mono uppercase tracking-wider bg-[var(--shell-surface)] rounded-full p-2 border border-[var(--shell-border)]">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="bg-sky-200 w-3 h-3 rounded block border border-sky-300"></span>
+                                                    <span className="bg-[var(--shell-border)] w-3 h-3 rounded block border border-[var(--shell-border)]"></span>
                                                     <span>1 (Menor)</span>
                                                 </div>
 
@@ -3072,7 +3076,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                                                 <div className="flex items-center gap-2">
                                                     <span>10 (Maior)</span>
-                                                    <span className="bg-blue-950 w-3 h-3 rounded block shadow-[0_0_5px_rgba(30,58,138,0.5)]"></span>
+                                                    <span className="bg-white/10 w-3 h-3 rounded block shadow-[0_0_5px_rgba(30,58,138,0.5)]"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -3174,44 +3178,44 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             <div className="space-y-4">
                                 <InstagramReelsMiniAnalysis posts={data.top_posts} storiesRows={sequence} totalFollowers={data.page_followers.value} />
 
-                                <div className="bg-[var(--shell-surface)] border border-cyan-500/25 rounded-3xl overflow-hidden shadow-[0_0_35px_rgba(6,182,212,0.14)]">
-                                    <div className="px-5 py-3 border-b border-cyan-500/20 bg-[var(--shell-side)]">
-                                        <h3 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">
+                                <div className="bento-cell liquid-glass shadow-[0_0_35px_rgba(6,182,212,0.14)]">
+                                    <div className="px-5 py-3 border-b border-[var(--shell-border)]/20 bg-[var(--shell-side)]">
+                                        <h3 className="text-sm font-black uppercase tracking-widest text-[var(--foreground)] dark:text-[var(--foreground)]">
                                             Protocolo AIMC-Bianconi 2026 - Monitor de Lealdade (Stories Analytics)
                                         </h3>
                                     </div>
                                     <div className="p-4 md:p-5 space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-                                            <div className="h-[132px] rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4 flex flex-col justify-between">
-                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-emerald-300">◀ Toques para Voltar (Interesse)</div>
-                                                <div className="text-5xl leading-none font-black tracking-tight text-emerald-300">{formatNumber(totalBack)}</div>
-                                                <div className="text-[11px] text-emerald-200/80">Alta relevância</div>
+                                            <div className="h-[132px] rounded-2xl border border-var(--foreground)/35 bg-[var(--foreground)]/20 p-4 flex flex-col justify-between">
+                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-[var(--foreground)]">◀ Toques para Voltar (Interesse)</div>
+                                                <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)]">{formatNumber(totalBack)}</div>
+                                                <div className="text-[11px] text-[var(--foreground)]/80">Alta relevância</div>
                                             </div>
-                                            <div className="h-[132px] rounded-2xl border border-amber-500/35 bg-amber-500/10 p-4 flex flex-col justify-between">
-                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-amber-300">▶ Toques para Avançar (Tédio)</div>
-                                                <div className="text-5xl leading-none font-black tracking-tight text-amber-300">{formatNumber(totalForward)}</div>
-                                                <div className="text-[11px] text-amber-200/80">Alerta amarelo (melhorar ritmo)</div>
+                                            <div className="h-[132px] rounded-2xl border border-[var(--shell-border)]/35 bg-[var(--shell-border)]/10 p-4 flex flex-col justify-between">
+                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-[var(--foreground)]">▶ Toques para Avançar (Tédio)</div>
+                                                <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)]">{formatNumber(totalForward)}</div>
+                                                <div className="text-[11px] text-[var(--muted)]">Alerta moderado (melhorar ritmo)</div>
                                             </div>
-                                            <div className="h-[132px] rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 flex flex-col justify-between">
-                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-rose-300">⛔ Saídas (Rejeição)</div>
-                                                <div className="text-5xl leading-none font-black tracking-tight text-rose-300">{formatNumber(totalExits)}</div>
-                                                <div className="text-[11px] text-rose-200/80">Alerta vermelho (tóxico)</div>
+                                            <div className="h-[132px] rounded-2xl border border-[var(--shell-border)]/40 bg-[var(--shell-border)]/10 p-4 flex flex-col justify-between">
+                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-[var(--foreground)]">⛔ Saídas (Rejeição)</div>
+                                                <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)]">{formatNumber(totalExits)}</div>
+                                                <div className="text-[11px] text-[var(--muted)]">Alerta crítico (tóxico)</div>
                                             </div>
-                                            <div className="h-[132px] rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-4 flex flex-col justify-between">
-                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-emerald-300">💬 Respostas & Reações (Conversão)</div>
-                                                <div className="text-5xl leading-none font-black tracking-tight text-emerald-300">{formatNumber(totalReplies)}</div>
-                                                <div className="text-[11px] text-emerald-200/80">Sucesso</div>
+                                            <div className="h-[132px] rounded-2xl border border-var(--foreground)/35 bg-[var(--foreground)]/20 p-4 flex flex-col justify-between">
+                                                <div className="text-[10px] uppercase tracking-[0.14em] font-black text-[var(--foreground)]">💬 Respostas & Reações (Conversão)</div>
+                                                <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)]">{formatNumber(totalReplies)}</div>
+                                                <div className="text-[11px] text-[var(--foreground)]/80">Sucesso</div>
                                             </div>
                                         </div>
 
                                         <div className="rounded-2xl border border-[var(--shell-border)] overflow-hidden">
                                             <div className="px-4 py-3 border-b border-[var(--shell-border)] bg-[var(--shell-side)]">
-                                                <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-500 dark:text-zinc-400">Tabela de Detalhamento (Frame a Frame)</h4>
+                                                <h4 className="text-[10px] uppercase tracking-widest font-black text-[var(--muted)] dark:text-[var(--muted)]">Tabela de Detalhamento (Frame a Frame)</h4>
                                             </div>
                                             <div className="overflow-x-auto">
                                                 <table className="w-full min-w-[1220px] text-sm">
                                                     <thead>
-                                                        <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                                                        <tr className="border-b border-[var(--shell-border)] text-[10px] font-bold uppercase tracking-wider text-[var(--muted)] dark:text-[var(--muted)]">
                                                             <th className="py-2.5 px-3 text-left">Frame</th>
                                                             <th className="py-2.5 px-3 text-left">Tipo</th>
                                                             <th className="py-2.5 px-3 text-right">Faixa etária pred.</th>
@@ -3228,50 +3232,50 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             <tr key={item.id} className="hover:bg-[var(--shell-side)] transition-colors">
                                                                 <td className="py-2.5 px-3">
                                                                     <div className="flex items-center gap-2">
-                                                                        <div className="w-9 h-9 rounded-md overflow-hidden border border-[var(--shell-border)] bg-zinc-800 shrink-0">
+                                                                        <div className="w-9 h-9 rounded-md overflow-hidden border border-[var(--shell-border)] bg-[var(--shell-side)] shrink-0">
                                                                             <img src={item.image} alt={item.label} className="w-full h-full object-cover" />
                                                                         </div>
                                                                         <div>
                                                                             <div className="font-black text-[var(--foreground)]">{item.time}</div>
-                                                                            <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{item.label}</div>
+                                                                            <div className="text-[11px] text-[var(--muted)] dark:text-[var(--muted)]">{item.label}</div>
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td className="py-2.5 px-3 text-zinc-600 dark:text-zinc-400">{item.type}</td>
+                                                                <td className="py-2.5 px-3 text-[var(--foreground)] dark:text-[var(--muted)]">{item.type}</td>
                                                                 <td className="py-2.5 px-3 text-right">
-                                                                    <span className="inline-flex items-center px-2 py-0.5 rounded border border-violet-500/30 bg-violet-500/15 text-xs font-black text-violet-700 dark:text-violet-300">
+                                                                    <span className="inline-flex items-center px-2 py-0.5 rounded border border-[var(--shell-border)]/30 bg-[var(--shell-border)]/15 text-xs font-black text-[var(--foreground)] dark:text-[var(--foreground)]">
                                                                         {item.dominantAgeRange}
                                                                     </span>
-                                                                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">{item.dominantAgeShare}%</div>
+                                                                    <div className="text-[10px] text-[var(--muted)] dark:text-[var(--muted)] mt-0.5">{item.dominantAgeShare}%</div>
                                                                 </td>
                                                                 <td className="py-2.5 px-3 text-right">
                                                                     <span className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-black ${item.dominantGender === "Mulheres"
                                                                         ? "border-fuchsia-500/30 bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300"
-                                                                        : "border-sky-500/30 bg-sky-500/15 text-sky-700 dark:text-sky-300"
+                                                                        : "border-[var(--shell-border)]/30 bg-[var(--shell-border)]/15 text-[var(--foreground)] dark:text-[var(--foreground)]"
                                                                         }`}>
                                                                         {item.dominantGender}
                                                                     </span>
-                                                                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">{item.dominantGenderShare}%</div>
+                                                                    <div className="text-[10px] text-[var(--muted)] dark:text-[var(--muted)] mt-0.5">{item.dominantGenderShare}%</div>
                                                                 </td>
                                                                 <td className="py-2.5 px-3 text-right font-black text-[var(--foreground)]">{formatNumber(item.reach)}</td>
                                                                 <td className="py-2.5 px-3 text-right">
                                                                     <div className="flex items-center justify-end gap-2">
-                                                                        <div className="w-24 h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
-                                                                            <div className={`h-full ${item.retention >= 80 ? "bg-emerald-400" : item.retention >= 60 ? "bg-amber-400" : "bg-rose-500"}`} style={{ width: `${item.retention}%` }} />
+                                                                        <div className="w-24 h-2 rounded-full bg-[var(--accent-primary)] dark:bg-[var(--shell-side)] overflow-hidden">
+                                                                            <div className={`h-full ${item.retention >= 80 ? "bg-white/20" : item.retention >= 60 ? "bg-[var(--shell-border)]" : "bg-[var(--shell-border)]"}`} style={{ width: `${item.retention}%` }} />
                                                                         </div>
-                                                                        <span className={`font-black text-xs ${item.retention >= 80 ? "text-emerald-400" : item.retention >= 60 ? "text-amber-400" : "text-rose-400"}`}>{item.retention}%</span>
+                                                                        <span className={`font-black text-xs ${item.retention >= 80 ? "text-[var(--foreground)]" : item.retention >= 60 ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}`}>{item.retention}%</span>
                                                                     </div>
                                                                 </td>
-                                                                <td className="py-2.5 px-3 text-right text-zinc-700 dark:text-zinc-300">{item.interactionLabel}</td>
+                                                                <td className="py-2.5 px-3 text-right text-[var(--foreground)] ">{item.interactionLabel}</td>
                                                                 <td className="py-2.5 px-3 text-right">
                                                                     <div className="flex items-center justify-end gap-2">
-                                                                        <div className="w-24 h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden flex">
-                                                                            <div className="h-full bg-emerald-400" style={{ width: `${Math.min(100, (item.backTaps / Math.max(1, item.backTaps + item.exits)) * 100)}%` }} />
-                                                                            <div className="h-full bg-rose-500" style={{ width: `${Math.min(100, (item.exits / Math.max(1, item.backTaps + item.exits)) * 100)}%` }} />
+                                                                        <div className="w-24 h-2 rounded-full bg-[var(--accent-primary)] dark:bg-[var(--shell-side)] overflow-hidden flex">
+                                                                            <div className="h-full bg-white/20" style={{ width: `${Math.min(100, (item.backTaps / Math.max(1, item.backTaps + item.exits)) * 100)}%` }} />
+                                                                            <div className="h-full bg-[var(--shell-border)]" style={{ width: `${Math.min(100, (item.exits / Math.max(1, item.backTaps + item.exits)) * 100)}%` }} />
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td className="py-2.5 px-3 text-right font-black text-zinc-700 dark:text-zinc-300">{item.linkClicks > 0 ? formatNumber(item.linkClicks) : "-"}</td>
+                                                                <td className="py-2.5 px-3 text-right font-black text-[var(--foreground)] ">{item.linkClicks > 0 ? formatNumber(item.linkClicks) : "-"}</td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
@@ -3280,17 +3284,17 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         </div>
 
                                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
-                                            <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3">
-                                                <div className="text-[11px] font-black text-cyan-700 dark:text-cyan-300 uppercase tracking-widest">A. Melhor Horário de Retenção</div>
-                                                <div className="text-sm font-bold text-cyan-900 dark:text-cyan-100 mt-1">{bestWindow} (&lt;2% rejeição)</div>
+                                            <div className="rounded-2xl border border-[var(--shell-border)]/30 bg-[var(--shell-border)]/10 px-4 py-3">
+                                                <div className="text-[11px] font-black text-[var(--foreground)] dark:text-[var(--foreground)] uppercase tracking-widest">A. Melhor Horário de Retenção</div>
+                                                <div className="text-sm font-bold text-[var(--foreground)] dark:text-[var(--foreground)] mt-1">{bestWindow} (&lt;2% rejeição)</div>
                                             </div>
-                                            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
-                                                <div className="text-[11px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest">B. Cemitério de Sequências</div>
-                                                <div className="text-sm font-bold text-amber-900 dark:text-amber-100 mt-1">Aviso: {sequence[rejectionIndex]?.type ?? "Frame"} com pico de saída na sequência.</div>
+                                            <div className="rounded-2xl border border-[var(--shell-border)]/30 bg-[var(--shell-border)]/10 px-4 py-3">
+                                                <div className="text-[11px] font-black text-[var(--foreground)] dark:text-[var(--foreground)] uppercase tracking-widest">B. Cemitério de Sequências</div>
+                                                <div className="text-sm font-bold text-[var(--foreground)] dark:text-[var(--foreground)] mt-1">Aviso: {sequence[rejectionIndex]?.type ?? "Frame"} com pico de saída na sequência.</div>
                                             </div>
-                                            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
-                                                <div className="text-[11px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">C. Termômetro de Comunidade</div>
-                                                <div className="text-sm font-bold text-emerald-900 dark:text-emerald-100 mt-1">{totalReplies} replies / {Math.max(1, repliesPerK)}k views (Comunidade forte)</div>
+                                            <div className="rounded-2xl border border-var(--foreground)/30 bg-[var(--foreground)]/20 px-4 py-3">
+                                                <div className="text-[11px] font-black text-[var(--foreground)]  uppercase tracking-widest">C. Termômetro de Comunidade</div>
+                                                <div className="text-sm font-bold text-[var(--foreground)]  mt-1">{totalReplies} replies / {Math.max(1, repliesPerK)}k views (Comunidade forte)</div>
                                             </div>
                                         </div>
                                     </div>
@@ -3310,13 +3314,13 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <div className="inline-flex rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-1">
                                     <button
                                         onClick={() => setAudienceViewMode("base_total")}
-                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_total" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_total" ? "bg-white/10 text-[var(--foreground)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                                     >
                                         Base Total
                                     </button>
                                     <button
                                         onClick={() => setAudienceViewMode("base_engajada")}
-                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_engajada" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${audienceViewMode === "base_engajada" ? "bg-white/10 text-[var(--foreground)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                                     >
                                         Base Engajada
                                     </button>
@@ -3329,50 +3333,50 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             isInstagram ? (
                                 <div className="overflow-x-auto">
                                     <div className="grid grid-cols-8 gap-3 min-w-[1760px]">
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Novos Seguidores</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Novos Seguidores</h3>
                                             <div>
-                                                <div className="text-4xl xl:text-5xl font-black text-emerald-400 tracking-tighter leading-none mb-3">+{formatNumber(periodFollowers.newFollowers)}</div>
-                                                <div className={`text-[10px] font-bold uppercase tracking-wide ${periodFollowers.growthPct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">+{formatNumber(periodFollowers.newFollowers)}</div>
+                                                <div className={`text-[10px] font-bold uppercase tracking-wide ${periodFollowers.growthPct >= 0 ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}`}>
                                                     {periodFollowers.growthPct >= 0 ? "+" : ""}{periodFollowers.growthPct.toFixed(1)}% no período
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Total de Seguidores</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Total de Seguidores</h3>
                                             <div>
-                                                <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">{formatNumber(data.page_followers.value)}</div>
-                                                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Base ativa da conta</div>
+                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">{formatNumber(data.page_followers.value)}</div>
+                                                <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wide">Base ativa da conta</div>
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Botômetro</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Botômetro</h3>
                                             {instagramAudienceModel ? (
                                                 <div className="space-y-2 w-full">
                                                     <div className="flex items-center justify-between text-[10px] font-bold">
-                                                        <span className="text-emerald-300 uppercase tracking-wide">Valiosos</span>
-                                                        <span className="text-white">{instagramAudienceModel.botometer.valuablePct}%</span>
+                                                        <span className="text-[var(--foreground)] uppercase tracking-wide">Valiosos</span>
+                                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.valuablePct}%</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-[10px] font-bold">
-                                                        <span className="text-amber-300 uppercase tracking-wide">Fantasmas</span>
-                                                        <span className="text-white">{instagramAudienceModel.botometer.ghostPct}%</span>
+                                                        <span className="text-[var(--foreground)] uppercase tracking-wide">Fantasmas</span>
+                                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.ghostPct}%</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-[10px] font-bold">
-                                                        <span className="text-rose-300 uppercase tracking-wide">Bots</span>
-                                                        <span className="text-white">{instagramAudienceModel.botometer.botPct}%</span>
+                                                        <span className="text-[var(--foreground)] uppercase tracking-wide">Bots</span>
+                                                        <span className="text-[var(--foreground)]">{instagramAudienceModel.botometer.botPct}%</span>
                                                     </div>
                                                     <div className="h-1.5 rounded-full overflow-hidden bg-[var(--shell-border)] flex mt-2 w-full">
-                                                        <div className="h-full bg-emerald-500" style={{ width: `${instagramAudienceModel.botometer.valuablePct}%` }} />
-                                                        <div className="h-full bg-amber-400" style={{ width: `${instagramAudienceModel.botometer.ghostPct}%` }} />
-                                                        <div className="h-full bg-rose-500" style={{ width: `${instagramAudienceModel.botometer.botPct}%` }} />
+                                                        <div className="h-full bg-white/20" style={{ width: `${instagramAudienceModel.botometer.valuablePct}%` }} />
+                                                        <div className="h-full bg-[var(--shell-border)]" style={{ width: `${instagramAudienceModel.botometer.ghostPct}%` }} />
+                                                        <div className="h-full bg-[var(--shell-border)]" style={{ width: `${instagramAudienceModel.botometer.botPct}%` }} />
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="text-[10px] text-zinc-500 font-bold uppercase">Sem dados suficientes</div>
+                                                <div className="text-[10px] text-[var(--muted)] font-bold uppercase">Sem dados suficientes</div>
                                             )}
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cluster Principal</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Cluster Principal</h3>
                                             {(() => {
                                                 const badge = getGenderBadge(data.demographics.top_audience);
                                                 const cluster = data.demographics.top_audience ?? "";
@@ -3384,52 +3388,52 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             {badge.symbol}
                                                         </span>
                                                         <div className="min-w-0">
-                                                            <div className="text-3xl font-black text-white tracking-tight leading-none truncate">{badge.label}</div>
-                                                            <div className="text-sm font-bold text-zinc-500 mt-1">{ageRange}</div>
+                                                            <div className="text-3xl font-black text-[var(--foreground)] tracking-tight leading-none truncate">{badge.label}</div>
+                                                            <div className="text-sm font-bold text-[var(--muted)] mt-1">{ageRange}</div>
                                                         </div>
                                                     </div>
                                                 );
                                             })()}
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">
                                                 {audienceViewMode === "base_engajada" ? "Faixa Etária (Engajada)" : "Faixa Etária Principal"}
                                             </h3>
                                             <div>
-                                                <div className="text-5xl font-black text-white tracking-tighter leading-none mb-3">
+                                                <div className="text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">
                                                     {audienceTotalsForView.topAge?.range ?? data.demographics.top_age_group}
                                                 </div>
                                                 {audienceTotalsForView.topAge && (
-                                                    <div className="text-[10px] text-blue-400 font-bold uppercase tracking-wide">
+                                                    <div className="text-[10px] text-[var(--foreground)] font-bold uppercase tracking-wide">
                                                         {AGE_ECONOMIC_TAGS[audienceTotalsForView.topAge.range] ?? "Cluster"}
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
                                             <div className="flex-1 flex items-center">
-                                                <div className="text-3xl xl:text-4xl font-black text-white tracking-tighter break-words leading-none">
+                                                <div className="text-3xl xl:text-4xl font-black text-[var(--foreground)] tracking-tighter break-words leading-none">
                                                     {formatCityWithState(data.demographics.top_city, data.demographics.cities_data)}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
                                             <div className="flex-1 flex items-center gap-4">
                                                 <div className="text-6xl leading-none shrink-0 filter drop-shadow-lg">
                                                     {getCountryFlagEmoji(data.demographics.top_country)}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <div className="text-xl xl:text-3xl font-black text-white tracking-tight leading-none break-words">{data.demographics.top_country}</div>
+                                                    <div className="text-xl xl:text-3xl font-black text-[var(--foreground)] tracking-tight leading-none break-words">{data.demographics.top_country}</div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
                                             <div>
-                                                <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">PT-BR</div>
-                                                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Português (BR)</div>
+                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">PT-BR</div>
+                                                <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wide">Português (BR)</div>
                                             </div>
                                         </div>
                                     </div>
@@ -3437,46 +3441,46 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                             ) : (
                                 <div className="overflow-x-auto">
                                     <div className="grid grid-cols-8 gap-3 min-w-[1760px]">
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Novos Seguidores</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Novos Seguidores</h3>
                                             <div>
-                                                <div className="text-4xl xl:text-5xl font-black text-emerald-400 tracking-tighter leading-none mb-3">+{formatNumber(periodFollowers.newFollowers)}</div>
-                                                <div className={`text-[10px] font-bold uppercase tracking-wide ${periodFollowers.growthPct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">+{formatNumber(periodFollowers.newFollowers)}</div>
+                                                <div className={`text-[10px] font-bold uppercase tracking-wide ${periodFollowers.growthPct >= 0 ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}`}>
                                                     {periodFollowers.growthPct >= 0 ? "+" : ""}{periodFollowers.growthPct.toFixed(1)}% no período
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Total de Seguidores</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Total de Seguidores</h3>
                                             <div>
-                                                <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">{formatNumber(data.page_followers.value)}</div>
-                                                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Base ativa da conta</div>
+                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">{formatNumber(data.page_followers.value)}</div>
+                                                <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wide">Base ativa da conta</div>
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Botômetro</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Botômetro</h3>
                                             <div className="space-y-2 w-full">
                                                 <div className="flex items-center justify-between text-[10px] font-bold">
-                                                    <span className="text-emerald-300 uppercase tracking-wide">Reais</span>
-                                                    <span className="text-white">86%</span>
+                                                    <span className="text-[var(--foreground)] uppercase tracking-wide">Reais</span>
+                                                    <span className="text-[var(--foreground)]">86%</span>
                                                 </div>
                                                 <div className="flex items-center justify-between text-[10px] font-bold">
-                                                    <span className="text-amber-300 uppercase tracking-wide">Fantasmas</span>
-                                                    <span className="text-white">11%</span>
+                                                    <span className="text-[var(--foreground)] uppercase tracking-wide">Fantasmas</span>
+                                                    <span className="text-[var(--foreground)]">11%</span>
                                                 </div>
                                                 <div className="flex items-center justify-between text-[10px] font-bold">
-                                                    <span className="text-rose-300 uppercase tracking-wide">Bots</span>
-                                                    <span className="text-white">3%</span>
+                                                    <span className="text-[var(--foreground)] uppercase tracking-wide">Bots</span>
+                                                    <span className="text-[var(--foreground)]">3%</span>
                                                 </div>
                                                 <div className="h-1.5 rounded-full overflow-hidden bg-[var(--shell-border)] flex mt-2 w-full">
-                                                    <div className="h-full bg-emerald-500" style={{ width: "86%" }} />
-                                                    <div className="h-full bg-amber-400" style={{ width: "11%" }} />
-                                                    <div className="h-full bg-rose-500" style={{ width: "3%" }} />
+                                                    <div className="h-full bg-white/20" style={{ width: "86%" }} />
+                                                    <div className="h-full bg-[var(--shell-border)]" style={{ width: "11%" }} />
+                                                    <div className="h-full bg-[var(--shell-border)]" style={{ width: "3%" }} />
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cluster Principal</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Cluster Principal</h3>
                                             {(() => {
                                                 const badge = getGenderBadge(data.demographics.top_audience);
                                                 const cluster = data.demographics.top_audience ?? "";
@@ -3488,50 +3492,50 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             {badge.symbol}
                                                         </span>
                                                         <div className="min-w-0">
-                                                            <div className="text-3xl font-black text-white tracking-tight leading-none truncate">{badge.label}</div>
-                                                            <div className="text-sm font-bold text-zinc-500 mt-1">{ageRange}</div>
+                                                            <div className="text-3xl font-black text-[var(--foreground)] tracking-tight leading-none truncate">{badge.label}</div>
+                                                            <div className="text-sm font-bold text-[var(--muted)] mt-1">{ageRange}</div>
                                                         </div>
                                                     </div>
                                                 );
                                             })()}
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Faixa Etária Principal</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Faixa Etária Principal</h3>
                                             <div>
-                                                <div className="text-5xl font-black text-white tracking-tighter leading-none mb-3">
+                                                <div className="text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">
                                                     {audienceTotalsForView.topAge?.range ?? data.demographics.top_age_group}
                                                 </div>
                                                 {audienceTotalsForView.topAge && (
-                                                    <div className="text-[10px] text-blue-400 font-bold uppercase tracking-wide">
+                                                    <div className="text-[10px] text-[var(--foreground)] font-bold uppercase tracking-wide">
                                                         {AGE_ECONOMIC_TAGS[audienceTotalsForView.topAge.range] ?? "Cluster"}
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Cidade Principal</h3>
                                             <div className="flex-1 flex items-center">
-                                                <div className="text-3xl xl:text-4xl font-black text-white tracking-tighter break-words leading-none">
+                                                <div className="text-3xl xl:text-4xl font-black text-[var(--foreground)] tracking-tighter break-words leading-none">
                                                     {formatCityWithState(data.demographics.top_city, data.demographics.cities_data)}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">País Principal</h3>
                                             <div className="flex-1 flex items-center gap-4">
                                                 <div className="text-6xl leading-none shrink-0 filter drop-shadow-lg">
                                                     {getCountryFlagEmoji(data.demographics.top_country)}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <div className="text-xl xl:text-3xl font-black text-white tracking-tight leading-none break-words">{data.demographics.top_country}</div>
+                                                    <div className="text-xl xl:text-3xl font-black text-[var(--foreground)] tracking-tight leading-none break-words">{data.demographics.top_country}</div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
+                                        <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
+                                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Idioma Principal</h3>
                                             <div>
-                                                <div className="text-4xl xl:text-5xl font-black text-white tracking-tighter leading-none mb-3">PT-BR</div>
-                                                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Português (BR)</div>
+                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">PT-BR</div>
+                                                <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wide">Português (BR)</div>
                                             </div>
                                         </div>
                                     </div>
@@ -3543,23 +3547,23 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                         <div className="liquid-glass p-6 relative">
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
                                 <div>
-                                    <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">
+                                    <h3 className="text-4xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">
                                         Faixa Etária & Gênero
                                     </h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground)]">
                                         {isInstagram ? "Leitura de volume vs valor para priorizar quem realmente converte." : "Resumo da distribuição demográfica da base."}
                                     </p>
                                 </div>
                                 <div className="inline-flex rounded-xl border border-[var(--shell-border)] bg-[var(--shell-side)] p-1">
                                     <button
                                         onClick={() => setDemoValueMode("pct")}
-                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${demoValueMode === "pct" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${demoValueMode === "pct" ? "bg-white/10 text-[var(--foreground)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                                     >
                                         % Relativo
                                     </button>
                                     <button
                                         onClick={() => setDemoValueMode("abs")}
-                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${demoValueMode === "abs" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                        className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${demoValueMode === "abs" ? "bg-white/10 text-[var(--foreground)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                                     >
                                         Nº Absoluto
                                     </button>
@@ -3572,20 +3576,20 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 const totalMale = audienceTotalsForView.totalMale;
                                 const totalFemale = audienceTotalsForView.totalFemale;
                                 const sortedByAge = audienceTotalsForView.sortedByAge;
-                                const palette = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#0ea5e9", "#ef4444", "#ec4899"];
+                                const palette = ["#FFFFFF", "#F0F3F7", "#AAB3C0", "#3B4553"];
 
                                 return (
                                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
-                                        <div className="flex flex-col p-4 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] min-h-[220px] lg:min-h-[330px]">
+                                        <div className="flex flex-col p-4 rounded-2xl bento-cell bg-[var(--shell-side)] min-h-[220px] lg:min-h-[330px]">
                                             <div className="mb-4">
-                                                <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-2 tracking-widest w-full text-center lg:text-left">
+                                                <h4 className="text-[10px] font-bold uppercase text-[var(--muted)] mb-2 tracking-widest w-full text-center lg:text-left">
                                                     {isInstagram && audienceViewMode === "base_engajada" ? "Faixa Etária Engajada" : "Total por Faixa Etária"}
                                                 </h4>
                                                 <div className="w-full text-center lg:text-left">
                                                     <div className="text-xl font-black text-[var(--foreground)]">
                                                         {topAge?.range ?? "—"} anos
                                                     </div>
-                                                    <div className="text-[10px] text-zinc-500 mt-1">
+                                                    <div className="text-[10px] text-[var(--muted)] mt-1">
                                                         são a maioria, representando <strong className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(topAgePercentage * data.page_followers.value / 100)) : `${topAgePercentage}%`}</strong> da leitura atual.
                                                     </div>
                                                 </div>
@@ -3623,7 +3627,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         <span className="text-2xl font-black text-[var(--foreground)] tracking-tighter leading-none">
                                                             {demoValueMode === "abs" ? formatNumber(Math.round(topAgePercentage * data.page_followers.value / 100)) : `${topAgePercentage}%`}
                                                         </span>
-                                                        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
+                                                        <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--muted)] mt-1">
                                                             {topAge?.range ?? "—"}
                                                         </span>
                                                     </div>
@@ -3639,17 +3643,17 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                 <div
                                                                     key={item.range}
                                                                     className={`flex items-center gap-3 text-[9px] px-1.5 py-0.5 rounded transition-colors ${isDecisor
-                                                                        ? "bg-emerald-500/10 border border-emerald-500/25"
+                                                                        ? "bg-[var(--foreground)]/20 border border-var(--foreground)/25"
                                                                         : isInfluencer
-                                                                            ? "bg-blue-500/10 border border-blue-500/25"
+                                                                            ? "bg-[var(--foreground)]/10 border border-[var(--foreground)]/20"
                                                                             : "hover:bg-[var(--shell-surface)]"
                                                                         }`}
                                                                 >
                                                                     <div className="flex items-center gap-1.5 min-w-0">
                                                                         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: palette[index % palette.length] }} />
-                                                                        <div className="font-medium truncate text-zinc-400">{item.range}</div>
+                                                                        <div className="font-medium truncate text-[var(--muted)]">{item.range}</div>
                                                                     </div>
-                                                                    <span className="font-mono font-black text-white/50">
+                                                                    <span className="font-mono font-black text-[var(--foreground)]/50">
                                                                         {demoValueMode === "abs" ? formatNumber(Math.round(item.total * data.page_followers.value / 100)) : `${Math.round(item.total)}%`}
                                                                     </span>
                                                                 </div>
@@ -3665,17 +3669,17 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                 <div
                                                                     key={item.range}
                                                                     className={`flex items-center gap-3 text-[9px] px-1.5 py-0.5 rounded transition-colors ${isDecisor
-                                                                        ? "bg-emerald-500/10 border border-emerald-500/25"
+                                                                        ? "bg-[var(--foreground)]/20 border border-var(--foreground)/25"
                                                                         : isInfluencer
-                                                                            ? "bg-blue-500/10 border border-blue-500/25"
+                                                                            ? "bg-[var(--foreground)]/10 border border-[var(--foreground)]/20"
                                                                             : "hover:bg-[var(--shell-surface)]"
                                                                         }`}
                                                                 >
                                                                     <div className="flex items-center gap-1.5 min-w-0">
                                                                         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: palette[originalIndex % palette.length] }} />
-                                                                        <div className="font-medium truncate text-zinc-400">{item.range}</div>
+                                                                        <div className="font-medium truncate text-[var(--muted)]">{item.range}</div>
                                                                     </div>
-                                                                    <span className="font-mono font-black text-white/50">
+                                                                    <span className="font-mono font-black text-[var(--foreground)]/50">
                                                                         {demoValueMode === "abs" ? formatNumber(Math.round(item.total * data.page_followers.value / 100)) : `${Math.round(item.total)}%`}
                                                                     </span>
                                                                 </div>
@@ -3686,8 +3690,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                             </div>
                                         </div>
 
-                                        <div className="lg:col-span-2 flex flex-col p-4 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] min-h-[220px] lg:min-h-[330px]">
-                                            <h4 className="text-[10px] font-black uppercase text-white mb-4 tracking-widest z-10 w-full text-left">
+                                        <div className="lg:col-span-2 flex flex-col p-4 rounded-2xl bento-cell bg-[var(--shell-side)] min-h-[220px] lg:min-h-[330px]">
+                                            <h4 className="text-[10px] font-black uppercase text-[var(--foreground)] mb-4 tracking-widest z-10 w-full text-left">
                                                 Distribuição Demográfica (Idade & Gênero)
                                             </h4>
                                             <PopulationPyramid
@@ -3703,15 +3707,15 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                             />
                                         </div>
 
-                                        <div className="flex flex-col p-4 rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] relative overflow-hidden min-h-[220px] lg:min-h-[330px]">
+                                        <div className="flex flex-col p-4 rounded-2xl bento-cell bg-[var(--shell-side)] relative overflow-hidden min-h-[220px] lg:min-h-[330px]">
                                             <div className="w-full text-left">
-                                                <h4 className="text-[10px] font-bold uppercase text-zinc-500 mb-1 tracking-widest">
+                                                <h4 className="text-[10px] font-bold uppercase text-[var(--muted)] mb-1 tracking-widest">
                                                     {isInstagram && audienceViewMode === "base_engajada" ? "Gênero da Base Engajada" : "Resumo de Gênero"}
                                                 </h4>
                                                 <div className="text-xl font-black text-[var(--foreground)] text-center lg:text-left">
                                                     {totalFemale > totalMale ? "Mulheres" : "Homens"}
                                                 </div>
-                                                <div className="text-[10px] text-zinc-500 mt-1 text-center lg:text-left">
+                                                <div className="text-[10px] text-[var(--muted)] mt-1 text-center lg:text-left">
                                                     são a maioria, representando <strong className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(Math.max(totalFemale, totalMale) * data.page_followers.value / 100)) : `${Math.max(totalFemale, totalMale)}%`}</strong> da leitura atual.
                                                 </div>
                                             </div>
@@ -3726,7 +3730,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             cy="50"
                                                             r="40"
                                                             fill="none"
-                                                            stroke="#fb923c"
+                                                            stroke="#AAB3C0"
                                                             strokeWidth="16"
                                                             strokeDasharray={`${(totalFemale / 100) * 251.2} 251.2`}
                                                             strokeLinecap="round"
@@ -3737,7 +3741,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             cy="50"
                                                             r="40"
                                                             fill="none"
-                                                            stroke="#0ea5e9"
+                                                            stroke="var(--foreground)"
                                                             strokeWidth="16"
                                                             strokeDasharray={`${(totalMale / 100) * 251.2} 251.2`}
                                                             strokeDashoffset={-((totalFemale / 100) * 251.2)}
@@ -3749,7 +3753,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         <span className={`font-black text-[var(--foreground)] tracking-tighter leading-none ${demoValueMode === "abs" ? "text-xl" : "text-2xl"}`}>
                                                             {demoValueMode === "abs" ? formatNumber(Math.round(Math.max(totalFemale, totalMale) * data.page_followers.value / 100)) : `${Math.max(totalFemale, totalMale)}%`}
                                                         </span>
-                                                        <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 mt-1">
+                                                        <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--muted)] mt-1">
                                                             {totalFemale > totalMale ? "Mulheres" : "Homens"}
                                                         </span>
                                                     </div>
@@ -3758,23 +3762,23 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 <div className="w-full space-y-2">
                                                     <div className="flex justify-between items-center text-[10px] font-bold">
                                                         <div className="flex items-center gap-1.5">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                                                            <span className="text-zinc-500 uppercase tracking-wide">Mulheres</span>
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--shell-border)]" />
+                                                            <span className="text-[var(--muted)] uppercase tracking-wide">Mulheres</span>
                                                         </div>
-                                                        <span className="text-white">{demoValueMode === "abs" ? formatNumber(Math.round(totalFemale * data.page_followers.value / 100)) : `${totalFemale}%`}</span>
+                                                        <span className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(totalFemale * data.page_followers.value / 100)) : `${totalFemale}%`}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-[10px] font-bold">
                                                         <div className="flex items-center gap-1.5">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-                                                            <span className="text-zinc-500 uppercase tracking-wide">Homens</span>
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--shell-border)]" />
+                                                            <span className="text-[var(--muted)] uppercase tracking-wide">Homens</span>
                                                         </div>
-                                                        <span className="text-white">{demoValueMode === "abs" ? formatNumber(Math.round(totalMale * data.page_followers.value / 100)) : `${totalMale}%`}</span>
+                                                        <span className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(totalMale * data.page_followers.value / 100)) : `${totalMale}%`}</span>
                                                     </div>
                                                 </div>
 
                                                 <div className="w-full h-1.5 bg-[var(--shell-surface)] rounded-full overflow-hidden flex mt-2 shrink-0">
-                                                    <div className="h-full bg-orange-400" style={{ width: `${totalFemale}%` }} />
-                                                    <div className="h-full bg-sky-500" style={{ width: `${totalMale}%` }} />
+                                                    <div className="h-full bg-[var(--shell-border)]" style={{ width: `${totalFemale}%` }} />
+                                                    <div className="h-full bg-[var(--shell-border)]" style={{ width: `${totalMale}%` }} />
                                                 </div>
                                             </div>
                                         </div>
@@ -3790,8 +3794,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-start">
                                         <div>
-                                            <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">{isInstagram ? "Audiência por Geografia - Cidade" : "Fãs por Geografia - Cidade"}</h3>
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{isInstagram ? "Cidades com maior concentração de audiência ativa." : "Cidades onde seus fãs vivem"}</p>
+                                            <h3 className="text-4xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">{isInstagram ? "Audiência por Geografia - Cidade" : "Fãs por Geografia - Cidade"}</h3>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground)]">{isInstagram ? "Cidades com maior concentração de audiência ativa." : "Cidades onde seus fãs vivem"}</p>
                                         </div>
                                         <select
                                             value={selectedStateFilter}
@@ -3799,7 +3803,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 setSelectedStateFilter(e.target.value);
                                                 setCityPage(1);
                                             }}
-                                            className="bg-[var(--shell-surface)] text-[10px] font-bold text-zinc-500 border border-[var(--shell-border)] rounded-lg px-2 py-1 outline-none focus:border-blue-500 transition-colors"
+                                            className="bg-[var(--shell-surface)] text-[10px] font-bold text-[var(--muted)] border border-[var(--shell-border)] rounded-lg px-2 py-1 outline-none focus:border-white/20 transition-colors"
                                         >
                                             <option value="todos">Todos os Estados</option>
                                             <option value="SP">São Paulo (SP)</option>
@@ -3821,7 +3825,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     <div className="overflow-x-auto flex-1">
                                         <table className="w-full text-left text-xs whitespace-nowrap">
                                             <thead className="bg-[var(--shell-surface)] border-b border-[var(--shell-border)]">
-                                                <tr className="text-zinc-500 font-bold uppercase tracking-wider">
+                                                <tr className="text-[var(--muted)] font-bold uppercase tracking-wider">
                                                     <th className="px-6 py-3">Cidade</th>
                                                     <th className="px-6 py-3 text-right">{isInstagram ? "Contas Alcançadas" : "Curtidas da Pág."}</th>
                                                     <th className="px-6 py-3 text-right">{isInstagram ? "Variação" : "Cresc. Absoluto"}</th>
@@ -3835,23 +3839,23 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     .map((item, idx) => (
                                                         <tr key={idx} className="hover:bg-[var(--shell-side)] transition-colors">
                                                             <td className="px-6 py-3 font-bold text-[var(--foreground)]">{item.city}</td>
-                                                            <td className="px-6 py-3 text-right font-mono text-zinc-400">
+                                                            <td className="px-6 py-3 text-right font-mono text-[var(--muted)]">
                                                                 {formatNumber(item.likes)}
-                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}`}>
                                                                     {item.growth > 0 ? '+' : ''}{(item.growth / item.likes * 100).toFixed(1)}%
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-3 text-right font-mono">
-                                                                <span className={item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                                                                <span className={item.growth >= 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}>
                                                                     {item.growth > 0 ? '+' : ''}{item.growth}
                                                                 </span>
-                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500/70' : 'text-rose-500/70'} opacity-70`}>
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-[var(--foreground)]/70' : 'text-[var(--muted)]'} opacity-70`}>
                                                                     {item.growth > 0 ? '+' : ''}{(item.growth * 10).toFixed(1)}% est.
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-3 text-right font-mono font-bold text-[var(--foreground)]">
                                                                 {item.percentage}%
-                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}`}>
                                                                     {item.growth > 0 ? '+' : ''}0.2%
                                                                 </div>
                                                             </td>
@@ -3872,8 +3876,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-center">
                                         <div>
-                                            <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">{isInstagram ? "Cidades por Faixa Etária" : "Cidades por Idade"}</h3>
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{isInstagram ? "Contas por faixa etária" : "Fãs por faixa etária"}</p>
+                                            <h3 className="text-4xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">{isInstagram ? "Cidades por Faixa Etária" : "Cidades por Idade"}</h3>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground)]">{isInstagram ? "Contas por faixa etária" : "Fãs por faixa etária"}</p>
                                         </div>
                                         <div className="flex items-center gap-2 bg-[var(--shell-surface)] rounded-lg p-1 border border-[var(--shell-border)]">
                                             <button
@@ -3884,7 +3888,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 disabled={activeAgeGroupIndex === 0}
                                                 className="p-1 hover:bg-[var(--shell-side)] rounded disabled:opacity-30 transition-colors"
                                             >
-                                                <ChevronLeftIcon className="w-3 h-3 text-zinc-500" />
+                                                <ChevronLeftIcon className="w-3 h-3 text-[var(--muted)]" />
                                             </button>
                                             <span className="text-[10px] font-black min-w-[50px] text-center text-[var(--foreground)]">
                                                 {data.demographics.cities_by_age && data.demographics.cities_by_age[activeAgeGroupIndex]?.age_group}
@@ -3897,14 +3901,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 disabled={!data.demographics?.cities_by_age || activeAgeGroupIndex === data.demographics.cities_by_age.length - 1}
                                                 className="p-1 hover:bg-[var(--shell-side)] rounded disabled:opacity-30 transition-colors"
                                             >
-                                                <ChevronRightIcon className="w-3 h-3 text-zinc-500" />
+                                                <ChevronRightIcon className="w-3 h-3 text-[var(--muted)]" />
                                             </button>
                                         </div>
                                     </div>
                                     <div className="overflow-x-auto flex-1">
                                         <table className="w-full text-left text-xs whitespace-nowrap">
                                             <thead className="bg-[var(--shell-surface)] border-b border-[var(--shell-border)]">
-                                                <tr className="text-zinc-500 font-bold uppercase tracking-wider">
+                                                <tr className="text-[var(--muted)] font-bold uppercase tracking-wider">
                                                     <th className="px-6 py-3">Cidade</th>
                                                     <th className="px-6 py-3 text-right">{isInstagram ? "Contas Alcançadas" : "Fãs"}</th>
                                                     <th className="px-6 py-3 text-right">{isInstagram ? "Variação" : "Cresc. Absoluto"}</th>
@@ -3918,23 +3922,23 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         .map((city, idx) => (
                                                             <tr key={idx} className="hover:bg-[var(--shell-side)] transition-colors">
                                                                 <td className="px-6 py-3 font-bold text-[var(--foreground)]">{city.city}</td>
-                                                                <td className="px-6 py-3 text-right font-mono text-zinc-400">
+                                                                <td className="px-6 py-3 text-right font-mono text-[var(--muted)]">
                                                                     {formatNumber(city.fans)}
-                                                                    <div className={`text-[9px] ${(city.growth || 0) >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                    <div className={`text-[9px] ${(city.growth || 0) >= 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}`}>
                                                                         {(city.growth || 0) > 0 ? '+' : ''}{((city.growth || 0) / (city.fans || 1) * 100).toFixed(1)}%
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-6 py-3 text-right font-mono">
-                                                                    <span className={(city.growth || 0) >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                                                                    <span className={(city.growth || 0) >= 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}>
                                                                         {(city.growth || 0) > 0 ? '+' : ''}{city.growth || 0}
                                                                     </span>
-                                                                    <div className={`text-[9px] ${(city.growth || 0) >= 0 ? 'text-emerald-500/70' : 'text-rose-500/70'} opacity-70`}>
+                                                                    <div className={`text-[9px] ${(city.growth || 0) >= 0 ? 'text-[var(--foreground)]/70' : 'text-[var(--muted)]'} opacity-70`}>
                                                                         {(city.growth || 0) > 0 ? '+' : ''}{((city.growth || 0) * 10).toFixed(1)}% est.
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-6 py-3 text-right font-mono font-bold text-[var(--foreground)]">
                                                                     {city.percentage ?? ((city.fans / (data.demographics?.cities_by_age?.[activeAgeGroupIndex]?.cities.reduce((acc, c) => acc + c.fans, 0) || 1)) * 100).toFixed(1)}%
-                                                                    <div className={`text-[9px] ${(city.growth || 0) >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                    <div className={`text-[9px] ${(city.growth || 0) >= 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}`}>
                                                                         {(city.growth || 0) > 0 ? '+' : ''}0.2%
                                                                     </div>
                                                                 </td>
@@ -3961,19 +3965,19 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex justify-between items-start">
                                         <div>
-                                            <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">Cidades por Gênero</h3>
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Classificado por %</p>
+                                            <h3 className="text-4xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">Cidades por Gênero</h3>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground)]">Classificado por %</p>
                                         </div>
                                         <div className="flex bg-[var(--shell-surface)] rounded-lg p-0.5 border border-[var(--shell-border)]">
                                             <button
                                                 onClick={() => setGenderSort('female')}
-                                                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${genderSort === 'female' ? 'bg-orange-400 text-white shadow-sm' : 'text-zinc-500 hover:text-[var(--foreground)]'}`}
+                                                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${genderSort === 'female' ? 'bg-[var(--shell-border)] text-[var(--foreground)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--foreground)]'}`}
                                             >
                                                 Mulheres
                                             </button>
                                             <button
                                                 onClick={() => setGenderSort('male')}
-                                                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${genderSort === 'male' ? 'bg-sky-500 text-white shadow-sm' : 'text-zinc-500 hover:text-[var(--foreground)]'}`}
+                                                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-all ${genderSort === 'male' ? 'bg-[var(--shell-border)] text-[var(--foreground)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--foreground)]'}`}
                                             >
                                                 Homens
                                             </button>
@@ -3988,13 +3992,13 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     <div className="flex justify-between text-[12px] font-bold text-[var(--foreground)]">
                                                         <span>{item.city}</span>
                                                         <div className="flex gap-2 text-[11px]">
-                                                            <span className={`transition-colors ${genderSort === 'female' ? 'text-orange-400 font-black' : 'text-zinc-400'}`}>Mulheres {item.female}%</span>
-                                                            <span className={`transition-colors ${genderSort === 'male' ? 'text-sky-500 font-black' : 'text-zinc-400'}`}>Homens {item.male}%</span>
+                                                            <span className={`transition-colors ${genderSort === 'female' ? 'text-[var(--foreground)] font-black' : 'text-[var(--muted)]'}`}>Mulheres {item.female}%</span>
+                                                            <span className={`transition-colors ${genderSort === 'male' ? 'text-[var(--foreground)] font-black' : 'text-[var(--muted)]'}`}>Homens {item.male}%</span>
                                                         </div>
                                                     </div>
                                                     <div className="flex h-1.5 w-full rounded-full overflow-hidden bg-[var(--shell-border)]">
-                                                        <div className={`h-full transition-all duration-500 ${genderSort === 'female' ? 'bg-orange-400' : 'bg-orange-400/30'}`} style={{ width: `${item.female}%` }} />
-                                                        <div className={`h-full transition-all duration-500 ${genderSort === 'male' ? 'bg-sky-500' : 'bg-sky-500/30'}`} style={{ width: `${item.male}%` }} />
+                                                        <div className={`h-full transition-all duration-500 ${genderSort === 'female' ? 'bg-[var(--shell-border)]' : 'bg-[var(--shell-border)]/30'}`} style={{ width: `${item.female}%` }} />
+                                                        <div className={`h-full transition-all duration-500 ${genderSort === 'male' ? 'bg-[var(--shell-border)]' : 'bg-[var(--shell-border)]/30'}`} style={{ width: `${item.male}%` }} />
                                                     </div>
                                                 </div>
                                             ))}
@@ -4010,13 +4014,13 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 {/* 4. Countries Table (Bottom Right) */}
                                 <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)]">
-                                        <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">{isInstagram ? "Audiência por Geografia - País" : "Fãs por Geografia - País"}</h3>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{isInstagram ? "De onde vem a audiência que o conteúdo alcança." : "De onde vêm os seus fãs"}</p>
+                                        <h3 className="text-4xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">{isInstagram ? "Audiência por Geografia - País" : "Fãs por Geografia - País"}</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground)]">{isInstagram ? "De onde vem a audiência que o conteúdo alcança." : "De onde vêm os seus fãs"}</p>
                                     </div>
                                     <div className="overflow-x-auto flex-1">
                                         <table className="w-full text-left text-xs whitespace-nowrap">
                                             <thead className="bg-[var(--shell-surface)] border-b border-[var(--shell-border)]">
-                                                <tr className="text-zinc-500 font-bold uppercase tracking-wider">
+                                                <tr className="text-[var(--muted)] font-bold uppercase tracking-wider">
                                                     <th className="px-6 py-3">País</th>
                                                     <th className="px-6 py-3 text-right">{isInstagram ? "Contas Alcançadas" : "Curtidas da Pág."}</th>
                                                     <th className="px-6 py-3 text-right">{isInstagram ? "Variação" : "Cresc. Absoluto"}</th>
@@ -4029,23 +4033,23 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     .map((item, idx) => (
                                                         <tr key={idx} className="hover:bg-[var(--shell-side)] transition-colors">
                                                             <td className="px-6 py-3 font-bold text-[var(--foreground)]">{item.country}</td>
-                                                            <td className="px-6 py-3 text-right font-mono text-zinc-400">
+                                                            <td className="px-6 py-3 text-right font-mono text-[var(--muted)]">
                                                                 {formatNumber(item.likes)}
-                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}`}>
                                                                     {item.growth > 0 ? '+' : ''}{(item.growth / item.likes * 100).toFixed(1)}%
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-3 text-right font-mono">
-                                                                <span className={item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
+                                                                <span className={item.growth >= 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}>
                                                                     {item.growth > 0 ? '+' : ''}{item.growth}
                                                                 </span>
-                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500/70' : 'text-rose-500/70'} opacity-70`}>
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-[var(--foreground)]/70' : 'text-[var(--muted)]'} opacity-70`}>
                                                                     {item.growth > 0 ? '+' : ''}{(item.growth * 10).toFixed(1)}% est.
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-3 text-right font-mono font-bold text-[var(--foreground)]">
                                                                 {item.percentage}%
-                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                                <div className={`text-[9px] ${item.growth >= 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}`}>
                                                                     {item.growth > 0 ? '+' : ''}0.2%
                                                                 </div>
                                                             </td>
@@ -4068,25 +4072,25 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                 <div className="liquid-glass overflow-hidden flex flex-col h-full">
                                     <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)] flex items-start justify-between gap-4">
                                         <div>
-                                            <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">Seguidores</h3>
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Fluxo de entrada/saída e evolução no período.</p>
+                                            <h3 className="text-4xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">Seguidores</h3>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground)]">Fluxo de entrada/saída e evolução no período.</p>
                                         </div>
                                         <div className="flex bg-[var(--shell-surface)] rounded-xl p-0.5 border border-[var(--shell-border)]">
                                             <button
                                                 onClick={() => setFollowersInterval("daily")}
-                                                className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${followersInterval === "daily" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                                className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${followersInterval === "daily" ? "bg-white/10 text-[var(--foreground)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                                             >
                                                 Diário
                                             </button>
                                             <button
                                                 onClick={() => setFollowersInterval("weekly")}
-                                                className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${followersInterval === "weekly" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                                className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${followersInterval === "weekly" ? "bg-white/10 text-[var(--foreground)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                                             >
                                                 Semanal
                                             </button>
                                             <button
                                                 onClick={() => setFollowersInterval("monthly")}
-                                                className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${followersInterval === "monthly" ? "bg-blue-500 text-white shadow-sm" : "text-zinc-500 hover:text-[var(--foreground)]"}`}
+                                                className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${followersInterval === "monthly" ? "bg-white/10 text-[var(--foreground)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                                             >
                                                 Mensal
                                             </button>
@@ -4096,11 +4100,11 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                     <div className="p-6 flex flex-col gap-6">
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <h4 className="text-sm font-black tracking-tight text-blue-500">Novos vs Deixaram de seguir</h4>
-                                                <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-3 py-1">
-                                                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">Novos vs Deixaram de seguir</h4>
+                                                <div className="flex items-center gap-2 text-[10px] font-black text-[var(--muted)] bento-cell rounded-full px-3 py-1">
+                                                    <span className="w-2 h-2 rounded-full bg-white/20" />
                                                     Novos
-                                                    <span className="w-2 h-2 rounded-full bg-rose-500 ml-2" />
+                                                    <span className="w-2 h-2 rounded-full bg-[var(--shell-border)] ml-2" />
                                                     Saídas
                                                 </div>
                                             </div>
@@ -4109,7 +4113,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 const barMax = 100;
 
                                                 return (
-                                                    <div className="relative h-[280px] rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] p-4 overflow-hidden">
+                                                    <div className="relative h-[280px] rounded-2xl bento-cell bg-[var(--shell-side)] p-4 overflow-hidden">
                                                         <div className="absolute left-4 right-4 top-1/2 h-px bg-[var(--shell-border)]" />
                                                         <div className="absolute left-4 right-4 top-6 h-px bg-[var(--shell-border)] opacity-40" />
                                                         <div className="absolute left-4 right-4 bottom-6 h-px bg-[var(--shell-border)] opacity-40" />
@@ -4121,16 +4125,16 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                 return (
                                                                     <div key={p.label} className="flex-1 h-full flex flex-col items-stretch justify-end gap-2 min-w-[18px]">
                                                                         <div className="relative flex-1 flex items-center justify-center">
-                                                                            <div className="absolute left-1/2 top-1/2 h-[52px] -translate-x-1/2 border-l border-dashed border-zinc-500/35" />
+                                                                            <div className="absolute left-1/2 top-1/2 h-[52px] -translate-x-1/2 border-l border-dashed border-[var(--shell-border)]/35" />
                                                                             <div className="absolute left-0 right-0 top-1/2 -translate-y-full flex items-end justify-center">
-                                                                                <div className="w-full max-w-[22px] rounded-t-lg bg-emerald-500/90 shadow-[0_10px_30px_rgba(16,185,129,0.15)]" style={{ height: `${up}px` }} title={`Novos: ${p.gained.toLocaleString('pt-BR')}`} />
+                                                                                <div className="w-full max-w-[22px] rounded-t-lg bg-[var(--foreground)]/20 shadow-[0_10px_30px_rgba(16,185,129,0.15)]" style={{ height: `${up}px` }} title={`Novos: ${p.gained.toLocaleString('pt-BR')}`} />
                                                                             </div>
                                                                             <div className="absolute left-0 right-0 top-1/2 flex items-start justify-center">
-                                                                                <div className="w-full max-w-[22px] rounded-b-lg bg-rose-500/85 shadow-[0_10px_30px_rgba(244,63,94,0.15)]" style={{ height: `${down}px` }} title={`Saídas: ${p.lost.toLocaleString('pt-BR')}`} />
+                                                                                <div className="w-full max-w-[22px] rounded-b-lg bg-[var(--shell-border)]/85 shadow-[0_10px_30px_rgba(244,63,94,0.15)]" style={{ height: `${down}px` }} title={`Saídas: ${p.lost.toLocaleString('pt-BR')}`} />
                                                                             </div>
                                                                         </div>
                                                                         <div className="h-8 flex items-start justify-center">
-                                                                            <span className="inline-block -rotate-35 origin-top text-[8px] font-bold text-zinc-500 text-left font-mono tracking-tight">
+                                                                            <span className="inline-block -rotate-35 origin-top text-[8px] font-bold text-[var(--muted)] text-left font-mono tracking-tight">
                                                                                 {p.label}
                                                                             </span>
                                                                         </div>
@@ -4139,7 +4143,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             })}
                                                         </div>
 
-                                                        <div className="absolute top-4 right-4 text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+                                                        <div className="absolute top-4 right-4 text-[10px] font-black text-[var(--muted)] bento-cell rounded-full px-2 py-1">
                                                             Net: {followersSeries[followersSeries.length - 1]?.cumulative >= 0 ? "+" : ""}
                                                             {followersSeries[followersSeries.length - 1]?.cumulative.toLocaleString('pt-BR')}
                                                         </div>
@@ -4149,7 +4153,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         </div>
 
                                         <div className="space-y-3">
-                                            <h4 className="text-sm font-black tracking-tight text-blue-500">Aumento de seguidores</h4>
+                                            <h4 className="text-sm font-black tracking-tight text-[var(--foreground)]">Aumento de seguidores</h4>
                                             {(() => {
                                                 const values = followersSeries.map(p => p.cumulative);
                                                 const min = Math.min(...values, 0);
@@ -4172,7 +4176,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 const area = `${path} L ${xAt(followersSeries.length - 1).toFixed(1)} ${yAt(min).toFixed(1)} L ${xAt(0).toFixed(1)} ${yAt(min).toFixed(1)} Z`;
 
                                                 return (
-                                                    <div className="relative h-[280px] rounded-2xl bg-[var(--shell-side)] border border-[var(--shell-border)] p-4 overflow-hidden">
+                                                    <div className="relative h-[280px] rounded-2xl bento-cell bg-[var(--shell-side)] p-4 overflow-hidden">
                                                         <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full">
                                                             <defs>
                                                                 <linearGradient id="followersArea" x1="0" y1="0" x2="0" y2="1">
@@ -4180,9 +4184,9 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                     <stop offset="100%" stopColor="rgba(59,130,246,0)" />
                                                                 </linearGradient>
                                                                 <linearGradient id="followersStroke" x1="0" y1="0" x2="1" y2="0">
-                                                                    <stop offset="0%" stopColor="#06b6d4" />
-                                                                    <stop offset="60%" stopColor="#3b82f6" />
-                                                                    <stop offset="100%" stopColor="#6366f1" />
+                                                                    <stop offset="0%" stopColor="#AAB3C0" />
+                                                                    <stop offset="60%" stopColor="#AAB3C0" />
+                                                                    <stop offset="100%" stopColor="#AAB3C0" />
                                                                 </linearGradient>
                                                             </defs>
 
@@ -4202,7 +4206,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                         strokeWidth="1"
                                                                         strokeDasharray="3 4"
                                                                     />
-                                                                    <circle cx={xAt(i)} cy={yAt(p.cumulative)} r="4" fill="#3b82f6" opacity="0.95" />
+                                                                    <circle cx={xAt(i)} cy={yAt(p.cumulative)} r="4" fill="#F0F3F7" opacity="0.95" />
                                                                     <circle cx={xAt(i)} cy={yAt(p.cumulative)} r="10" fill="transparent" />
                                                                 </g>
                                                             ))}
@@ -4223,7 +4227,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             ))}
                                                         </svg>
 
-                                                        <div className="absolute top-4 left-4 text-[10px] font-black text-zinc-500 bg-[var(--shell-surface)] border border-[var(--shell-border)] rounded-full px-2 py-1">
+                                                        <div className="absolute top-4 left-4 text-[10px] font-black text-[var(--muted)] bento-cell rounded-full px-2 py-1">
                                                             Net: {followersSeries[followersSeries.length - 1]?.cumulative >= 0 ? "+" : ""}
                                                             {followersSeries[followersSeries.length - 1]?.cumulative.toLocaleString('pt-BR')}
                                                         </div>

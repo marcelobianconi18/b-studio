@@ -32,11 +32,8 @@ export default function WarRoomTerminalCard() {
     }, []);
 
     return (
-        <div
-            className="h-full w-full rounded-3xl p-6 shadow-sm border flex flex-col overflow-hidden relative group"
-            style={{ backgroundColor: "var(--shell-surface)", borderColor: "var(--shell-border)" }} // Now uses theme variables
-        >
-            <div className="absolute inset-0 bg-red-500/5 pointer-events-none rounded-3xl" />
+        <div className="h-full w-full p-6 flex flex-col overflow-hidden relative group transition-all duration-300 bento-cell hover-spring">
+            <div className="absolute inset-0 bg-[white]/5 pointer-events-none rounded-3xl" />
 
             {/* Header */}
             <div
@@ -44,10 +41,10 @@ export default function WarRoomTerminalCard() {
                 style={{ borderColor: "var(--shell-border)" }}
             >
                 <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                    <h1 className="text-sm font-black uppercase tracking-widest text-red-500">WAR ROOM TERMINAL</h1>
+                    <span className="w-2 h-2 rounded-full bg-[white] animate-pulse shadow-sm"></span>
+                    <h1 className="text-sm font-black uppercase tracking-widest text-[white] drop-shadow-sm">WAR ROOM TERMINAL</h1>
                 </div>
-                <div className="text-[10px] font-mono text-zinc-500">
+                <div className="text-[10px] font-mono text-[var(--muted)]">
                     LIVE FEED • GUARDIAN ACTIVE
                 </div>
             </div>
@@ -59,28 +56,28 @@ export default function WarRoomTerminalCard() {
                         key={index}
                         className="flex gap-3 p-2 rounded transition-colors hover:bg-[var(--shell-side)]"
                     >
-                        <span className="text-zinc-500 shrink-0">[{log.time}]</span>
+                        <span className="text-[var(--muted)] shrink-0">[{log.time}]</span>
                         <div className="flex-1">
                             {log.type === "CRITICAL" && (
-                                <span className="flex items-start gap-2 text-red-500 font-bold">
+                                <span className="flex items-start gap-2 text-[white] font-bold">
                                     <ExclamationTriangleIcon className="w-4 h-4 shrink-0" />
                                     <span>[CRÍTICO] {log.message}</span>
                                 </span>
                             )}
                             {log.type === "GUARDIAN" && (
-                                <span className="flex items-start gap-2 text-emerald-500 font-bold">
+                                <span className="flex items-start gap-2 text-[white] font-bold">
                                     <ShieldCheckIcon className="w-4 h-4 shrink-0" />
                                     <span>[GUARDIAN] {log.message}</span>
                                 </span>
                             )}
                             {log.type === "OPPORTUNITY" && (
-                                <span className="flex items-start gap-2 text-blue-500 font-bold">
+                                <span className="flex items-start gap-2 text-[var(--muted)] font-bold">
                                     <SparklesIcon className="w-4 h-4 shrink-0" />
                                     <span>[OPPORTUNITY] {log.message}</span>
                                 </span>
                             )}
                             {log.type === "SYSTEM" && (
-                                <span className="flex items-start gap-2 text-zinc-400">
+                                <span className="flex items-start gap-2 text-[var(--muted)]">
                                     <InformationCircleIcon className="w-4 h-4 shrink-0" />
                                     <span>[SISTEMA] {log.message}</span>
                                 </span>

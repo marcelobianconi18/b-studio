@@ -88,33 +88,33 @@ const AGE_BRACKETS = ["18-24", "25-34", "35-44", "45-54"];
 const WEEK_DAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 const getToneByRetentionRate = (rate: number) => {
-    if (rate >= 40) return "bg-emerald-500/20 text-emerald-400";
-    if (rate >= 28) return "bg-amber-500/20 text-amber-400";
-    return "bg-rose-500/20 text-rose-400";
+    if (rate >= 40) return "bg-white/10/20 text-[var(--foreground)]";
+    if (rate >= 28) return "bg-[var(--shell-border)]/20 text-[var(--foreground)]";
+    return "bg-[var(--shell-border)]/20 text-[var(--foreground)]";
 };
 
 const getBarByRetentionRate = (rate: number) => {
-    if (rate >= 40) return "bg-emerald-500";
-    if (rate >= 28) return "bg-amber-400";
-    return "bg-rose-500";
+    if (rate >= 40) return "bg-white/10";
+    if (rate >= 28) return "bg-[var(--shell-border)]";
+    return "bg-[var(--shell-border)]";
 };
 
 const getToneByEngagementRate = (rate: number) => {
-    if (rate >= 8) return "bg-emerald-500/20 text-emerald-400";
-    if (rate >= 4) return "bg-amber-500/20 text-amber-400";
-    return "bg-rose-500/20 text-rose-400";
+    if (rate >= 8) return "bg-white/10/20 text-[var(--foreground)]";
+    if (rate >= 4) return "bg-[var(--shell-border)]/20 text-[var(--foreground)]";
+    return "bg-[var(--shell-border)]/20 text-[var(--foreground)]";
 };
 
 const getToneByFollowersViewRate = (rate: number) => {
-    if (rate >= 35) return "bg-emerald-500/20 text-emerald-400";
-    if (rate >= 20) return "bg-amber-500/20 text-amber-400";
-    return "bg-zinc-500/20 text-zinc-300";
+    if (rate >= 35) return "bg-white/10/20 text-[var(--foreground)]";
+    if (rate >= 20) return "bg-[var(--shell-border)]/20 text-[var(--foreground)]";
+    return "bg-[var(--shell-border)]/20 text-[var(--foreground)]";
 };
 
 const getToneByDominantGender = (gender: "Mulheres" | "Homens") => {
     return gender === "Mulheres"
         ? "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-300 border-fuchsia-500/30"
-        : "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30";
+        : "bg-[var(--shell-border)]/15 text-[var(--foreground)] dark:text-[var(--foreground)] border-[var(--shell-border)]/30";
 };
 
 export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }: InstagramReelsMiniAnalysisProps) {
@@ -270,73 +270,73 @@ export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }
     if (!winner || topRows.length === 0) return null;
 
     return (
-        <div className="lg:col-span-2 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white/90 dark:bg-[var(--shell-surface)] shadow-sm">
-            <div className="px-4 py-3 border-b border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-[var(--shell-side)] rounded-t-3xl">
-                <h3 className="text-[11px] uppercase tracking-widest font-black text-zinc-500 dark:text-zinc-400">
+        <div className="lg:col-span-2 bento-cell liquid-glass">
+            <div className="px-4 py-3 border-b border-[var(--shell-border)]/50 bg-[var(--shell-side)]/50">
+                <h3 className="text-[11px] uppercase tracking-widest font-black text-[var(--foreground)] dark:text-[var(--foreground)]">
                     Análise de Reels (Mini Lista)
                 </h3>
             </div>
 
             <div className="p-4 md:p-5 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-8 gap-x-2 gap-y-1.5">
-                    <div className="h-[135px] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/85 dark:bg-zinc-900/45 p-4 flex flex-col justify-between xl:col-span-2 xl:col-start-1 xl:row-start-1">
-                        <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400 font-black">Total de Reels</div>
-                        <div className="text-5xl leading-none font-black tracking-tight text-zinc-900 dark:text-zinc-100">{summary.totalReels}</div>
-                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                            Total de minutos: <span className="font-black text-zinc-700 dark:text-zinc-200">{formatMinutes(summary.totalDurationSec)}</span>
+                    <div className="h-[135px] bento-cell bg-[var(--shell-border)]/30 p-4 flex flex-col justify-between xl:col-span-2 xl:col-start-1 xl:row-start-1">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--foreground)] dark:text-[var(--foreground)] font-black">Total de Reels</div>
+                        <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)] ">{summary.totalReels}</div>
+                        <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">
+                            Total de minutos: <span className="font-black text-[var(--foreground)] ">{formatMinutes(summary.totalDurationSec)}</span>
                         </div>
                     </div>
 
-                    <div className="h-[135px] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/85 dark:bg-zinc-900/45 p-4 flex flex-col justify-between xl:col-span-2 xl:col-start-3 xl:row-start-1">
-                        <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400 font-black">Tempo Médio</div>
-                        <div className="text-5xl leading-none font-black tracking-tight text-zinc-900 dark:text-zinc-100">{formatSeconds(summary.avgWatchSec)}</div>
-                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <div className="h-[135px] bento-cell bg-[var(--shell-border)]/30 p-4 flex flex-col justify-between xl:col-span-2 xl:col-start-3 xl:row-start-1">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--foreground)] dark:text-[var(--foreground)] font-black">Tempo Médio</div>
+                        <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)] ">{formatSeconds(summary.avgWatchSec)}</div>
+                        <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">
                             Média assistida por Reel ({formatSeconds(summary.avgDurationSec)} de duração média)
                         </div>
                     </div>
 
-                    <div className="h-[135px] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/85 dark:bg-zinc-900/45 p-4 flex flex-col justify-between xl:col-span-2 xl:row-start-2 xl:col-start-1">
-                        <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400 font-black">Compartilhamentos</div>
-                        <div className="text-5xl leading-none font-black tracking-tight text-zinc-900 dark:text-zinc-100">{formatNumber(summary.totalShares)}</div>
-                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <div className="h-[135px] bento-cell bg-[var(--shell-border)]/30 p-4 flex flex-col justify-between xl:col-span-2 xl:row-start-2 xl:col-start-1">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--foreground)] dark:text-[var(--foreground)] font-black">Compartilhamentos</div>
+                        <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)] ">{formatNumber(summary.totalShares)}</div>
+                        <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">
                             Soma de shares dos reels analisados
                         </div>
                     </div>
 
-                    <div className="h-[135px] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/85 dark:bg-zinc-900/45 p-4 flex flex-col justify-between xl:col-span-2 xl:row-start-2 xl:col-start-3">
-                        <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400 font-black">Engajamentos</div>
-                        <div className="text-5xl leading-none font-black tracking-tight text-zinc-900 dark:text-zinc-100">{formatNumber(summary.totalEngagements)}</div>
-                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <div className="h-[135px] bento-cell bg-[var(--shell-border)]/30 p-4 flex flex-col justify-between xl:col-span-2 xl:row-start-2 xl:col-start-3">
+                        <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--foreground)] dark:text-[var(--foreground)] font-black">Engajamentos</div>
+                        <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)] ">{formatNumber(summary.totalEngagements)}</div>
+                        <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">
                             Reações + comentários + shares + salvos
                         </div>
                     </div>
 
-                    <div className="md:col-span-2 xl:col-span-2 xl:col-start-5 xl:row-span-2 xl:h-[276px] rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4 flex flex-col">
+                    <div className="md:col-span-2 xl:col-span-2 xl:col-start-5 xl:row-span-2 xl:h-[276px] bento-cell bg-[var(--shell-surface)]/20 p-4 flex flex-col">
                         <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-lg bg-blue-500/25 text-blue-300 inline-flex items-center justify-center text-[11px]">◷</span>
-                            <h4 className="text-sm font-black text-zinc-900 dark:text-zinc-100">Melhores Horários • Reels</h4>
+                            <span className="w-5 h-5 rounded-lg bg-white/10/25 text-[var(--foreground)] inline-flex items-center justify-center text-[11px]">◷</span>
+                            <h4 className="text-sm font-black text-[var(--foreground)] ">Melhores Horários • Reels</h4>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-2">
-                            <div className="rounded-xl border border-blue-500/35 bg-blue-500/10 px-3 py-2">
-                                <div className="text-[9px] uppercase tracking-[0.14em] font-black text-blue-500 dark:text-blue-300">Melhor horário</div>
-                                <div className="text-3xl leading-none font-black text-zinc-900 dark:text-zinc-100 mt-1">{bestPublishWindow.hour}</div>
+                            <div className="rounded-xl bento-cell bg-[var(--shell-border)]/10 px-3 py-2">
+                                <div className="text-[9px] uppercase tracking-[0.14em] font-black text-[var(--foreground)] ">Melhor horário</div>
+                                <div className="text-3xl leading-none font-black text-[var(--foreground)]  mt-1">{bestPublishWindow.hour}</div>
                             </div>
-                            <div className="rounded-xl border border-cyan-500/35 bg-cyan-500/10 px-3 py-2">
-                                <div className="text-[9px] uppercase tracking-[0.14em] font-black text-cyan-600 dark:text-cyan-300">Melhor dia</div>
-                                <div className="text-3xl leading-none font-black text-zinc-900 dark:text-zinc-100 mt-1">{bestPublishWindow.day}</div>
+                            <div className="rounded-xl border border-[var(--shell-border)]/35 bg-[var(--shell-border)]/10 px-3 py-2">
+                                <div className="text-[9px] uppercase tracking-[0.14em] font-black text-[var(--foreground)] dark:text-[var(--foreground)]">Melhor dia</div>
+                                <div className="text-3xl leading-none font-black text-[var(--foreground)]  mt-1">{bestPublishWindow.day}</div>
                             </div>
                         </div>
-                        <div className="mt-auto pt-2 text-[11px] text-zinc-600 dark:text-zinc-400">
+                        <div className="mt-auto pt-2 text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">
                             Baseado em interação média dos Reels.
                         </div>
                     </div>
 
-                    <div className="md:col-span-2 xl:col-span-2 xl:col-start-7 xl:row-span-2 xl:h-[276px] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/50 p-3 flex flex-col overflow-hidden">
-                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 dark:text-zinc-400 font-black">
+                    <div className="md:col-span-2 xl:col-span-2 xl:col-start-7 xl:row-span-2 xl:h-[276px] bento-cell bg-[var(--shell-surface)]/10 p-3 flex flex-col overflow-hidden">
+                        <div className="text-[10px] uppercase tracking-widest text-[var(--foreground)] dark:text-[var(--foreground)] font-black">
                             Resumo de audiência
                         </div>
-                        <div className="mt-1 text-[11px] text-zinc-600 dark:text-zinc-400">
-                            {summary.dominantAudienceLabel}: <span className="font-black text-zinc-900 dark:text-zinc-100">{summary.dominantAudienceRate}%</span> das views.
+                        <div className="mt-1 text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">
+                            {summary.dominantAudienceLabel}: <span className="font-black text-[var(--foreground)] ">{summary.dominantAudienceRate}%</span> das views.
                         </div>
 
                         <div className="mt-2 flex-1 min-h-0 grid grid-cols-[1fr_auto_1fr] items-center">
@@ -346,27 +346,27 @@ export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }
                                     background: `conic-gradient(rgb(251 146 60) 0 ${summary.followersSeenRate}%, rgb(14 165 233) ${summary.followersSeenRate}% 100%)`,
                                 }}
                             >
-                                <div className="absolute inset-[28px] rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col items-center justify-center px-2 text-center">
-                                    <span className="w-full text-center text-[2rem] leading-none font-black tabular-nums text-zinc-900 dark:text-white">
+                                <div className="absolute inset-[28px] rounded-full border border-[var(--shell-border)] bg-[var(--shell-surface)] flex flex-col items-center justify-center px-2 text-center shadow-inner">
+                                    <span className="w-full text-center text-[2rem] leading-none font-black tabular-nums text-[var(--foreground)] ">
                                         {summary.dominantAudienceRate}%
                                     </span>
-                                    <span className="mt-1 text-[9px] leading-[1.1] uppercase tracking-[0.04em] font-black text-zinc-900 dark:text-white max-w-[84px]">
+                                    <span className="mt-1 text-[9px] leading-[1.1] uppercase tracking-[0.04em] font-black text-[var(--foreground)]  max-w-[84px]">
                                         {summary.isFollowersMajority ? "SEGUIDORES" : "NÃO SEGUIDORES"}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="min-w-[118px] space-y-1.5 col-start-3 justify-self-start ml-3">
-                                <div className="flex items-center justify-between text-[10px] text-zinc-700 dark:text-zinc-300">
+                                <div className="flex items-center justify-between text-[10px] text-[var(--foreground)] ">
                                     <div className="flex items-center gap-2">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-orange-400" />
+                                        <span className="w-2.5 h-2.5 rounded-full bg-[var(--shell-border)]" />
                                         <span className="font-black uppercase tracking-[0.04em]">Seguidores</span>
                                     </div>
                                     <span className="font-black">{summary.followersSeenRate}%</span>
                                 </div>
-                                <div className="flex items-center justify-between text-[10px] text-zinc-700 dark:text-zinc-300">
+                                <div className="flex items-center justify-between text-[10px] text-[var(--foreground)] ">
                                     <div className="flex items-center gap-2">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                                        <span className="w-2.5 h-2.5 rounded-full bg-[var(--shell-border)]" />
                                         <span className="font-black uppercase tracking-[0.04em]">Não seguidores</span>
                                     </div>
                                     <span className="font-black">{summary.nonFollowersSeenRate}%</span>
@@ -376,25 +376,25 @@ export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-cyan-200/70 dark:border-cyan-500/30 bg-white/50 dark:bg-zinc-950/45 p-3 md:p-4 space-y-4">
+                <div className="bento-cell bg-[var(--shell-border)]/10 p-3 md:p-4 space-y-4">
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
-                        <div className="xl:col-span-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900/40 p-3">
-                            <div className="text-[10px] uppercase tracking-widest font-black text-zinc-500 dark:text-zinc-400 mb-2">
+                        <div className="xl:col-span-4 bento-cell bg-[var(--shell-border)]/20 p-3">
+                            <div className="text-[10px] uppercase tracking-widest font-black text-[var(--foreground)] dark:text-[var(--foreground)] mb-2">
                                 Hero Section (MVP da Semana)
                             </div>
                             <div className="flex gap-3">
-                                <div className="w-24 h-24 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-200 dark:bg-zinc-800 shrink-0 relative">
+                                <div className="w-24 h-24 rounded-xl overflow-hidden bento-cell bg-[var(--shell-surface)] shrink-0 relative">
                                     <img src={winner.post.image} alt={winner.post.message} className="w-full h-full object-cover" />
                                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                        <PlayCircleIcon className="w-7 h-7 text-white/90" />
+                                        <PlayCircleIcon className="w-7 h-7 text-[var(--foreground)]/90" />
                                     </div>
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-xs font-black text-zinc-900 dark:text-zinc-100 leading-tight line-clamp-2">
+                                    <div className="text-xs font-black text-[var(--foreground)]  leading-tight line-clamp-2">
                                         MVP da Semana: Campeão de Distribuição
                                     </div>
-                                    <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 truncate">{winner.audioLabel}</div>
-                                    <div className="mt-2 inline-flex items-center rounded-lg px-2 py-1 text-[10px] font-black bg-emerald-500/20 text-emerald-400">
+                                    <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)] mt-1 truncate">{winner.audioLabel}</div>
+                                    <div className="mt-2 inline-flex items-center rounded-lg px-2 py-1 text-[10px] font-black bg-white/10/20 text-[var(--foreground)]">
                                         🏆 Maior Retenção ({winner.hookRate}%)
                                     </div>
                                 </div>
@@ -402,37 +402,37 @@ export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }
                         </div>
 
                         <div className="xl:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div className="h-[132px] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/85 dark:bg-zinc-900/45 p-4 flex flex-col justify-between">
-                                <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400 font-black">Taxa de Gancho</div>
-                                <div className="text-5xl leading-none font-black tracking-tight text-zinc-900 dark:text-zinc-100">{winner.hookRate}%</div>
-                                <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Retenção nos 3s iniciais</div>
+                            <div className="h-[132px] bento-cell bg-[var(--shell-border)]/20 p-4 flex flex-col justify-between">
+                                <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--foreground)] dark:text-[var(--foreground)] font-black">Taxa de Gancho</div>
+                                <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)] ">{winner.hookRate}%</div>
+                                <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">Retenção nos 3s iniciais</div>
                             </div>
-                            <div className="h-[132px] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/85 dark:bg-zinc-900/45 p-4 flex flex-col justify-between">
-                                <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400 font-black">Tempo Médio</div>
-                                <div className="text-4xl xl:text-5xl leading-none font-black tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
+                            <div className="h-[132px] bento-cell bg-[var(--shell-border)]/20 p-4 flex flex-col justify-between">
+                                <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--foreground)] dark:text-[var(--foreground)] font-black">Tempo Médio</div>
+                                <div className="text-4xl xl:text-5xl leading-none font-black tracking-tight text-[var(--foreground)]  whitespace-nowrap">
                                     {formatSeconds(winner.avgWatchSec)} / {formatSeconds(winner.durationSec)}
                                 </div>
-                                <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Tempo assistido vs duração total</div>
+                                <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">Tempo assistido vs duração total</div>
                             </div>
-                            <div className="h-[132px] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/85 dark:bg-zinc-900/45 p-4 flex flex-col justify-between">
-                                <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400 font-black">Fator Viral</div>
-                                <div className="text-5xl leading-none font-black tracking-tight text-zinc-900 dark:text-zinc-100">{winner.viralFactor.toFixed(1)}%</div>
-                                <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Shares sobre interações totais</div>
+                            <div className="h-[132px] bento-cell bg-[var(--shell-border)]/20 p-4 flex flex-col justify-between">
+                                <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--foreground)] dark:text-[var(--foreground)] font-black">Fator Viral</div>
+                                <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)] ">{winner.viralFactor.toFixed(1)}%</div>
+                                <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">Shares sobre interações totais</div>
                             </div>
-                            <div className="h-[132px] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/85 dark:bg-zinc-900/45 p-4 flex flex-col justify-between">
-                                <div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400 font-black">Conversão Real</div>
-                                <div className="text-5xl leading-none font-black tracking-tight text-zinc-900 dark:text-zinc-100">+{formatNumber(winner.followers)}</div>
-                                <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Novos seguidores do reel</div>
+                            <div className="h-[132px] bento-cell bg-[var(--shell-border)]/20 p-4 flex flex-col justify-between">
+                                <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--foreground)] dark:text-[var(--foreground)] font-black">Conversão Real</div>
+                                <div className="text-5xl leading-none font-black tracking-tight text-[var(--foreground)] ">+{formatNumber(winner.followers)}</div>
+                                <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">Novos seguidores do reel</div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/70 dark:bg-zinc-900/35 overflow-hidden">
-                        <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 flex items-center justify-between gap-3">
-                            <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-500 dark:text-zinc-400">
+                    <div className="bento-cell bg-[var(--shell-border)]/10 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-[var(--shell-border)] bg-[var(--shell-side)]/50 flex items-center justify-between gap-3">
+                            <h4 className="text-[10px] uppercase tracking-widest font-black text-[var(--foreground)] dark:text-[var(--foreground)]">
                                 Ranking de Performance de Reels
                             </h4>
-                            <span className="text-[10px] uppercase tracking-widest font-black text-zinc-400 dark:text-zinc-500">
+                            <span className="text-[10px] uppercase tracking-widest font-black text-[var(--foreground)] dark:text-[var(--foreground)]">
                                 Top {topRows.length} Reels
                             </span>
                         </div>
@@ -440,7 +440,7 @@ export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[1380px] text-sm">
                                 <thead>
-                                    <tr className="text-[10px] uppercase tracking-widest font-black text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-transparent">
+                                    <tr className="text-[10px] uppercase tracking-widest font-black text-[var(--foreground)] border-b border-[var(--shell-border)] bg-[var(--shell-surface)]/50">
                                         <th className="py-2.5 px-3 text-left"># & Conteúdo</th>
                                         <th className="py-2.5 px-3 text-right">👥 Seguidores viram</th>
                                         <th className="py-2.5 px-3 text-right">🧬 Faixa etária pred.</th>
@@ -455,17 +455,17 @@ export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }
                                 </thead>
                                 <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                                     {topRows.map((row, index) => (
-                                        <tr key={row.post.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
+                                        <tr key={row.post.id} className="hover:bg-[var(--shell-border)] dark:hover:bg-[var(--shell-border)]/40 transition-colors">
                                             <td className="py-2.5 px-3">
                                                 <div className="flex items-center gap-2.5 min-w-[360px]">
-                                                    <span className="w-5 text-center text-xs font-black text-zinc-500 dark:text-zinc-400">{index + 1}</span>
-                                                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 shrink-0">
+                                                    <span className="w-5 text-center text-xs font-black text-[var(--foreground)] dark:text-[var(--foreground)]">{index + 1}</span>
+                                                    <div className="w-10 h-10 rounded-lg overflow-hidden bento-cell shrink-0">
                                                         <img src={row.post.image} alt={row.post.message} className="w-full h-full object-cover" />
                                                     </div>
                                                     <div className="min-w-0">
-                                                        <div className="text-xs font-black text-zinc-900 dark:text-zinc-100 truncate">{row.audioLabel}</div>
-                                                        <div className="text-[11px] text-zinc-500 dark:text-zinc-400">0:{String(row.durationSec).padStart(2, "0")}</div>
-                                                        <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+                                                        <div className="text-xs font-black text-[var(--foreground)]  truncate">{row.audioLabel}</div>
+                                                        <div className="text-[11px] text-[var(--foreground)] dark:text-[var(--foreground)]">0:{String(row.durationSec).padStart(2, "0")}</div>
+                                                        <div className="text-[10px] text-[var(--foreground)] dark:text-[var(--foreground)] truncate">
                                                             {formatNumber(row.views)} Views | {formatNumber(row.engagementTotal)} Interações | {row.engagementRate.toFixed(1)}% Taxa | {row.hookRate}% Retenção | {formatNumber(row.shares)} Shares ✈️
                                                         </div>
                                                     </div>
@@ -475,27 +475,27 @@ export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-black ${getToneByFollowersViewRate(row.followersViewRate)}`}>
                                                     {row.followersViewRate.toFixed(1)}%
                                                 </span>
-                                                <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">da base</div>
+                                                <div className="text-[10px] text-[var(--foreground)] dark:text-[var(--foreground)] mt-0.5">da base</div>
                                             </td>
                                             <td className="py-2.5 px-3 text-right">
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded border border-violet-500/30 bg-violet-500/15 text-xs font-black text-violet-700 dark:text-violet-300">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded border border-[var(--shell-border)]/30 bg-[var(--shell-border)]/15 text-xs font-black text-[var(--foreground)] dark:text-[var(--foreground)]">
                                                     {row.dominantAgeRange}
                                                 </span>
-                                                <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">{row.dominantAgeShare}%</div>
+                                                <div className="text-[10px] text-[var(--foreground)] dark:text-[var(--foreground)] mt-0.5">{row.dominantAgeShare}%</div>
                                             </td>
                                             <td className="py-2.5 px-3 text-right">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-black ${getToneByDominantGender(row.dominantGender)}`}>
                                                     {row.dominantGender}
                                                 </span>
-                                                <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">{row.dominantGenderShare}%</div>
+                                                <div className="text-[10px] text-[var(--foreground)] dark:text-[var(--foreground)] mt-0.5">{row.dominantGenderShare}%</div>
                                             </td>
                                             <td className="py-2.5 px-3 text-right">
-                                                <div className="text-lg font-black text-zinc-900 dark:text-zinc-100">{formatNumber(row.views)}</div>
-                                                <div className="text-[10px] text-zinc-500 dark:text-zinc-400">views</div>
+                                                <div className="text-lg font-black text-[var(--foreground)] ">{formatNumber(row.views)}</div>
+                                                <div className="text-[10px] text-[var(--foreground)] dark:text-[var(--foreground)]">views</div>
                                             </td>
                                             <td className="py-2.5 px-3 text-right">
-                                                <div className="text-lg font-black text-zinc-900 dark:text-zinc-100">{formatNumber(row.engagementTotal)}</div>
-                                                <div className="text-[10px] text-zinc-500 dark:text-zinc-400">interações</div>
+                                                <div className="text-lg font-black text-[var(--foreground)] ">{formatNumber(row.engagementTotal)}</div>
+                                                <div className="text-[10px] text-[var(--foreground)] dark:text-[var(--foreground)]">interações</div>
                                             </td>
                                             <td className="py-2.5 px-3 text-right">
                                                 <div className="flex items-center justify-end gap-2">
@@ -507,18 +507,18 @@ export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }
                                             <td className="py-2.5 px-3 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <span className={`text-xs px-2 py-0.5 rounded ${getToneByRetentionRate(row.hookRate)} font-black`}>{row.hookRate}%</span>
-                                                    <div className="w-16 h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                                                    <div className="w-16 h-2 rounded-full bg-[var(--accent-primary)] dark:bg-[var(--shell-border)] overflow-hidden">
                                                         <div className={`h-full ${getBarByRetentionRate(row.hookRate)}`} style={{ width: `${row.hookRate}%` }} />
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="py-2.5 px-3 text-right font-black text-zinc-600 dark:text-zinc-400">
+                                            <td className="py-2.5 px-3 text-right font-black text-[var(--foreground)] dark:text-[var(--foreground)]">
                                                 <span className="inline-flex items-center gap-1 justify-end">
                                                     <PaperAirplaneIcon className="w-3.5 h-3.5" />
                                                     {formatNumber(row.shares)}
                                                 </span>
                                             </td>
-                                            <td className="py-2.5 px-3 text-right font-black text-zinc-700 dark:text-zinc-300">
+                                            <td className="py-2.5 px-3 text-right font-black text-[var(--foreground)] ">
                                                 +{formatNumber(row.followers)}
                                             </td>
                                         </tr>
@@ -528,8 +528,8 @@ export default function InstagramReelsMiniAnalysis({ posts, totalFollowers = 0 }
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/85 dark:bg-zinc-900/55 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300">
-                        <span className="font-black text-zinc-900 dark:text-zinc-100">💡 Insight Bianconi:</span>{" "}
+                    <div className="bento-cell bg-[var(--shell-border)]/20 px-4 py-3 text-sm text-[var(--foreground)]">
+                        <span className="font-black text-[var(--foreground)] ">💡 Insight Bianconi:</span>{" "}
                         {insight} Use Trending para crescer, Original para vender.
                     </div>
                 </div>

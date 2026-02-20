@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  /* Light Mode Palette - Inspired by Anexo 3/4 */
-  --background: #E4E4E4;
-  --foreground: #10141A;
+  /* Light Mode Palette - Reversed Slate Palette */
+  --background: #FFFFFF;
+  --foreground: #0D0F13;
 
   /* Surface colors for cards/panels on light mode */
-  --shell-surface: #FFFFFF;
-  --shell-border: rgba(0, 0, 0, 0.08);
-  /* macOS-like subtle border */
-  --shell-side: #F4F4F4;
-  --shell-side-btn: #F5F5F5;
-  --shell-top: #F0F0F0;
+  --shell-surface: #F0F3F7;
+  --shell-border: #AAB3C0;
+  --shell-side: #FFFFFF;
+  --shell-side-btn: rgba(13, 15, 19, 0.05);
+  /* #0D0F13 with low opacity */
+  --shell-top: #F0F3F7;
 
   /* Accents */
-  --ink: #10141A;
-  --muted: #6B7280;
-  --accent-blue: #83A2DB;
-  --accent-red: #CE6969;
+  --ink: #F0F3F7;
+  --muted: #3B4553;
+  --accent-primary: #242A33;
+  --accent-neon-cyan: #AAB3C0;
+  --accent-neon-pink: #3B4553;
+  --accent-neon-purple: #242A33;
 }
 
 @theme inline {
+  --color-social-primary-300: var(--social-primary-300);
+  --color-social-primary-400: var(--social-primary-400);
+  --color-social-primary-500: var(--social-primary-500);
+  --color-social-primary-600: var(--social-primary-600);
+  --color-social-primary-700: var(--social-primary-700);
+  --color-social-primary-800: var(--social-primary-800);
+  --color-social-primary-900: var(--social-primary-900);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sf), sans-serif;
@@ -28,23 +38,24 @@
 }
 
 [data-theme="dark"] {
-  /* Dark Mode Palette - Translucent Glass */
-  --background: #10141A;
+  /* Dark Mode Palette - Deep Blue / Neon Bento */
+  --background: #090B14;
   --foreground: #FFFFFF;
 
-  /* Surface colors — more translucent for glass effect */
-  --shell-surface: rgba(16, 20, 26, 0.55);
-  /* macOS-like subtle highlight for dark backgrounds */
-  --shell-border: rgba(255, 255, 255, 0.1);
-  --shell-side: rgba(16, 20, 26, 0.7);
-  --shell-side-btn: rgba(255, 255, 255, 0.06);
-  --shell-top: rgba(16, 20, 26, 0.5);
+  /* Surface colors */
+  --shell-surface: #0D0F13;
+  --shell-border: #3B4553;
+  --shell-side: #242A33;
+  --shell-side-btn: rgba(240, 243, 247, 0.05);
+  /* #F0F3F7 with opacity */
+  --shell-top: #0D0F13;
 
-  /* Accents */
-  --ink: #10141A;
-  --muted: #9CA3AF;
-  --accent-blue: #83A2DB;
-  --accent-red: #CE6969;
+  /* Neon Accents (Mapped to Slate Palette) */
+  --ink: #090B14;
+  --muted: #AAB3C0;
+  --accent-neon-pink: #F0F3F7;
+  --accent-neon-purple: #AAB3C0;
+  --accent-neon-cyan: #FFFFFF;
 }
 
 body {
@@ -53,3 +64,5 @@ body {
   font-family: var(--font-sans);
   min-height: 100vh;
 }
+
+@layer base {}

@@ -224,7 +224,7 @@ const BrazilFollowersMap = ({
                         id: 'background',
                         type: 'background',
                         paint: {
-                            'background-color': initialDark ? '#18181b' : '#f4f4f5',
+                            'background-color': initialDark ? "#090B14" : "#F8FAFC",
                         },
                     },
                 ],
@@ -261,7 +261,7 @@ const BrazilFollowersMap = ({
                     type: 'fill',
                     source: 'world-countries',
                     paint: {
-                        'fill-color': isDark ? '#111724' : '#e7edf7',
+                        'fill-color': isDark ? "#1E293B" : "#E2E8F0",
                         'fill-opacity': 1,
                     },
                 });
@@ -271,7 +271,7 @@ const BrazilFollowersMap = ({
                     type: 'line',
                     source: 'world-countries',
                     paint: {
-                        'line-color': isDark ? '#273248' : '#b9c6db',
+                        'line-color': isDark ? "#334155" : "#CBD5E1",
                         'line-width': 0.8,
                     },
                 });
@@ -286,7 +286,7 @@ const BrazilFollowersMap = ({
                     type: 'fill',
                     source: 'brazil-states',
                     paint: {
-                        'fill-color': isDark ? '#1a2333' : '#cfd8e9',
+                        'fill-color': isDark ? "#334155" : "#CBD5E1",
                         'fill-opacity': 1,
                     },
                 });
@@ -296,7 +296,7 @@ const BrazilFollowersMap = ({
                     type: 'line',
                     source: 'brazil-states',
                     paint: {
-                        'line-color': isDark ? '#526384' : '#8ca1c1',
+                        'line-color': isDark ? "#475569" : "#94A3B8",
                         'line-width': 1.3,
                     },
                 });
@@ -341,12 +341,11 @@ const BrazilFollowersMap = ({
                             ['linear'],
                             ['heatmap-density'],
                             0, 'rgba(46, 138, 230, 0)',
-                            0.2, '#2E8AE6',
-                            0.4, '#69D1AB',
-                            0.6, '#DAF291',
-                            0.75, '#FFD85C',
-                            0.9, '#FF9D4D',
-                            1, '#FF6B3B',
+                            0.2, 'rgba(46, 138, 230, 0.4)',
+                            0.4, 'rgb(74, 158, 255)',
+                            0.6, 'rgb(255, 184, 74)',
+                            0.8, 'rgb(255, 107, 59)',
+                            1, 'rgb(255, 68, 0)'
                         ],
                     },
                 });
@@ -380,28 +379,39 @@ const BrazilFollowersMap = ({
 
     useEffect(() => {
         const map = mapRef.current;
-        if (!map || !map.isStyleLoaded()) return;
+        if (!map) return;
 
-        const bg = isDarkMode ? '#18181b' : '#f4f4f5';
-        const worldFill = isDarkMode ? '#111724' : '#e7edf7';
-        const worldBorder = isDarkMode ? '#273248' : '#b9c6db';
-        const brazilFill = isDarkMode ? '#1a2333' : '#cfd8e9';
-        const brazilBorder = isDarkMode ? '#526384' : '#8ca1c1';
+        const updateLayers = () => {
+            if (!map.isStyleLoaded()) return;
 
-        if (map.getLayer('background')) {
-            map.setPaintProperty('background', 'background-color', bg);
-        }
-        if (map.getLayer('world-fill')) {
-            map.setPaintProperty('world-fill', 'fill-color', worldFill);
-        }
-        if (map.getLayer('world-border')) {
-            map.setPaintProperty('world-border', 'line-color', worldBorder);
-        }
-        if (map.getLayer('brazil-fill')) {
-            map.setPaintProperty('brazil-fill', 'fill-color', brazilFill);
-        }
-        if (map.getLayer('brazil-border')) {
-            map.setPaintProperty('brazil-border', 'line-color', brazilBorder);
+            const bg = isDarkMode ? "#090B14" : "#F8FAFC";
+            const worldFill = isDarkMode ? "#1E293B" : "#E2E8F0";
+            const worldBorder = isDarkMode ? "#334155" : "#CBD5E1";
+            const brazilFill = isDarkMode ? "#334155" : "#CBD5E1";
+            const brazilBorder = isDarkMode ? "#475569" : "#94A3B8";
+
+            if (map.getLayer('background')) {
+                map.setPaintProperty('background', 'background-color', bg);
+            }
+            if (map.getLayer('world-fill')) {
+                map.setPaintProperty('world-fill', 'fill-color', worldFill);
+            }
+            if (map.getLayer('world-border')) {
+                map.setPaintProperty('world-border', 'line-color', worldBorder);
+            }
+            if (map.getLayer('brazil-fill')) {
+                map.setPaintProperty('brazil-fill', 'fill-color', brazilFill);
+            }
+            if (map.getLayer('brazil-border')) {
+                map.setPaintProperty('brazil-border', 'line-color', brazilBorder);
+            }
+            map.resize();
+        };
+
+        if (map.isStyleLoaded()) {
+            updateLayers();
+        } else {
+            map.once('styledata', updateLayers);
         }
     }, [isDarkMode]);
 
@@ -418,31 +428,31 @@ const BrazilFollowersMap = ({
             <div className="absolute top-0 left-0 w-full p-6 z-10 bg-gradient-to-b from-[var(--shell-surface)] to-transparent pointer-events-none">
                 <div className="flex items-start justify-between gap-4">
                     <div className="max-w-[320px]">
-                        <h3 className="text-4xl font-black text-white tracking-tighter leading-none mb-2">{title}</h3>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{subtitle}</p>
-                        <p className="text-[10px] text-zinc-400 mt-1">Visualização com dados simulados por perfil</p>
+                        <h3 className="text-4xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">{title}</h3>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground)]">{subtitle}</p>
+                        <p className="text-[10px] text-[var(--foreground)] mt-1">Visualização com dados simulados por perfil</p>
                     </div>
 
                     <div className="hidden md:flex items-stretch justify-end gap-3 pointer-events-auto ml-auto min-w-[320px]">
-                        <div className="px-4 py-3 rounded-xl border border-blue-500/35 bg-gradient-to-r from-blue-500/20 to-blue-500/5 shadow-[0_0_0_1px_rgba(59,130,246,0.15)] min-w-[170px]">
-                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Top Região</span>
-                            <div className="text-base font-black text-blue-500 leading-tight mt-1">Sudeste (48%)</div>
+                        <div className="px-4 py-3 rounded-xl border border-[var(--shell-border)]/20 bg-[var(--shell-surface)]/10 shadow-sm min-w-[170px]">
+                            <span className="text-[10px] text-[var(--foreground)] uppercase font-bold">Top Região</span>
+                            <div className="text-base font-black text-[var(--foreground)] leading-tight mt-1">Sudeste (48%)</div>
                         </div>
-                        <div className="px-4 py-3 rounded-xl border border-emerald-500/35 bg-gradient-to-r from-emerald-500/20 to-emerald-500/5 shadow-[0_0_0_1px_rgba(16,185,129,0.15)] min-w-[160px]">
-                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Top Estado</span>
-                            <div className="text-base font-black text-emerald-500 leading-tight mt-1">São Paulo</div>
+                        <div className="px-4 py-3 rounded-xl border border-[var(--shell-border)] bg-[var(--shell-surface)] shadow-sm min-w-[160px]">
+                            <span className="text-[10px] text-[var(--foreground)] uppercase font-bold">Top Estado</span>
+                            <div className="text-base font-black text-[var(--foreground)] leading-tight mt-1">São Paulo</div>
                         </div>
                     </div>
                 </div>
 
                 <div className="mt-3 md:hidden flex items-stretch gap-2 pointer-events-auto">
-                    <div className="px-3 py-2 rounded-xl border border-blue-500/35 bg-blue-500/10 min-w-[140px]">
-                        <span className="text-[10px] text-zinc-500 uppercase font-bold">Top Região</span>
-                        <div className="text-sm font-black text-blue-500 leading-tight mt-0.5">Sudeste (48%)</div>
+                    <div className="px-3 py-2 rounded-xl border border-[var(--shell-border)]/20 bg-[var(--shell-surface)]/10 min-w-[140px]">
+                        <span className="text-[10px] text-[var(--foreground)] uppercase font-bold">Top Região</span>
+                        <div className="text-sm font-black text-[var(--foreground)] leading-tight mt-0.5">Sudeste (48%)</div>
                     </div>
-                    <div className="px-3 py-2 rounded-xl border border-emerald-500/35 bg-emerald-500/10 min-w-[130px]">
-                        <span className="text-[10px] text-zinc-500 uppercase font-bold">Top Estado</span>
-                        <div className="text-sm font-black text-emerald-500 leading-tight mt-0.5">São Paulo</div>
+                    <div className="px-3 py-2 rounded-xl border border-[var(--shell-border)]/20 bg-[var(--shell-surface)]/10 min-w-[130px]">
+                        <span className="text-[10px] text-[var(--foreground)] uppercase font-bold">Top Estado</span>
+                        <div className="text-sm font-black text-[var(--foreground)] leading-tight mt-0.5">São Paulo</div>
                     </div>
                 </div>
 
@@ -451,8 +461,8 @@ const BrazilFollowersMap = ({
                         type="button"
                         onClick={() => setViewMode('gender')}
                         className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${viewMode === 'gender'
-                            ? 'bg-blue-500 text-white border-blue-500'
-                            : 'bg-[var(--shell-surface)] text-zinc-500 border-[var(--shell-border)] hover:border-blue-400/60'
+                            ? 'bg-white/10 text-[var(--foreground)] border-white/20'
+                            : 'bg-[var(--shell-surface)] text-[var(--foreground)] border-[var(--shell-border)] hover:border-[var(--foreground)]/20'
                             }`}
                     >
                         Gênero
@@ -461,8 +471,8 @@ const BrazilFollowersMap = ({
                         type="button"
                         onClick={() => setViewMode('age')}
                         className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${viewMode === 'age'
-                            ? 'bg-blue-500 text-white border-blue-500'
-                            : 'bg-[var(--shell-surface)] text-zinc-500 border-[var(--shell-border)] hover:border-blue-400/60'
+                            ? 'bg-white/10 text-[var(--foreground)] border-white/20'
+                            : 'bg-[var(--shell-surface)] text-[var(--foreground)] border-[var(--shell-border)] hover:border-[var(--foreground)]/20'
                             }`}
                     >
                         Faixa etária
@@ -476,8 +486,8 @@ const BrazilFollowersMap = ({
                                     type="button"
                                     onClick={() => setGenderFilter(option)}
                                     className={`px-2 py-1 rounded-full text-[10px] font-bold border transition-colors ${genderFilter === option
-                                        ? 'bg-zinc-800 text-white border-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100'
-                                        : 'bg-[var(--shell-surface)] text-zinc-500 border-[var(--shell-border)] hover:border-zinc-500/60'
+                                        ? 'bg-[var(--shell-border)] text-[var(--foreground)] border-[var(--shell-border)] dark:bg-[var(--accent-primary)]  dark:border-[var(--shell-border)]'
+                                        : 'bg-[var(--shell-surface)] text-[var(--foreground)] border-[var(--shell-border)] hover:border-[var(--shell-border)]/60'
                                         }`}
                                 >
                                     {option === 'all' ? 'Todos' : option === 'female' ? 'Feminino' : 'Masculino'}
@@ -494,8 +504,8 @@ const BrazilFollowersMap = ({
                                     type="button"
                                     onClick={() => setAgeFilter(option)}
                                     className={`px-2 py-1 rounded-full text-[10px] font-bold border transition-colors ${ageFilter === option
-                                        ? 'bg-zinc-800 text-white border-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100'
-                                        : 'bg-[var(--shell-surface)] text-zinc-500 border-[var(--shell-border)] hover:border-zinc-500/60'
+                                        ? 'bg-[var(--shell-border)] text-[var(--foreground)] border-[var(--shell-border)] dark:bg-[var(--accent-primary)]  dark:border-[var(--shell-border)]'
+                                        : 'bg-[var(--shell-surface)] text-[var(--foreground)] border-[var(--shell-border)] hover:border-[var(--shell-border)]/60'
                                         }`}
                                 >
                                     {option}
@@ -515,11 +525,11 @@ const BrazilFollowersMap = ({
             <div className="absolute bottom-6 right-6 bg-[var(--shell-surface)]/90 backdrop-blur border border-[var(--shell-border)] p-2 rounded-lg text-[10px] z-10 pointer-events-none">
                 <div className="flex items-center gap-2 mb-1">
                     <span className="w-2 h-2 rounded-full bg-[#FF6B3B]"></span>
-                    <span className="text-zinc-400">Alta Densidade</span>
+                    <span className="text-[var(--foreground)]">Alta Densidade</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#2E8AE6]/50"></span>
-                    <span className="text-zinc-600">Baixa Densidade</span>
+                    <span className="text-[var(--foreground)]">Baixa Densidade</span>
                 </div>
             </div>
         </div>

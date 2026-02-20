@@ -39,7 +39,7 @@ export default function Sidebar({
     onThemeChange
 }: SidebarProps) {
     return (
-        <aside className="fixed left-6 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center py-6 gap-5 w-[68px] rounded-[40px] glass-capsule">
+        <aside className="fixed left-6 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center py-6 gap-5 w-[68px] rounded-[40px] bg-[var(--shell-surface)] border border-[var(--shell-border)] shadow-[0_16px_40px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.1)]">
             {/* Nav Icons */}
             <nav className="flex-1 flex flex-col items-center gap-4">
                 {NAV_ITEMS.map((item) => {
@@ -52,8 +52,8 @@ export default function Sidebar({
                             onClick={() => onNavigate(item.id)}
                             className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group
                                 ${isActive
-                                    ? "bg-black/30 text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
-                                    : "text-white/60 hover:text-white hover:bg-white/10"
+                                    ? "bg-white/40 text-black/60 shadow-sm drop-shadow-sm"
+                                    : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--shell-side)]"
                                 }
                             `}
                             title={item.label}
@@ -61,7 +61,7 @@ export default function Sidebar({
                             <Icon className={`w-6 h-6 transition-transform ${isActive ? "scale-105" : ""}`} strokeWidth={1.5} />
 
                             {/* Tooltip */}
-                            <span className="absolute left-[60px] bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
+                            <span className="absolute left-[60px] bg-[var(--shell-surface)] border border-[var(--shell-border)] text-[var(--foreground)] text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
                                 {item.label}
                             </span>
                         </button>
@@ -75,14 +75,14 @@ export default function Sidebar({
                     onClick={() => onNavigate("settings")}
                     className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group
                         ${activeTab === "settings"
-                            ? "bg-black/30 text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
-                            : "text-white/60 hover:text-white hover:bg-white/10"
+                            ? "bg-black/30 text-[var(--foreground)] shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
+                            : "text-[var(--foreground)]/60 hover:text-[var(--foreground)] hover:bg-white/10"
                         }
                     `}
                     title="Configurações"
                 >
                     <Cog6ToothIcon className="w-6 h-6" strokeWidth={1.5} />
-                    <span className="absolute left-[60px] bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
+                    <span className="absolute left-[60px] bg-black/80 backdrop-blur-sm text-[var(--foreground)] text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
                         Configurações
                     </span>
                 </button>
@@ -92,14 +92,14 @@ export default function Sidebar({
                     onClick={() => onThemeChange("dark")}
                     className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group
                         ${theme === "dark"
-                            ? "bg-black/30 text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
-                            : "text-white/60 hover:text-white hover:bg-white/10"
+                            ? "bg-[var(--shell-side-btn)] text-[var(--foreground)] shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
+                            : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--shell-side)]"
                         }
                     `}
                     title="Modo escuro"
                 >
                     <MoonIcon className="w-6 h-6" strokeWidth={1.5} />
-                    <span className="absolute left-[60px] bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
+                    <span className="absolute left-[60px] bg-[var(--shell-surface)] border border-[var(--shell-border)] text-[var(--foreground)] text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
                         Dark Mode
                     </span>
                 </button>
@@ -109,14 +109,14 @@ export default function Sidebar({
                     onClick={() => onThemeChange("light")}
                     className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group
                         ${theme === "light"
-                            ? "bg-black/30 text-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
-                            : "text-white/60 hover:text-white hover:bg-white/10"
+                            ? "bg-[var(--shell-side-btn)] text-[var(--foreground)] shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]"
+                            : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--shell-side)]"
                         }
                     `}
                     title="Modo claro"
                 >
                     <SunIcon className="w-6 h-6" strokeWidth={1.5} />
-                    <span className="absolute left-[60px] bg-black/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
+                    <span className="absolute left-[60px] bg-[var(--shell-surface)] border border-[var(--shell-border)] text-[var(--foreground)] text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-[999] shadow-xl">
                         Day Light
                     </span>
                 </button>

@@ -37,7 +37,7 @@ export default function InstagramPreview({ image, caption, username = "b_studio_
             </div>
 
             {/* Content */}
-            <div className="aspect-square bg-zinc-100 relative">
+            <div className="aspect-square bg-[var(--accent-primary)] relative">
                 {image ? (
                     <img src={image} alt="Post preview" className="w-full h-full object-cover" />
                 ) : (

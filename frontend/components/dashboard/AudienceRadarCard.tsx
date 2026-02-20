@@ -11,53 +11,53 @@ interface AudienceStat {
 const stats: AudienceStat[] = [
     { type: "Instagram", value: "245k", growth: "+1.2%", icon: HeartIcon, color: "text-rose-500" },
     { type: "TikTok", value: "110k", growth: "+3.5%", icon: ArrowTrendingUpIcon, color: "text-pink-500" },
-    { type: "YouTube", value: "52k", growth: "+0.8%", icon: ArrowTrendingUpIcon, color: "text-red-600" },
+    { type: "YouTube", value: "52k", growth: "+0.8%", icon: ArrowTrendingUpIcon, color: "text-[var(--foreground)]" },
 ];
 
 export default function AudienceRadarCard() {
     return (
-        <div
-            className="h-full w-full rounded-3xl p-6 shadow-sm border flex flex-col justify-between group hover:border-[#F472B6]/30 transition-all duration-300"
-            style={{ backgroundColor: "var(--shell-surface)", borderColor: "var(--shell-border)" }}
-        >
+        <div className="h-full w-full p-6 flex flex-col justify-between group transition-all duration-300 bento-cell hover-spring">
             {/* Header */}
             <div>
-                <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Radar de Audiência</h2>
-                <h1 className="text-xl font-black tracking-tighter" style={{ color: "var(--foreground)" }}>SENTIMENTO IA</h1>
+                <h2 className="text-[var(--muted)] text-xs font-bold uppercase tracking-widest mb-1">Radar de Audiência</h2>
+                <h1 className="text-xl font-black tracking-tighter text-[var(--foreground)]">SENTIMENTO IA</h1>
             </div>
 
             {/* Total Followers */}
             <div className="flex items-baseline gap-2 mt-4">
-                <span className="text-3xl font-black" style={{ color: "var(--foreground)" }}>407.000</span>
-                <span className="text-xs text-emerald-500 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">+1.2% Hoje</span>
+                <span className="text-3xl font-black text-[var(--foreground)]">407.000</span>
+                <span className="text-xs text-[white] font-bold bg-[white]/10 px-2 py-0.5 rounded-full shadow-sm">+1.2% Hoje</span>
             </div>
 
             {/* Sentiment Thermometer */}
             <div className="my-6">
-                <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2">
-                    <span>Positivo (80%)</span>
-                    <span>Neutro (15%)</span>
-                    <span className="text-red-500">Negativo (5%)</span>
+                <div className="my-6">
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] mb-2">
+                        <span className="text-[white]">Positivo (80%)</span>
+                        <span className="text-[var(--muted)]">Neutro (15%)</span>
+                        <span className="text-[white]">Negativo (5%)</span>
+                    </div>
+                    <div
+                        className="h-2 w-full rounded-full flex overflow-hidden shadow-inner"
+                        style={{ backgroundColor: "var(--shell-side)" }}
+                    >
+                        <div className="h-full bg-[white] w-[80%] rounded-l-full shadow-sm"></div>
+                        <div className="h-full bg-[var(--muted)] w-[15%]"></div>
+                        <div className="h-full bg-[white] w-[5%] rounded-r-full shadow-sm"></div>
+                    </div>
+                    <p className="text-[10px] text-[var(--muted)] mt-2 text-right">Baseado em NLP das últimas 24h</p>
                 </div>
-                <div
-                    className="h-2 w-full rounded-full flex overflow-hidden"
-                    style={{ backgroundColor: "var(--shell-side)" }}
-                >
-                    <div className="h-full bg-emerald-500 w-[80%] rounded-l-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"></div>
-                    <div className="h-full bg-yellow-500 w-[15%]"></div>
-                    <div className="h-full bg-red-500 w-[5%] rounded-r-full shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
-                </div>
-                <p className="text-[10px] text-zinc-500/80 mt-2 text-right">Baseado em NLP das últimas 24h</p>
-            </div>
 
-            {/* Insight */}
-            <div className="p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-                <div className="flex items-center gap-2 mb-1">
-                    <ClockIcon className="w-4 h-4 text-blue-500" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">Melhor Horário Hoje</span>
+                {/* Insight */}
+                <div className="p-3 bg-[var(--muted)]/5 border border-[var(--muted)]/20 rounded-xl relative overflow-hidden">
+                    <div className="flex items-center gap-2 mb-1 relative z-10">
+                        <ClockIcon className="w-4 h-4 text-[var(--muted)]" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Melhor Horário Hoje</span>
+                    </div>
+                    <p className="text-lg font-black text-[var(--muted)] relative z-10 drop-shadow-sm">18:45</p>
+                    <p className="text-[10px] text-[var(--muted)]/70 relative z-10">Pico de atividade previsto. Sugestão: Postar Story.</p>
+                    <div className="absolute -right-10 -top-10 w-24 h-24 bg-[var(--muted)]/20 rounded-full blur-2xl pointer-events-none"></div>
                 </div>
-                <p className="text-lg font-black text-blue-500">18:45</p>
-                <p className="text-[10px] text-blue-400/70">Pico de atividade previsto. Sugestão: Postar Story.</p>
             </div>
         </div>
     );

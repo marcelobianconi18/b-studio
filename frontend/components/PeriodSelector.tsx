@@ -60,18 +60,18 @@ export default function PeriodSelector({ value = "30d", onChange, variant = "def
                     if (!isOpen) setView("list");
                 }}
                 className={isFlatRed
-                    ? "w-[220px] h-[34px] flex items-center gap-2 bg-white/90 hover:bg-white border-2 border-red-600 rounded-none px-3 transition-all text-black justify-between"
+                    ? "w-[220px] h-[34px] flex items-center gap-2 bg-white/90 hover:bg-white border-2 border-white/20 rounded-none px-3 transition-all text-black justify-between"
                     : isShellBrand
                         ? "w-[264px] h-[38px] flex items-center gap-2 bg-[var(--shell-side-btn)] hover:bg-[oklch(from_var(--shell-side-btn)_l_c_h_/_0.8)] border border-[var(--shell-border)] rounded-xl px-3 transition-all text-[var(--foreground)] justify-between shadow-sm"
                         : "flex items-center gap-2 bg-[var(--shell-side)] hover:bg-[oklch(from_var(--shell-side)_l_c_h_/_0.8)] border border-[var(--shell-border)] rounded-full pl-3 pr-4 py-1.5 transition-all text-sm font-medium text-[var(--foreground)] min-w-[160px] justify-between"}
             >
                 <div className="flex items-center gap-2">
-                    {!isFlatRed && <CalendarDaysIcon className={`w-4 h-4 ${isShellBrand ? "text-blue-400" : "text-zinc-500"}`} />}
+                    {!isFlatRed && <CalendarDaysIcon className={`w-4 h-4 ${isShellBrand ? "text-[var(--foreground)]" : "text-zinc-500"}`} />}
                     <span className={isFlatRed ? "text-[14px] font-black tracking-tight whitespace-nowrap" : isShellBrand ? "text-[12px] font-black tracking-wide whitespace-nowrap" : "text-xs font-bold whitespace-nowrap"} style={isFlatRed ? { fontFamily: "Georgia, Times New Roman, serif" } : undefined}>
                         {isFlatRed ? flatRedLabel : isShellBrand ? selected.label.toUpperCase() : selected.label}
                     </span>
                 </div>
-                <ChevronDownIcon className={`w-3 h-3 ${isFlatRed ? "text-zinc-700" : "text-[var(--muted)]"} transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                <ChevronDownIcon className={`w-3 h-3 ${isFlatRed ? "text-[var(--foreground)]" : "text-[var(--muted)]"} transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
 
             {isOpen && (
@@ -90,10 +90,10 @@ export default function PeriodSelector({ value = "30d", onChange, variant = "def
                                             onChange?.(option.value as PeriodValue, option.label);
                                             setIsOpen(false);
                                         }}
-                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors text-xs font-medium ${selected.value === option.value ? "bg-blue-500/10 text-blue-500" : "hover:bg-[var(--shell-side)] text-[var(--muted)] hover:text-[var(--foreground)]"}`}
+                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors text-xs font-medium ${selected.value === option.value ? "bg-white/10/10 text-[var(--foreground)]" : "hover:bg-[var(--shell-side)] text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                                     >
                                         <span>{option.label}</span>
-                                        {selected.value === option.value && <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                                        {selected.value === option.value && <div className="w-1.5 h-1.5 rounded-full bg-white/10" />}
                                     </button>
                                 ))}
                                 <div className="h-px bg-[var(--shell-border)] my-1" />
@@ -136,7 +136,7 @@ export default function PeriodSelector({ value = "30d", onChange, variant = "def
                                 <button
                                     onClick={handleApplyCustom}
                                     disabled={!startDate || !endDate}
-                                    className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 text-white font-bold text-xs py-2 rounded-lg transition-colors mt-2"
+                                    className="w-full bg-white/10 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/10 text-[var(--foreground)] font-bold text-xs py-2 rounded-lg transition-colors mt-2"
                                 >
                                     Aplicar Período
                                 </button>

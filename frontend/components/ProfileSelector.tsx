@@ -37,12 +37,12 @@ export default function ProfileSelector({ selectedProfile, onChange, variant = "
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={isFlatRed
-                    ? "w-[220px] h-[44px] flex items-center gap-3 border-2 border-red-600 bg-white/90 rounded-none pl-3 pr-3 transition-all text-black hover:bg-white"
+                    ? "w-[220px] h-[44px] flex items-center gap-3 border-2 border-white/20 bg-white/90 rounded-none pl-3 pr-3 transition-all text-black hover:bg-white"
                     : isShellBrand
                         ? "w-[264px] h-[41px] flex items-center gap-2 border border-[var(--shell-border)] bg-[var(--shell-side-btn)] hover:bg-[oklch(from_var(--shell-side-btn)_l_c_h_/_0.8)] rounded-xl pl-3 pr-3 transition-all text-[var(--foreground)] shadow-sm"
                         : "flex items-center gap-3 bg-[var(--shell-side)] hover:bg-[oklch(from_var(--shell-side)_l_c_h_/_0.8)] border border-[var(--shell-border)] rounded-full pl-2 pr-4 py-1.5 transition-all text-sm font-medium text-[var(--foreground)]"}
             >
-                <div className={isFlatRed ? "w-7 h-7 rounded-full border-[3px] border-red-600 bg-white" : isShellBrand ? "w-6.5 h-6.5 rounded-full bg-gradient-to-tr from-pink-500 via-fuchsia-500 to-orange-400 p-[2px]" : "w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px]"}>
+                <div className={isFlatRed ? "w-7 h-7 rounded-full border-[3px] border-white/20 bg-white" : isShellBrand ? "w-6.5 h-6.5 rounded-full bg-gradient-to-tr from-pink-500 via-fuchsia-500 to-orange-400 p-[2px]" : "w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px]"}>
                     <div className={isFlatRed ? "hidden" : isShellBrand ? "w-full h-full rounded-full bg-[var(--shell-side-btn)]/90 flex items-center justify-center" : "w-full h-full rounded-full bg-[var(--shell-side-btn)] flex items-center justify-center"}>
                         <UserCircleIcon className={isShellBrand ? "w-3.5 h-3.5 text-[var(--muted)]" : "w-5 h-5 text-[var(--muted)]"} />
                     </div>
@@ -56,7 +56,7 @@ export default function ProfileSelector({ selectedProfile, onChange, variant = "
                     {isShellBrand && <span className="text-[9px] leading-tight uppercase tracking-wider text-[var(--muted)] font-bold">{selectedNetwork}</span>}
                     {!isFlatRed && !isShellBrand && <span className="text-[9px] text-[var(--muted)] uppercase tracking-wider">{selected.role}</span>}
                 </div>
-                <ChevronDownIcon className={`${isFlatRed ? "w-4 h-4 text-zinc-700" : "w-4 h-4 text-[var(--muted)]"} transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                <ChevronDownIcon className={`${isFlatRed ? "w-4 h-4 text-[var(--foreground)]" : "w-4 h-4 text-[var(--muted)]"} transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
 
             {isOpen && (
@@ -75,9 +75,9 @@ export default function ProfileSelector({ selectedProfile, onChange, variant = "
                                     onChange?.(profile);
                                     setIsOpen(false);
                                 }}
-                                className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${selected.id === profile.id ? "bg-blue-500/10 text-blue-500" : "hover:bg-[var(--shell-side)] text-[var(--muted)] hover:text-[var(--foreground)]"}`}
+                                className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${selected.id === profile.id ? "bg-white/10/10 text-[var(--foreground)]" : "hover:bg-[var(--shell-side)] text-[var(--muted)] hover:text-[var(--foreground)]"}`}
                             >
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selected.id === profile.id ? "bg-blue-500 text-white" : "bg-[var(--shell-side-btn)]"}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selected.id === profile.id ? "bg-white/10 text-[var(--foreground)]" : "bg-[var(--shell-side-btn)]"}`}>
                                     <span className="text-xs font-bold">{profile.name.charAt(0)}</span>
                                 </div>
                                 <div className="flex flex-col leading-none gap-0.5">

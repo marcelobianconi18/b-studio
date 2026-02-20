@@ -68,14 +68,14 @@ export default function GuardianTerminal() {
 
             {/* Header */}
             <div className="flex items-center justify-between mb-4 border-b border-zinc-800 pb-2">
-                <div className="flex items-center gap-2 text-emerald-400">
+                <div className="flex items-center gap-2 text-[var(--foreground)]">
                     <ShieldCheckIcon className="w-5 h-5" />
                     <span className="font-mono text-xs font-bold tracking-wider">GUARDIAN_AI ACTIVE</span>
                 </div>
                 <div className="flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-red-500/50" />
-                    <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
-                    <div className="w-2 h-2 rounded-full bg-emerald-500/50" />
+                    <div className="w-2 h-2 rounded-full bg-white/10/50" />
+                    <div className="w-2 h-2 rounded-full bg-white/10/50" />
+                    <div className="w-2 h-2 rounded-full bg-white/10/50" />
                 </div>
             </div>
 
@@ -88,9 +88,9 @@ export default function GuardianTerminal() {
                     <div key={i} className="flex gap-3 opacity-90 hover:opacity-100 transition-opacity">
                         <span className="text-zinc-500 shrink-0 select-none">{log.time}</span>
                         <span className={`
-                            ${log.type === 'success' ? 'text-emerald-400' : ''}
+                            ${log.type === 'success' ? 'text-[var(--foreground)]' : ''}
                             ${log.type === 'warning' ? 'text-amber-400' : ''}
-                            ${log.type === 'info' ? 'text-blue-400' : ''}
+                            ${log.type === 'info' ? 'text-[var(--foreground)]' : ''}
                         `}>
                             {log.type === 'success' && '>> '}
                             {log.type === 'warning' && '!! '}
@@ -99,7 +99,7 @@ export default function GuardianTerminal() {
                         </span>
                     </div>
                 ))}
-                <div className="animate-pulse text-emerald-500">_</div>
+                <div className="animate-pulse text-[var(--foreground)]">_</div>
             </div>
         </div>
     );

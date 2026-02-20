@@ -118,9 +118,9 @@ export default function CompetitorsAnalysis() {
 
     const getTypeIcon = (type: string) => {
         switch (type) {
-            case 'video': return <span className="text-purple-400" title="Reels">🎥</span>;
-            case 'carousel': return <span className="text-blue-400" title="Carrossel">🎠</span>;
-            default: return <span className="text-zinc-400" title="Foto">📷</span>;
+            case 'video': return <span className="text-[var(--foreground)]" title="Reels">🎥</span>;
+            case 'carousel': return <span className="text-[var(--foreground)]" title="Carrossel">🎠</span>;
+            default: return <span className="text-[var(--muted)]" title="Foto">📷</span>;
         }
     };
     const getTypeLabel = (type: string) => {
@@ -141,7 +141,7 @@ export default function CompetitorsAnalysis() {
 
     if (!competitors || competitors.length === 0) {
         return (
-            <div className="flex-1 flex items-center justify-center p-20 text-center text-zinc-500">
+            <div className="flex-1 flex items-center justify-center p-20 text-center text-[var(--muted)]">
                 Nenhum dado de concorrente disponível.
             </div>
         );
@@ -150,38 +150,24 @@ export default function CompetitorsAnalysis() {
     return (
         <div className="space-y-6">
             {/* TABS NAVIGATION */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[var(--shell-border)] pb-0 mb-6 gap-4 bg-zinc-900/40 rounded-t-[2rem] px-2 pt-2 liquid-glass">
-                <div className="flex flex-wrap items-end">
-                    {TABS.map((tab, index) => {
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center p-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-inner overflow-x-auto hide-scrollbar">
+                    {TABS.map((tab) => {
                         const isActive = activeTab === tab.id;
                         return (
-                            <div key={tab.id} className="relative flex items-center">
-                                {/* Separator before item (if not first, not active, and previous was not active) */}
-                                {index > 0 && !isActive && activeTab !== TABS[index - 1].id && (
-                                    <div className="w-px h-4 bg-zinc-700 mx-1" />
-                                )}
-
-                                <button
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`
-                                        relative px-4 py-2 text-sm font-medium transition-all duration-200 group flex items-center justify-center min-w-[120px]
-                                        ${isActive
-                                            ? "bg-[var(--shell-surface)] text-white rounded-t-lg z-10 -mb-[1px] pb-[9px] shadow-[0_-1px_0_0_rgba(255,255,255,0.05),-1px_0_0_0_rgba(255,255,255,0.05),1px_0_0_0_rgba(255,255,255,0.05)] border-t border-x border-[var(--shell-border)] border-b-0"
-                                            : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-lg mx-1"
-                                        }
-                                    `}
-                                >
-                                    {isActive && (
-                                        <>
-                                            {/* Corner curves for active tab */}
-                                            <div className="absolute bottom-0 -left-2 w-2 h-2 bg-transparent rounded-br-lg shadow-[2px_2px_0_0_var(--shell-surface)] pointer-events-none z-20" />
-                                            <div className="absolute bottom-0 -right-2 w-2 h-2 bg-transparent rounded-bl-lg shadow-[-2px_2px_0_0_var(--shell-surface)] pointer-events-none z-20" />
-                                        </>
-                                    )}
-
-                                    <span className="relative z-10 truncate max-w-[100px]">{tab.label}</span>
-                                </button>
-                            </div>
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`
+                                    relative px-5 py-2 text-sm font-semibold transition-all duration-300 rounded-full flex items-center justify-center whitespace-nowrap
+                                    ${isActive
+                                        ? "bg-white/20 text-[var(--foreground)] shadow-[0_2px_10px_rgba(0,0,0,0.1),inset_0_1px_rgba(255,255,255,0.4)]"
+                                        : "text-[var(--foreground)]/60 hover:text-[var(--foreground)] hover:bg-white/10"
+                                    }
+                                `}
+                            >
+                                <span className="relative z-10">{tab.label}</span>
+                            </button>
                         );
                     })}
                 </div>
@@ -192,40 +178,40 @@ export default function CompetitorsAnalysis() {
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
                     {/* 1. TOP METRICS CARDS (AVERAGES) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="liquid-glass p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Média de Seguidores</h3>
+                        <div className="liquid-glass p-5 flex flex-col justify-between hover:border-white/20/20 transition-all group">
+                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Média de Seguidores</h3>
                             <div>
-                                <div className="text-3xl font-black text-white tracking-tighter leading-none mb-2">
+                                <div className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">
                                     {formatNumber(Math.round(competitors.reduce((acc: number, c: Competitor) => acc + c.followers, 0) / competitors.length))}
                                 </div>
-                                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Benchmarking do setor</div>
+                                <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wide">Benchmarking do setor</div>
                             </div>
                         </div>
-                        <div className="liquid-glass p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Engajamento Médio</h3>
+                        <div className="liquid-glass p-5 flex flex-col justify-between hover:border-white/20/20 transition-all group">
+                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Engajamento Médio</h3>
                             <div>
-                                <div className="text-3xl font-black text-emerald-400 tracking-tighter leading-none mb-2">
+                                <div className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">
                                     {(competitors.reduce((acc: number, c: Competitor) => acc + c.engagementRate, 0) / competitors.length).toFixed(2)}%
                                 </div>
-                                <div className="text-[10px] text-emerald-500 font-bold uppercase tracking-wide">Performance de conteúdo</div>
+                                <div className="text-[10px] text-[var(--foreground)] font-bold uppercase tracking-wide">Performance de conteúdo</div>
                             </div>
                         </div>
-                        <div className="liquid-glass p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Freq. de Postagem</h3>
+                        <div className="liquid-glass p-5 flex flex-col justify-between hover:border-white/20/20 transition-all group">
+                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Freq. de Postagem</h3>
                             <div>
-                                <div className="text-3xl font-black text-white tracking-tighter leading-none mb-2">
+                                <div className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">
                                     {Math.round(competitors.reduce((acc: number, c: Competitor) => acc + c.totalPosts, 0) / competitors.length)}
                                 </div>
-                                <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wide">Posts por mês</div>
+                                <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wide">Posts por mês</div>
                             </div>
                         </div>
-                        <div className="liquid-glass p-5 flex flex-col justify-between hover:border-blue-500/20 transition-all group">
-                            <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-4">Crescimento Médio</h3>
+                        <div className="liquid-glass p-5 flex flex-col justify-between hover:border-white/20/20 transition-all group">
+                            <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Crescimento Médio</h3>
                             <div>
-                                <div className="text-3xl font-black text-blue-400 tracking-tighter leading-none mb-2">
+                                <div className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">
                                     +{(competitors.reduce((acc: number, c: Competitor) => acc + c.followersChange, 0) / competitors.length).toFixed(1)}%
                                 </div>
-                                <div className="text-[10px] text-blue-500 font-bold uppercase tracking-wide">Aquisição de novos usuários</div>
+                                <div className="text-[10px] text-[var(--foreground)] font-bold uppercase tracking-wide">Aquisição de novos usuários</div>
                             </div>
                         </div>
                     </div>
@@ -233,13 +219,13 @@ export default function CompetitorsAnalysis() {
                     {/* 2. COMPETITOR COMPARISON TABLE */}
                     <div className="liquid-glass overflow-hidden flex flex-col">
                         <div className="p-6 border-b border-[var(--shell-border)] bg-[var(--shell-side)]">
-                            <h3 className="text-3xl font-black text-white tracking-tighter leading-none mb-2">Análise Comparativa</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Detalhamento de performance por concorrente.</p>
+                            <h3 className="text-3xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-2">Análise Comparativa</h3>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground)]">Detalhamento de performance por concorrente.</p>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs whitespace-nowrap">
                                 <thead className="bg-[var(--shell-surface)] border-b border-[var(--shell-border)]">
-                                    <tr className="text-zinc-500 font-bold uppercase tracking-wider">
+                                    <tr className="text-[var(--muted)] font-bold uppercase tracking-wider">
                                         <th className="px-6 py-4">Concorrente</th>
                                         <th className="px-6 py-4 text-right">Seguidores</th>
                                         <th className="px-6 py-4 text-right">Cresc. (%)</th>
@@ -265,33 +251,33 @@ export default function CompetitorsAnalysis() {
                                                 {formatNumber(competitor.followers)}
                                             </td>
                                             <td className="px-6 py-4 text-right font-mono">
-                                                <span className={competitor.followersChange >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                                                <span className={competitor.followersChange >= 0 ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}>
                                                     {competitor.followersChange > 0 ? "+" : ""}{competitor.followersChange.toFixed(1)}%
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right font-mono text-[var(--foreground)]">
                                                 {competitor.engagementRate.toFixed(2)}%
-                                                <div className={`text-[10px] ${competitor.engagementChange >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                                                <div className={`text-[10px] ${competitor.engagementChange >= 0 ? "text-[var(--foreground)]" : "text-[var(--foreground)]"}`}>
                                                     {competitor.engagementChange > 0 ? "↑" : "↓"} {Math.abs(competitor.engagementChange).toFixed(1)}%
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-right font-mono text-zinc-400">
+                                            <td className="px-6 py-4 text-right font-mono text-[var(--muted)]">
                                                 {competitor.totalPosts}
                                             </td>
-                                            <td className="px-6 py-4 text-right font-mono text-zinc-400">
+                                            <td className="px-6 py-4 text-right font-mono text-[var(--muted)]">
                                                 {competitor.weeklyPosts}
                                             </td>
-                                            <td className="px-6 py-4 text-right font-mono text-zinc-400">
+                                            <td className="px-6 py-4 text-right font-mono text-[var(--muted)]">
                                                 {formatNumber(competitor.totalLikes)}
                                             </td>
-                                            <td className="px-6 py-4 text-right font-mono text-zinc-400">
+                                            <td className="px-6 py-4 text-right font-mono text-[var(--muted)]">
                                                 {formatNumber(competitor.totalComments)}
                                             </td>
-                                            <td className="px-6 py-4 text-right font-mono text-zinc-400">
+                                            <td className="px-6 py-4 text-right font-mono text-[var(--muted)]">
                                                 {competitor.avgInteractions}
                                             </td>
                                             <td className="px-6 py-4 text-right font-mono">
-                                                <span className="text-emerald-500 font-bold">
+                                                <span className="text-[var(--foreground)] font-bold">
                                                     +{formatNumber(competitor.recentGrowth)}
                                                 </span>
                                             </td>
@@ -309,38 +295,38 @@ export default function CompetitorsAnalysis() {
             {activeTab === "swot" && selectedSwotCompetitor && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
                     {/* COMPETITOR SELECTOR */}
-                    <div className="flex overflow-x-auto gap-4 pb-4 snap-x">
-                        {competitors.map((competitor) => (
-                            <button
-                                key={competitor.id}
-                                onClick={() => setSelectedSwotCompetitor(competitor)}
-                                className={`
-                                    field-sizing-content min-w-[200px] p-4 rounded-xl border transition-all flex items-center gap-3 snap-start text-left
-                                    ${selectedSwotCompetitor.id === competitor.id
-                                        ? "bg-[var(--shell-surface)] border-blue-500/50 ring-1 ring-blue-500/20"
-                                        : "bg-[var(--shell-side)] border-[var(--shell-border)] hover:border-zinc-700 opacity-60 hover:opacity-100"
-                                    }
-                                `}
-                            >
-                                <img src={competitor.avatar} alt={competitor.name} className={`w-10 h-10 rounded-full border border-[var(--shell-border)] ${selectedSwotCompetitor.id !== competitor.id ? 'grayscale' : ''}`} />
-                                <div>
-                                    <div className={`font-bold text-sm ${selectedSwotCompetitor.id === competitor.id ? "text-white" : "text-zinc-400"}`}>{competitor.name}</div>
-                                    <div className="text-[10px] text-zinc-500">Ver análise SWOT</div>
-                                </div>
-                            </button>
-                        ))}
+                    <div className="flex items-center p-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-inner overflow-x-auto hide-scrollbar w-fit mb-4">
+                        {competitors.map((competitor) => {
+                            const isSelected = selectedSwotCompetitor.id === competitor.id;
+                            return (
+                                <button
+                                    key={competitor.id}
+                                    onClick={() => setSelectedSwotCompetitor(competitor)}
+                                    className={`
+                                        relative px-4 py-2 text-xs font-bold transition-all duration-300 rounded-full flex items-center gap-2 whitespace-nowrap
+                                        ${isSelected
+                                            ? "bg-white/20 text-[var(--foreground)] shadow-[0_2px_10px_rgba(0,0,0,0.1),inset_0_1px_rgba(255,255,255,0.4)]"
+                                            : "text-[var(--foreground)]/60 hover:text-[var(--foreground)] hover:bg-white/10"
+                                        }
+                                    `}
+                                >
+                                    <img src={competitor.avatar} alt="" className={`w-4 h-4 rounded-full ${!isSelected ? 'grayscale opacity-50' : ''}`} />
+                                    <span>{competitor.name}</span>
+                                </button>
+                            );
+                        })}
                     </div>
 
                     {/* STRATEGIC INSIGHT CARD */}
-                    <div className="liquid-glass p-6 border border-blue-500/30 bg-blue-500/5 relative overflow-hidden group">
+                    <div className="liquid-glass p-6 border border-white/20/30 bg-white/10/5 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-24 h-24 text-blue-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-24 h-24 text-[var(--foreground)]">
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
                             </svg>
                         </div>
                         <div className="relative z-10">
-                            <h3 className="text-sm font-bold uppercase tracking-widest text-blue-400 mb-2 flex items-center gap-2">
-                                <span className="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--foreground)] mb-2 flex items-center gap-2">
+                                <span className="bg-white/10 text-[var(--foreground)] text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
                                         <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                                     </svg>
@@ -348,7 +334,7 @@ export default function CompetitorsAnalysis() {
                                 </span>
                                 Recomendação Estratégica
                             </h3>
-                            <div className="text-lg text-white font-medium leading-relaxed whitespace-pre-line">
+                            <div className="text-lg text-[var(--foreground)] font-medium leading-relaxed whitespace-pre-line">
                                 {selectedSwotCompetitor.strategicInsight}
                             </div>
                         </div>
@@ -359,13 +345,13 @@ export default function CompetitorsAnalysis() {
                         {/* FORÇAS (Internal / Positive) */}
                         <div className="liquid-glass p-6 border-t-4 border-t-emerald-500 flex flex-col h-full">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-black text-white tracking-tighter">FORÇAS</h3>
-                                <span className="text-[10px] uppercase font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded">Interno • Positivo</span>
+                                <h3 className="text-xl font-black text-[var(--foreground)] tracking-tighter">FORÇAS</h3>
+                                <span className="text-[10px] uppercase font-bold text-[var(--foreground)] bg-white/10/10 px-2 py-1 rounded">Interno • Positivo</span>
                             </div>
                             <ul className="space-y-3 flex-1">
                                 {selectedSwotCompetitor.swot.strengths.map((item, i) => (
-                                    <li key={i} className="flex gap-3 text-sm text-zinc-300 bg-zinc-800/30 p-3 rounded-lg border border-zinc-800">
-                                        <span className="text-emerald-500 font-bold">✓</span>
+                                    <li key={i} className="flex gap-3 text-sm text-[var(--foreground)] bg-[var(--shell-side)] p-3 rounded-lg border border-[var(--shell-border)]">
+                                        <span className="text-[var(--foreground)] font-bold">✓</span>
                                         {item}
                                     </li>
                                 ))}
@@ -375,13 +361,13 @@ export default function CompetitorsAnalysis() {
                         {/* FRAQUEZAS (Internal / Negative) */}
                         <div className="liquid-glass p-6 border-t-4 border-t-amber-500 flex flex-col h-full">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-black text-white tracking-tighter">FRAQUEZAS</h3>
-                                <span className="text-[10px] uppercase font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded">Interno • Negativo</span>
+                                <h3 className="text-xl font-black text-[var(--foreground)] tracking-tighter">FRAQUEZAS</h3>
+                                <span className="text-[10px] uppercase font-bold text-[var(--foreground)] bg-[var(--shell-border)]/10 px-2 py-1 rounded">Interno • Negativo</span>
                             </div>
                             <ul className="space-y-3 flex-1">
                                 {selectedSwotCompetitor.swot.weaknesses.map((item, i) => (
-                                    <li key={i} className="flex gap-3 text-sm text-zinc-300 bg-zinc-800/30 p-3 rounded-lg border border-zinc-800">
-                                        <span className="text-amber-500 font-bold">!</span>
+                                    <li key={i} className="flex gap-3 text-sm text-[var(--foreground)] bg-[var(--shell-side)] p-3 rounded-lg border border-[var(--shell-border)]">
+                                        <span className="text-[var(--foreground)] font-bold">!</span>
                                         {item}
                                     </li>
                                 ))}
@@ -391,13 +377,13 @@ export default function CompetitorsAnalysis() {
                         {/* OPORTUNIDADES (External / Positive) */}
                         <div className="liquid-glass p-6 border-t-4 border-t-blue-500 flex flex-col h-full">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-black text-white tracking-tighter">OPORTUNIDADES</h3>
-                                <span className="text-[10px] uppercase font-bold text-blue-500 bg-blue-500/10 px-2 py-1 rounded">Externo • Positivo</span>
+                                <h3 className="text-xl font-black text-[var(--foreground)] tracking-tighter">OPORTUNIDADES</h3>
+                                <span className="text-[10px] uppercase font-bold text-[var(--foreground)] bg-white/10/10 px-2 py-1 rounded">Externo • Positivo</span>
                             </div>
                             <ul className="space-y-3 flex-1">
                                 {selectedSwotCompetitor.swot.opportunities.map((item, i) => (
-                                    <li key={i} className="flex gap-3 text-sm text-zinc-300 bg-zinc-800/30 p-3 rounded-lg border border-zinc-800">
-                                        <span className="text-blue-500 font-bold">★</span>
+                                    <li key={i} className="flex gap-3 text-sm text-[var(--foreground)] bg-[var(--shell-side)] p-3 rounded-lg border border-[var(--shell-border)]">
+                                        <span className="text-[var(--foreground)] font-bold">★</span>
                                         {item}
                                     </li>
                                 ))}
@@ -407,13 +393,13 @@ export default function CompetitorsAnalysis() {
                         {/* AMEAÇAS (External / Negative) */}
                         <div className="liquid-glass p-6 border-t-4 border-t-purple-500 flex flex-col h-full">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-black text-white tracking-tighter">AMEAÇAS</h3>
-                                <span className="text-[10px] uppercase font-bold text-purple-500 bg-purple-500/10 px-2 py-1 rounded">Externo • Negativo</span>
+                                <h3 className="text-xl font-black text-[var(--foreground)] tracking-tighter">AMEAÇAS</h3>
+                                <span className="text-[10px] uppercase font-bold text-[var(--foreground)] bg-[var(--shell-border)]/10 px-2 py-1 rounded">Externo • Negativo</span>
                             </div>
                             <ul className="space-y-3 flex-1">
                                 {selectedSwotCompetitor.swot.threats.map((item, i) => (
-                                    <li key={i} className="flex gap-3 text-sm text-zinc-300 bg-zinc-800/30 p-3 rounded-lg border border-zinc-800">
-                                        <span className="text-purple-500 font-bold">⚠</span>
+                                    <li key={i} className="flex gap-3 text-sm text-[var(--foreground)] bg-[var(--shell-side)] p-3 rounded-lg border border-[var(--shell-border)]">
+                                        <span className="text-[var(--foreground)] font-bold">⚠</span>
                                         {item}
                                     </li>
                                 ))}
@@ -427,53 +413,58 @@ export default function CompetitorsAnalysis() {
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <div className="flex flex-col gap-6">
                         <div className="liquid-glass p-6 rounded-3xl">
-                            <h3 className="text-lg font-black tracking-tight mb-4 text-blue-500">Ranking de Melhores Posts</h3>
+                            <h3 className="text-lg font-black tracking-tight mb-4 text-[var(--foreground)]">Ranking de Melhores Posts</h3>
 
                             {/* FILTERS TOOLBAR */}
                             <div className="flex flex-wrap gap-2 mb-6 items-center">
-                                <span className="text-xs font-bold text-zinc-500 uppercase mr-2">Comparar:</span>
+                                <span className="text-xs font-bold text-[var(--muted)] uppercase mr-2">Comparar:</span>
 
                                 {/* Client Toggle */}
                                 <button
                                     onClick={() => setShowClient(!showClient)}
                                     className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${showClient
-                                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
-                                        : 'bg-zinc-800/50 text-zinc-500 border-zinc-700 hover:bg-zinc-800'
+                                        ? 'bg-white/10/20 text-[var(--foreground)] border-white/20/50 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                                        : 'bg-[var(--shell-side)] text-[var(--muted)] border-[var(--shell-border)] hover:bg-[var(--shell-side)]'
                                         }`}
                                 >
                                     Você (B-Studio)
                                 </button>
 
-                                {/* Competitor Toggles */}
-                                {competitors.map(comp => {
-                                    const isSelected = selectedCompetitorIds.includes(comp.id);
-                                    return (
-                                        <button
-                                            key={comp.id}
-                                            onClick={() => {
-                                                if (isSelected) {
-                                                    setSelectedCompetitorIds(ids => ids.filter(id => id !== comp.id));
-                                                } else {
-                                                    setSelectedCompetitorIds(ids => [...ids, comp.id]);
-                                                }
-                                            }}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${isSelected
-                                                ? 'bg-zinc-700 text-white border-zinc-500'
-                                                : 'bg-zinc-800/50 text-zinc-500 border-zinc-700 hover:bg-zinc-800'
-                                                }`}
-                                        >
-                                            <img src={comp.avatar} className={`w-4 h-4 rounded-full ${!isSelected ? 'grayscale opacity-60' : ''}`} alt="" />
-                                            {comp.name}
-                                        </button>
-                                    );
-                                })}
+                                <div className="flex items-center p-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-inner overflow-x-auto hide-scrollbar w-fit mb-4">
+                                    {/* Competitor Toggles */}
+                                    {competitors.map(comp => {
+                                        const isSelected = selectedCompetitorIds.includes(comp.id);
+                                        return (
+                                            <button
+                                                key={comp.id}
+                                                onClick={() => {
+                                                    if (isSelected) {
+                                                        setSelectedCompetitorIds(selectedCompetitorIds.filter(id => id !== comp.id));
+                                                    } else {
+                                                        setSelectedCompetitorIds([...selectedCompetitorIds, comp.id]);
+                                                    }
+                                                }}
+                                                className={`
+                                                relative px-4 py-2 text-xs font-bold transition-all duration-300 rounded-full flex items-center gap-2 whitespace-nowrap
+                                                ${isSelected
+                                                        ? "bg-white/20 text-[var(--foreground)] shadow-[0_2px_10px_rgba(0,0,0,0.1),inset_0_1px_rgba(255,255,255,0.4)]"
+                                                        : "text-[var(--foreground)]/60 hover:text-[var(--foreground)] hover:bg-white/10"
+                                                    }
+                                            `}
+                                            >
+                                                <img src={comp.avatar} className={`w-4 h-4 rounded-full ${!isSelected ? 'grayscale opacity-50' : ''}`} alt="" />
+                                                {comp.name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
 
                             {/* TABLE */}
                             <div className="overflow-x-auto rounded-xl border border-[var(--shell-border)]">
                                 <table className="w-full text-left text-sm whitespace-nowrap">
                                     <thead className="bg-[var(--shell-surface)]">
-                                        <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-zinc-500 text-[10px]">
+                                        <tr className="border-b border-[var(--shell-border)] font-bold uppercase tracking-wider text-[var(--muted)] text-[10px]">
                                             <th className="py-3 pl-4">#</th>
                                             <th className="py-3 px-2">Autor</th>
                                             <th className="py-3 px-2">Post</th>
@@ -499,22 +490,22 @@ export default function CompetitorsAnalysis() {
                                                     key={post.id}
                                                     className={`
                                                         group transition-colors hover:bg-[var(--shell-surface)]
-                                                        ${post.isClient ? 'bg-blue-500/5 hover:bg-blue-500/10' : ''}
+                                                        ${post.isClient ? 'bg-white/10/5 hover:bg-white/10/10' : ''}
                                                     `}
                                                 >
-                                                    <td className="py-3 pl-4 text-xs font-black text-zinc-500">
-                                                        {isTop3 ? <span className="text-yellow-500">#{index + 1}</span> : `#${index + 1}`}
+                                                    <td className="py-3 pl-4 text-xs font-black text-[var(--muted)]">
+                                                        {isTop3 ? <span className="text-[var(--foreground)]">#{index + 1}</span> : `#${index + 1}`}
                                                     </td>
                                                     <td className="py-3 px-2">
                                                         <div className="flex items-center gap-2">
                                                             <img src={post.author.avatar} alt="" className="w-6 h-6 rounded-full border border-[var(--shell-border)]" />
-                                                            <span className={`text-xs font-bold truncate max-w-[120px] ${post.isClient ? 'text-blue-400' : 'text-zinc-400'}`}>
+                                                            <span className={`text-xs font-bold truncate max-w-[120px] ${post.isClient ? 'text-[var(--foreground)]' : 'text-[var(--muted)]'}`}>
                                                                 {post.author.name}
                                                             </span>
                                                         </div>
                                                     </td>
                                                     <td className="py-3 px-2">
-                                                        <div className="w-10 h-10 rounded-lg bg-zinc-800 overflow-hidden relative shrink-0 border border-[var(--shell-border)]">
+                                                        <div className="w-10 h-10 rounded-lg bg-[var(--shell-side)] overflow-hidden relative shrink-0 border border-[var(--shell-border)]">
                                                             <img src={post.image} alt="" className="w-full h-full object-cover" />
                                                             {post.type === 'video' && (
                                                                 <div className="absolute inset-0 flex items-center justify-center bg-black/30">
@@ -526,7 +517,7 @@ export default function CompetitorsAnalysis() {
                                                     <td className="py-3 px-2 text-center">
                                                         <div className="flex flex-col items-center">
                                                             <span className="text-base">{getTypeIcon(post.type)}</span>
-                                                            <span className="text-[9px] text-zinc-500 uppercase font-bold mt-0.5">{getTypeLabel(post.type)}</span>
+                                                            <span className="text-[9px] text-[var(--muted)] uppercase font-bold mt-0.5">{getTypeLabel(post.type)}</span>
                                                         </div>
                                                     </td>
                                                     <td className="py-3 px-2">
@@ -534,19 +525,19 @@ export default function CompetitorsAnalysis() {
                                                             {post.message}
                                                         </p>
                                                     </td>
-                                                    <td className="py-3 px-2 text-[10px] text-zinc-500 font-mono">{post.date}</td>
-                                                    <td className="py-3 text-right px-2 font-mono text-xs text-zinc-300">{formatNumber(post.reach || 0)}</td>
-                                                    <td className="py-3 text-right px-2 font-mono text-xs text-emerald-400">{formatNumber(post.likes || post.reactions || 0)}</td>
-                                                    <td className="py-3 text-right px-2 font-mono text-xs text-zinc-400">{formatNumber(post.comments || 0)}</td>
-                                                    <td className="py-3 text-right px-2 font-mono text-xs text-zinc-400">{formatNumber(post.shares || 0)}</td>
-                                                    <td className="py-3 text-right px-2 font-mono text-xs text-purple-400">{post.video_views ? formatNumber(post.video_views) : '-'}</td>
-                                                    <td className="py-3 text-right px-2 font-mono text-xs text-zinc-400">{post.link_clicks ? formatNumber(post.link_clicks) : '-'}</td>
+                                                    <td className="py-3 px-2 text-[10px] text-[var(--muted)] font-mono">{post.date}</td>
+                                                    <td className="py-3 text-right px-2 font-mono text-xs text-[var(--foreground)]">{formatNumber(post.reach || 0)}</td>
+                                                    <td className="py-3 text-right px-2 font-mono text-xs text-[var(--foreground)]">{formatNumber(post.likes || post.reactions || 0)}</td>
+                                                    <td className="py-3 text-right px-2 font-mono text-xs text-[var(--muted)]">{formatNumber(post.comments || 0)}</td>
+                                                    <td className="py-3 text-right px-2 font-mono text-xs text-[var(--muted)]">{formatNumber(post.shares || 0)}</td>
+                                                    <td className="py-3 text-right px-2 font-mono text-xs text-[var(--foreground)]">{post.video_views ? formatNumber(post.video_views) : '-'}</td>
+                                                    <td className="py-3 text-right px-2 font-mono text-xs text-[var(--muted)]">{post.link_clicks ? formatNumber(post.link_clicks) : '-'}</td>
                                                     <td className="py-3 text-right pr-4">
                                                         <div className="flex items-center justify-end gap-2">
                                                             <span className="text-xs font-black text-[var(--foreground)]">{engagementRate.toFixed(1)}%</span>
-                                                            <div className="w-12 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+                                                            <div className="w-12 h-1.5 bg-[var(--shell-side-btn)] rounded-full overflow-hidden">
                                                                 <div
-                                                                    className={`h-full ${engagementRate > 5 ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                                                                    className={`h-full ${engagementRate > 5 ? 'bg-white/10' : 'bg-white/10'}`}
                                                                     style={{ width: `${Math.min(100, engagementRate * 10)}%` }}
                                                                 ></div>
                                                             </div>
@@ -567,26 +558,26 @@ export default function CompetitorsAnalysis() {
             {activeTab === "publico" && selectedAudienceCompetitor && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-6">
                     {/* COMPETITOR SELECTOR */}
-                    <div className="flex overflow-x-auto gap-4 pb-4 snap-x">
-                        {competitors.map((competitor) => (
-                            <button
-                                key={competitor.id}
-                                onClick={() => setSelectedAudienceCompetitor(competitor)}
-                                className={`
-                                    field-sizing-content min-w-[200px] p-4 rounded-xl border transition-all flex items-center gap-3 snap-start text-left
-                                    ${selectedAudienceCompetitor.id === competitor.id
-                                        ? "bg-[var(--shell-surface)] border-blue-500/50 ring-1 ring-blue-500/20"
-                                        : "bg-[var(--shell-side)] border-[var(--shell-border)] hover:border-zinc-700 opacity-60 hover:opacity-100"
-                                    }
-                                `}
-                            >
-                                <img src={competitor.avatar} alt={competitor.name} className={`w-10 h-10 rounded-full border border-[var(--shell-border)] ${selectedAudienceCompetitor.id !== competitor.id ? 'grayscale' : ''}`} />
-                                <div>
-                                    <div className={`font-bold text-sm ${selectedAudienceCompetitor.id === competitor.id ? "text-white" : "text-zinc-400"}`}>{competitor.name}</div>
-                                    <div className="text-[10px] text-zinc-500">Ver análise de público</div>
-                                </div>
-                            </button>
-                        ))}
+                    <div className="flex items-center p-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-inner overflow-x-auto hide-scrollbar w-fit mb-4">
+                        {competitors.map((competitor) => {
+                            const isSelected = selectedAudienceCompetitor.id === competitor.id;
+                            return (
+                                <button
+                                    key={competitor.id}
+                                    onClick={() => setSelectedAudienceCompetitor(competitor)}
+                                    className={`
+                                        relative px-4 py-2 text-xs font-bold transition-all duration-300 rounded-full flex items-center gap-2 whitespace-nowrap
+                                        ${isSelected
+                                            ? "bg-white/20 text-[var(--foreground)] shadow-[0_2px_10px_rgba(0,0,0,0.1),inset_0_1px_rgba(255,255,255,0.4)]"
+                                            : "text-[var(--foreground)]/60 hover:text-[var(--foreground)] hover:bg-white/10"
+                                        }
+                                    `}
+                                >
+                                    <img src={competitor.avatar} alt="" className={`w-4 h-4 rounded-full ${!isSelected ? 'grayscale opacity-50' : ''}`} />
+                                    <span>{competitor.name}</span>
+                                </button>
+                            );
+                        })}
                     </div>
 
                     {/* DEMOGRAPHICS SECTION */}
@@ -594,109 +585,109 @@ export default function CompetitorsAnalysis() {
                     {/* OVERVIEW CARDS ROW */}
                     <div className="flex overflow-x-auto pb-4 gap-6 snap-x">
                         {/* 1. NOVOS SEGUIDORES */}
-                        <div className="min-w-[220px] bg-zinc-950 border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Novos Seguidores</span>
+                        <div className="min-w-[220px] bg-[var(--shell-surface)] border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
+                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Novos Seguidores</span>
                             <div>
-                                <div className="text-4xl font-black text-emerald-400 tracking-tighter">+{formatNumber(selectedAudienceCompetitor.audience?.newFollowers || 0)}</div>
-                                <div className="text-[10px] font-bold text-emerald-600 uppercase mt-1">+{selectedAudienceCompetitor.audience?.newFollowersGrowth?.toFixed(1)}% no período</div>
+                                <div className="text-4xl font-black text-[var(--foreground)] tracking-tighter">+{formatNumber(selectedAudienceCompetitor.audience?.newFollowers || 0)}</div>
+                                <div className="text-[10px] font-bold text-[var(--foreground)] uppercase mt-1">+{selectedAudienceCompetitor.audience?.newFollowersGrowth?.toFixed(1)}% no período</div>
                             </div>
                         </div>
 
                         {/* 2. TOTAL DE SEGUIDORES */}
-                        <div className="min-w-[220px] bg-zinc-950 border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total de Seguidores</span>
+                        <div className="min-w-[220px] bg-[var(--shell-surface)] border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
+                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Total de Seguidores</span>
                             <div>
-                                <div className="text-4xl font-black text-white tracking-tighter">{formatNumber(selectedAudienceCompetitor.followers)}</div>
-                                <div className="text-[10px] font-bold text-zinc-600 uppercase mt-1">Base ativa da conta</div>
+                                <div className="text-4xl font-black text-[var(--foreground)] tracking-tighter">{formatNumber(selectedAudienceCompetitor.followers)}</div>
+                                <div className="text-[10px] font-bold text-[var(--foreground)] uppercase mt-1">Base ativa da conta</div>
                             </div>
                         </div>
 
                         {/* 3. BOTÔMETRO */}
-                        <div className="min-w-[340px] bg-zinc-950 border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Botômetro</span>
+                        <div className="min-w-[340px] bg-[var(--shell-surface)] border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
+                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Botômetro</span>
                             <div className="space-y-2">
                                 <div className="flex justify-between text-[10px] font-bold uppercase">
-                                    <span className="text-emerald-400">Reais</span>
-                                    <span className="text-zinc-500">{(selectedAudienceCompetitor.audience?.botometer?.real! * 100).toFixed(0)}%</span>
+                                    <span className="text-[var(--foreground)]">Reais</span>
+                                    <span className="text-[var(--muted)]">{(selectedAudienceCompetitor.audience?.botometer?.real! * 100).toFixed(0)}%</span>
                                 </div>
                                 <div className="flex justify-between text-[10px] font-bold uppercase">
-                                    <span className="text-amber-400">Fantasmas</span>
-                                    <span className="text-zinc-500">{(selectedAudienceCompetitor.audience?.botometer?.ghosts! * 100).toFixed(0)}%</span>
+                                    <span className="text-[var(--foreground)]">Fantasmas</span>
+                                    <span className="text-[var(--muted)]">{(selectedAudienceCompetitor.audience?.botometer?.ghosts! * 100).toFixed(0)}%</span>
                                 </div>
                                 <div className="flex justify-between text-[10px] font-bold uppercase">
-                                    <span className="text-rose-400">Bots</span>
-                                    <span className="text-zinc-500">{(selectedAudienceCompetitor.audience?.botometer?.bots! * 100).toFixed(0)}%</span>
+                                    <span className="text-[var(--foreground)]">Bots</span>
+                                    <span className="text-[var(--muted)]">{(selectedAudienceCompetitor.audience?.botometer?.bots! * 100).toFixed(0)}%</span>
                                 </div>
                                 {/* Progress Bar */}
-                                <div className="w-full h-2 rounded-full overflow-hidden flex mt-2 bg-zinc-900">
-                                    <div className="h-full bg-emerald-500" style={{ width: `${selectedAudienceCompetitor.audience?.botometer?.real! * 100}%` }}></div>
-                                    <div className="h-full bg-amber-500" style={{ width: `${selectedAudienceCompetitor.audience?.botometer?.ghosts! * 100}%` }}></div>
-                                    <div className="h-full bg-rose-500" style={{ width: `${selectedAudienceCompetitor.audience?.botometer?.bots! * 100}%` }}></div>
+                                <div className="w-full h-2 rounded-full overflow-hidden flex mt-2 bg-[var(--shell-surface)]">
+                                    <div className="h-full bg-white/10" style={{ width: `${selectedAudienceCompetitor.audience?.botometer?.real! * 100}%` }}></div>
+                                    <div className="h-full bg-[var(--shell-border)]" style={{ width: `${selectedAudienceCompetitor.audience?.botometer?.ghosts! * 100}%` }}></div>
+                                    <div className="h-full bg-[var(--shell-border)]" style={{ width: `${selectedAudienceCompetitor.audience?.botometer?.bots! * 100}%` }}></div>
                                 </div>
                             </div>
                         </div>
 
                         {/* 4. CLUSTER PRINCIPAL */}
-                        <div className="min-w-[260px] bg-zinc-950 border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Cluster Principal</span>
+                        <div className="min-w-[260px] bg-[var(--shell-surface)] border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
+                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Cluster Principal</span>
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
-                                    <span className="text-violet-400 text-xl">♀</span>
+                                <div className="w-12 h-12 rounded-xl bg-[var(--shell-border)]/10 flex items-center justify-center border border-[var(--shell-border)]/20">
+                                    <span className="text-[var(--foreground)] text-xl">♀</span>
                                 </div>
                                 <div className="flex flex-col justify-center">
-                                    <div className="text-2xl font-black text-white tracking-tight leading-none">{selectedAudienceCompetitor.audience?.mainCluster}</div>
-                                    <div className="text-[10px] font-bold text-zinc-500 uppercase mt-1">25-34</div>
+                                    <div className="text-2xl font-black text-[var(--foreground)] tracking-tight leading-none">{selectedAudienceCompetitor.audience?.mainCluster}</div>
+                                    <div className="text-[10px] font-bold text-[var(--muted)] uppercase mt-1">25-34</div>
                                 </div>
                             </div>
                         </div>
 
                         {/* 5. FAIXA ETÁRIA PRINCIPAL */}
-                        <div className="min-w-[220px] bg-zinc-950 border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Faixa Etária Principal</span>
+                        <div className="min-w-[220px] bg-[var(--shell-surface)] border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
+                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Faixa Etária Principal</span>
                             <div>
-                                <div className="text-4xl font-black text-white tracking-tighter">{selectedAudienceCompetitor.audience?.mainAge}</div>
-                                <div className="text-[10px] font-bold text-blue-500 uppercase mt-1">Millennials / Decisores</div>
+                                <div className="text-4xl font-black text-[var(--foreground)] tracking-tighter">{selectedAudienceCompetitor.audience?.mainAge}</div>
+                                <div className="text-[10px] font-bold text-[var(--foreground)] uppercase mt-1">Millennials / Decisores</div>
                             </div>
                         </div>
 
                         {/* 6. CIDADE PRINCIPAL */}
-                        <div className="min-w-[220px] bg-zinc-950 border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Cidade Principal</span>
-                            <div className="text-2xl font-black text-white tracking-tight leading-tight mt-2">{selectedAudienceCompetitor.audience?.mainCity}</div>
+                        <div className="min-w-[220px] bg-[var(--shell-surface)] border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
+                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Cidade Principal</span>
+                            <div className="text-2xl font-black text-[var(--foreground)] tracking-tight leading-tight mt-2">{selectedAudienceCompetitor.audience?.mainCity}</div>
                         </div>
 
                         {/* 7. PAÍS PRINCIPAL */}
-                        <div className="min-w-[220px] bg-zinc-950 border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">País Principal</span>
+                        <div className="min-w-[220px] bg-[var(--shell-surface)] border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
+                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">País Principal</span>
                             <div className="flex items-center gap-3 mt-2">
                                 <span className="text-4xl">🇧🇷</span>
-                                <div className="text-3xl font-black text-white tracking-tight">Brasil</div>
+                                <div className="text-3xl font-black text-[var(--foreground)] tracking-tight">Brasil</div>
                             </div>
                         </div>
 
                         {/* 8. IDIOMA PRINCIPAL */}
-                        <div className="min-w-[220px] bg-zinc-950 border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Idioma Principal</span>
+                        <div className="min-w-[220px] bg-[var(--shell-surface)] border border-white/5 p-5 rounded-2xl flex flex-col justify-between snap-start">
+                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Idioma Principal</span>
                             <div>
-                                <div className="text-4xl font-black text-white tracking-tighter">{selectedAudienceCompetitor.audience?.mainLanguage}</div>
-                                <div className="text-[10px] font-bold text-zinc-600 uppercase mt-1">Português (BR)</div>
+                                <div className="text-4xl font-black text-[var(--foreground)] tracking-tighter">{selectedAudienceCompetitor.audience?.mainLanguage}</div>
+                                <div className="text-[10px] font-bold text-[var(--foreground)] uppercase mt-1">Português (BR)</div>
                             </div>
                         </div>
                     </div>
 
                     <div className="liquid-glass p-8 rounded-3xl border border-[var(--shell-border)]">
                         <div className="mb-8">
-                            <h3 className="text-2xl font-black text-white tracking-tighter">Faixa Etária & Gênero</h3>
-                            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Resumo da distribuição demográfica da base.</p>
+                            <h3 className="text-2xl font-black text-[var(--foreground)] tracking-tighter">Faixa Etária & Gênero</h3>
+                            <p className="text-xs font-bold text-[var(--muted)] uppercase tracking-widest mt-1">Resumo da distribuição demográfica da base.</p>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                             {/* CARD 1: TOTAL POR FAIXA ETÁRIA (Donut) */}
-                            <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 flex flex-col">
-                                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Total por Faixa Etária</h4>
-                                <div className="text-xl font-bold text-white mb-6">
+                            <div className="bg-[var(--shell-surface)] rounded-2xl p-6 border border-[var(--shell-border)] flex flex-col">
+                                <h4 className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-1">Total por Faixa Etária</h4>
+                                <div className="text-xl font-bold text-[var(--foreground)] mb-6">
                                     {selectedAudienceCompetitor.audience?.age.reduce((a, b) => a.value > b.value ? a : b).label} anos
-                                    <span className="block text-[10px] font-normal text-zinc-500 mt-1">
+                                    <span className="block text-[10px] font-normal text-[var(--muted)] mt-1">
                                         são a maioria, representando {(selectedAudienceCompetitor.audience?.age.reduce((a, b) => a.value > b.value ? a : b).value * 100).toFixed(0)}% da leitura atual.
                                     </span>
                                 </div>
@@ -714,7 +705,7 @@ export default function CompetitorsAnalysis() {
                                                 const offsetVal = selectedAudienceCompetitor.audience?.age.slice(0, i).reduce((acc, curr) => acc + curr.value, 0) || 0;
                                                 const strokeDashoffset = -offsetVal * circumference;
 
-                                                const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#06b6d4', '#ef4444', '#ec4899'];
+                                                const colors = ["#AAB3C0", "#AAB3C0", "#AAB3C0", "#AAB3C0", "#AAB3C0", "#AAB3C0", "#AAB3C0"];
 
                                                 return (
                                                     <circle
@@ -733,7 +724,7 @@ export default function CompetitorsAnalysis() {
                                             {/* Inner Text */}
                                             <foreignObject x="25" y="25" width="50" height="50">
                                                 <div className="w-full h-full flex items-center justify-center transform rotate-90">
-                                                    <span className="text-lg font-black text-white">
+                                                    <span className="text-lg font-black text-[var(--foreground)]">
                                                         {(selectedAudienceCompetitor.audience?.age.reduce((a, b) => a.value > b.value ? a : b).value * 100).toFixed(0)}%
                                                     </span>
                                                 </div>
@@ -745,14 +736,14 @@ export default function CompetitorsAnalysis() {
                                     <div className="grid grid-cols-2 gap-x-4 w-full">
                                         <div className="space-y-1.5">
                                             {selectedAudienceCompetitor.audience?.age.slice(0, 4).map((a, i) => {
-                                                const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-cyan-500', 'bg-red-500', 'bg-pink-500'];
+                                                const colors = ['bg-white/10', 'bg-white/10', 'bg-[var(--shell-border)]', 'bg-[var(--shell-border)]', 'bg-[var(--shell-border)]', 'bg-white/10', 'bg-[var(--shell-border)]'];
                                                 return (
                                                     <div key={a.label} className="flex items-center gap-3 text-[10px]">
                                                         <div className="flex items-center gap-1.5">
                                                             <span className={`w-1.5 h-1.5 rounded-full ${colors[i % colors.length]}`}></span>
-                                                            <span className="text-zinc-400 font-medium">{a.label}</span>
+                                                            <span className="text-[var(--muted)] font-medium">{a.label}</span>
                                                         </div>
-                                                        <span className="text-white/50 font-bold">{(a.value * 100).toFixed(0)}%</span>
+                                                        <span className="text-[var(--foreground)]/50 font-bold">{(a.value * 100).toFixed(0)}%</span>
                                                     </div>
                                                 );
                                             })}
@@ -760,14 +751,14 @@ export default function CompetitorsAnalysis() {
                                         <div className="space-y-1.5">
                                             {selectedAudienceCompetitor.audience?.age.slice(4).map((a, i) => {
                                                 const originalIndex = i + 4;
-                                                const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-cyan-500', 'bg-red-500', 'bg-pink-500'];
+                                                const colors = ['bg-white/10', 'bg-white/10', 'bg-[var(--shell-border)]', 'bg-[var(--shell-border)]', 'bg-[var(--shell-border)]', 'bg-white/10', 'bg-[var(--shell-border)]'];
                                                 return (
                                                     <div key={a.label} className="flex items-center gap-3 text-[10px]">
                                                         <div className="flex items-center gap-1.5">
                                                             <span className={`w-1.5 h-1.5 rounded-full ${colors[originalIndex % colors.length]}`}></span>
-                                                            <span className="text-zinc-400 font-medium">{a.label}</span>
+                                                            <span className="text-[var(--muted)] font-medium">{a.label}</span>
                                                         </div>
-                                                        <span className="text-white/50 font-bold">{(a.value * 100).toFixed(0)}%</span>
+                                                        <span className="text-[var(--foreground)]/50 font-bold">{(a.value * 100).toFixed(0)}%</span>
                                                     </div>
                                                 );
                                             })}
@@ -777,15 +768,15 @@ export default function CompetitorsAnalysis() {
                             </div>
 
                             {/* CARD 2: PYRAMID CHART (Idade x Gênero) */}
-                            <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 lg:col-span-2 flex flex-col">
-                                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-6">Distribuição Demográfica (Idade x Gênero)</h4>
+                            <div className="bg-[var(--shell-surface)] rounded-2xl p-6 border border-[var(--shell-border)] lg:col-span-2 flex flex-col">
+                                <h4 className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-6">Distribuição Demográfica (Idade x Gênero)</h4>
 
                                 <div className="flex items-center justify-center gap-6 mb-4 text-[10px] font-bold uppercase tracking-wider">
                                     <div className="flex items-center gap-2">
-                                        <span className="w-3 h-3 bg-blue-500 rounded-sm"></span> Masculino
+                                        <span className="w-3 h-3 bg-white/10 rounded-sm"></span> Masculino
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="w-3 h-3 bg-pink-500 rounded-sm"></span> Feminino
+                                        <span className="w-3 h-3 bg-[var(--shell-border)] rounded-sm"></span> Feminino
                                     </div>
                                 </div>
 
@@ -804,22 +795,22 @@ export default function CompetitorsAnalysis() {
                                         const maxBar = 0.25;
 
                                         return (
-                                            <div key={ageGroup.label} className="flex items-center text-[10px] font-medium text-zinc-500">
+                                            <div key={ageGroup.label} className="flex items-center text-[10px] font-medium text-[var(--muted)]">
                                                 {/* Male Side (Right Aligned) */}
                                                 <div className="flex-1 flex items-center justify-end gap-2">
-                                                    <span className="text-zinc-600">{(maleVal * 100).toFixed(1)}%</span>
-                                                    <div className="h-4 bg-blue-500 rounded-l-sm" style={{ width: `${(maleVal / maxBar) * 100}%` }}></div>
+                                                    <span className="text-[var(--foreground)]">{(maleVal * 100).toFixed(1)}%</span>
+                                                    <div className="h-4 bg-white/10 rounded-l-sm" style={{ width: `${(maleVal / maxBar) * 100}%` }}></div>
                                                 </div>
 
                                                 {/* Center Label */}
-                                                <div className="w-12 text-center font-bold text-zinc-300 shrink-0">
+                                                <div className="w-12 text-center font-bold text-[var(--foreground)] shrink-0">
                                                     {ageGroup.label}
                                                 </div>
 
                                                 {/* Female Side (Left Aligned) */}
                                                 <div className="flex-1 flex items-center justify-start gap-2">
-                                                    <div className="h-4 bg-pink-500 rounded-r-sm" style={{ width: `${(femaleVal / maxBar) * 100}%` }}></div>
-                                                    <span className="text-zinc-600">{(femaleVal * 100).toFixed(1)}%</span>
+                                                    <div className="h-4 bg-[var(--shell-border)] rounded-r-sm" style={{ width: `${(femaleVal / maxBar) * 100}%` }}></div>
+                                                    <span className="text-[var(--foreground)]">{(femaleVal * 100).toFixed(1)}%</span>
                                                 </div>
                                             </div>
                                         );
@@ -828,11 +819,11 @@ export default function CompetitorsAnalysis() {
                             </div>
 
                             {/* CARD 3: RESUMO DE GÊNERO */}
-                            <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 flex flex-col">
-                                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Resumo de Gênero</h4>
-                                <div className="text-xl font-bold text-white mb-6">
+                            <div className="bg-[var(--shell-surface)] rounded-2xl p-6 border border-[var(--shell-border)] flex flex-col">
+                                <h4 className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-1">Resumo de Gênero</h4>
+                                <div className="text-xl font-bold text-[var(--foreground)] mb-6">
                                     Mulheres
-                                    <span className="block text-[10px] font-normal text-zinc-500 mt-1">
+                                    <span className="block text-[10px] font-normal text-[var(--muted)] mt-1">
                                         são a maioria, representando {(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Mulheres')?.value! * 100).toFixed(0)}% da leitura atual.
                                     </span>
                                 </div>
@@ -841,7 +832,7 @@ export default function CompetitorsAnalysis() {
                                     {/* Big Donut */}
                                     <div className="relative w-32 h-32">
                                         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="#27272a" strokeWidth="12" />
+                                            <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--foreground)" strokeWidth="12" />
                                             {selectedAudienceCompetitor.audience?.gender.map((g, i) => {
                                                 const value = g.value;
                                                 const circumference = 2 * Math.PI * 40;
@@ -855,7 +846,7 @@ export default function CompetitorsAnalysis() {
                                                         cy="50"
                                                         r="40"
                                                         fill="transparent"
-                                                        stroke={g.label === 'Mulheres' ? '#ec4899' : '#3b82f6'}
+                                                        stroke={g.label === 'Mulheres' ? "#AAB3C0" : "#AAB3C0"}
                                                         strokeWidth="12"
                                                         strokeDasharray={strokeDasharray}
                                                         strokeDashoffset={strokeDashoffset}
@@ -864,7 +855,7 @@ export default function CompetitorsAnalysis() {
                                             })}
                                             <foreignObject x="25" y="25" width="50" height="50">
                                                 <div className="w-full h-full flex items-center justify-center transform rotate-90">
-                                                    <span className="text-xl font-black text-white">
+                                                    <span className="text-xl font-black text-[var(--foreground)]">
                                                         {(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Mulheres')?.value! * 100).toFixed(0)}%
                                                     </span>
                                                 </div>
@@ -876,26 +867,26 @@ export default function CompetitorsAnalysis() {
                                     <div className="w-full space-y-3">
                                         <div className="flex justify-between items-center text-[10px] font-bold">
                                             <div className="flex items-center gap-1.5">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span>
-                                                <span className="text-zinc-400">MULHERES</span>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-[var(--shell-border)]"></span>
+                                                <span className="text-[var(--muted)]">MULHERES</span>
                                             </div>
-                                            <span className="text-white">{(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Mulheres')?.value! * 100).toFixed(0)}%</span>
+                                            <span className="text-[var(--foreground)]">{(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Mulheres')?.value! * 100).toFixed(0)}%</span>
                                         </div>
-                                        <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden flex">
+                                        <div className="w-full h-2 bg-[var(--shell-side)] rounded-full overflow-hidden flex">
                                             {selectedAudienceCompetitor.audience?.gender.map(g => (
                                                 <div
                                                     key={g.label}
-                                                    className={`h-full ${g.label === 'Mulheres' ? 'bg-pink-500' : 'bg-blue-500'}`}
+                                                    className={`h-full ${g.label === 'Mulheres' ? 'bg-[var(--shell-border)]' : 'bg-white/10'}`}
                                                     style={{ width: `${g.value * 100}%` }}
                                                 ></div>
                                             ))}
                                         </div>
                                         <div className="flex justify-between items-center text-[10px] font-bold">
                                             <div className="flex items-center gap-1.5">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                                <span className="text-zinc-400">HOMENS</span>
+                                                <span className="w-1.5 h-1.5 rounded-full bg-white/10"></span>
+                                                <span className="text-[var(--muted)]">HOMENS</span>
                                             </div>
-                                            <span className="text-white">{(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Homens')?.value! * 100).toFixed(0)}%</span>
+                                            <span className="text-[var(--foreground)]">{(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Homens')?.value! * 100).toFixed(0)}%</span>
                                         </div>
                                     </div>
                                 </div>
@@ -908,15 +899,15 @@ export default function CompetitorsAnalysis() {
 
                             {/* TOP LOCATIONS */}
                             <div className="liquid-glass p-6 rounded-3xl md:col-span-2">
-                                <h3 className="text-lg font-black tracking-tight mb-6 text-zinc-100 flex items-center gap-2">
-                                    <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
+                                <h3 className="text-lg font-black tracking-tight mb-6 text-[var(--foreground)] flex items-center gap-2">
+                                    <span className="w-1 h-6 bg-[var(--shell-border)] rounded-full"></span>
                                     Principais Localizações
                                 </h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                     {selectedAudienceCompetitor.audience?.locations.map((loc, i) => (
-                                        <div key={i} className="bg-zinc-800/30 border border-zinc-700/50 p-4 rounded-xl flex items-center justify-between">
-                                            <span className="text-sm font-bold text-zinc-300">{loc.label}</span>
-                                            <span className="text-sm font-black text-purple-400">{(loc.value * 100).toFixed(1)}%</span>
+                                        <div key={i} className="bento-cell bg-[var(--shell-side)] p-4 rounded-xl flex items-center justify-between">
+                                            <span className="text-sm font-bold text-[var(--foreground)]">{loc.label}</span>
+                                            <span className="text-sm font-black text-[var(--foreground)]">{(loc.value * 100).toFixed(1)}%</span>
                                         </div>
                                     ))}
                                 </div>

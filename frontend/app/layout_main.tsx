@@ -76,9 +76,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const actionsBar = (
         <div className="flex items-center gap-3">
-            <div className="flex bg-black/30 backdrop-blur-md rounded-full px-5 h-12 border border-white/10 items-center mr-2 shadow-lg">
+            <div className="flex bg-[var(--shell-surface)] backdrop-blur-md rounded-full px-5 h-12 border border-[var(--shell-border)] items-center mr-2 shadow-lg">
                 <ProfileSelector variant="shell-brand" selectedProfile={selectedInsightProfile} onChange={setSelectedInsightProfile} />
-                <div className="w-[2px] h-5 bg-white/10 mx-4" />
+                <div className="w-[2px] h-5 bg-[var(--shell-border)] mx-4" />
                 <PeriodSelector variant="shell-brand" value={selectedPeriod} onChange={(value) => setSelectedPeriod(value)} />
             </div>
 
@@ -88,7 +88,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             <button
                 onClick={() => setActiveTab("profile")}
-                className="w-11 h-11 rounded-full ml-1 overflow-hidden border-[3px] border-white/20 hover:border-white/40 transition-colors shadow-lg"
+                className="w-11 h-11 rounded-full ml-1 overflow-hidden border-[3px] border-[var(--shell-border)] hover:border-[var(--muted)] transition-colors shadow-lg"
                 title="Perfil"
             >
                 <img src="https://i.pravatar.cc/150?img=47" alt="User Avatar" className="w-full h-full object-cover" />
@@ -97,7 +97,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
 
     return (
-        <div className="min-h-screen flex flex-col relative" style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}>
+        <div className="h-screen w-full flex flex-col relative overflow-hidden" style={{ color: "var(--foreground)" }}>
             {/* Liquid Background */}
             <div className="liquid-bg-container">
                 <div className="liquid-blob blob-1" />
@@ -113,8 +113,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 onThemeChange={setTheme}
             />
 
-            <div className="flex-1 transition-all duration-300 pt-6 ml-[104px]">
-                <main className="p-2 min-h-[calc(100vh-24px)] flex flex-col">
+            <div className="flex-1 flex flex-col min-h-0 pl-[116px] pr-6 py-6 w-full">
+                <main className="h-full flex flex-col min-h-0">
                     {activeTab === "home" && <Dashboard headerCenter={platformLogo} action={actionsBar} />}
                     {activeTab === "ads_metrics" && (
                         <LiquidShell title="MÉTRICA ADS" subtitle="ANÁLISE DE PERFORMANCE" headerCenter={platformLogo} action={actionsBar}>

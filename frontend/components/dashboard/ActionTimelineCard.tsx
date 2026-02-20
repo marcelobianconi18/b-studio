@@ -17,30 +17,27 @@ const timeline: TimelineItem[] = [
 
 export default function ActionTimelineCard() {
     return (
-        <div
-            className="h-full w-full rounded-3xl p-6 shadow-sm border flex flex-col group hover:border-[#CE6969]/30 transition-all duration-300"
-            style={{ backgroundColor: "var(--shell-surface)", borderColor: "var(--shell-border)" }}
-        >
+        <div className="h-full w-full p-6 flex flex-col group transition-all duration-300 bento-cell hover-spring">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Timeline</h2>
-                    <h1 className="text-xl font-black tracking-tighter" style={{ color: "var(--foreground)" }}>PRÓXIMAS 24H</h1>
+                    <h2 className="text-[var(--muted)] text-xs font-bold uppercase tracking-widest mb-1">Timeline</h2>
+                    <h1 className="text-xl font-black tracking-tighter text-[var(--foreground)]">PRÓXIMAS 24H</h1>
                 </div>
                 <div className="relative">
-                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                    <BellAlertIcon className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
+                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white/10 animate-pulse"></span>
+                    <BellAlertIcon className="w-5 h-5 text-[var(--muted)] dark:text-[var(--muted)]" />
                 </div>
             </div>
 
             {/* Urgência */}
-            <div className="mb-6 bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center justify-between">
+            <div className="mb-6 bg-[white]/10 border border-[white]/20 p-4 rounded-2xl flex items-center justify-between">
                 <div>
-                    <div className="px-2 py-1 bg-red-500 text-white rounded-md text-[9px] font-black uppercase tracking-widest inline-block mb-1">Urgente</div>
-                    <p className="text-xs font-bold text-red-600 dark:text-red-400">3 Aprovações Pendentes</p>
-                    <p className="text-[10px] text-red-500/70">Campanha Black Friday</p>
+                    <div className="px-2 py-1 bg-[white] text-[var(--foreground)] rounded-md text-[9px] font-black uppercase tracking-widest inline-block mb-1 shadow-sm">Urgente</div>
+                    <p className="text-xs font-bold text-[white]">3 Aprovações Pendentes</p>
+                    <p className="text-[10px] text-[white]/70">Campanha Black Friday</p>
                 </div>
-                <button className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-xs font-bold shadow-md shadow-red-500/20">
+                <button className="px-4 py-2 bg-[white] text-[var(--foreground)] rounded-lg hover:brightness-110 transition-all text-xs font-bold shadow-md shadow-[white]/20">
                     Revisar
                 </button>
             </div>
@@ -57,33 +54,33 @@ export default function ActionTimelineCard() {
                             className="absolute -left-[31px] w-3 h-3 rounded-full border-2 z-10"
                             style={{
                                 borderColor: "var(--shell-surface)",
-                                backgroundColor: item.platform === 'Instagram' ? '#A855F7' : // purple-500
-                                    item.platform === 'Meta Ads' ? '#3B82F6' : // blue-500
-                                        "var(--foreground)"
+                                backgroundColor: item.platform === 'Instagram' ? 'var(--muted)' :
+                                    item.platform === 'Meta Ads' ? 'white' :
+                                        "white"
                             }}
                         ></div>
 
                         <div className="flex justify-between items-start">
-                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.time}</span>
+                            <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">{item.time}</span>
                             <span
-                                className={`text-[9px] px-2 py-0.5 rounded-full uppercase font-black tracking-widest ${item.status === 'processing' ? 'bg-blue-500/10 text-blue-500 animate-pulse' : item.status === 'draft' ? 'text-zinc-400' : 'bg-emerald-500/10 text-emerald-500'}`}
+                                className={`text-[9px] px-2 py-0.5 rounded-full uppercase font-black tracking-widest ${item.status === 'processing' ? 'bg-[white]/10 text-[white] animate-pulse' : item.status === 'draft' ? 'text-[var(--muted)]' : 'bg-[var(--muted)]/10 text-[var(--muted)]'}`}
                                 style={item.status === 'draft' ? { backgroundColor: "var(--shell-side)" } : {}}
                             >
                                 {item.platform}
                             </span>
                         </div>
-                        <h3 className="text-sm font-bold mt-1" style={{ color: "var(--foreground)" }}>{item.title}</h3>
-                        <p className="text-xs text-zinc-500">{item.description}</p>
+                        <h3 className="text-sm font-bold mt-1 text-[var(--foreground)]">{item.title}</h3>
+                        <p className="text-xs text-[var(--muted)]">{item.description}</p>
                     </div>
                 ))}
             </div>
 
             <div
-                className="mt-4 pt-4 border-t flex items-center justify-between text-xs text-zinc-400 font-bold uppercase tracking-widest"
+                className="mt-4 pt-4 border-t flex items-center justify-between text-xs text-[var(--muted)] font-bold uppercase tracking-widest"
                 style={{ borderColor: "var(--shell-border)" }}
             >
                 <span>Upload em progresso...</span>
-                <span className="text-blue-500 animate-pulse">5 arquivos</span>
+                <span className="text-[white] animate-pulse">5 arquivos</span>
             </div>
         </div>
     );
