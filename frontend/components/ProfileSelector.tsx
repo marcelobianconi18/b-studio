@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronDownIcon, UserCircleIcon } from "@heroicons/react/24/solid";
 
-export type InsightPlatform = "facebook" | "instagram";
+export type InsightPlatform = "facebook" | "instagram" | "meta_ads";
 
 export type InsightProfile = {
     id: string;
@@ -13,6 +13,7 @@ export type InsightProfile = {
 };
 
 const PROFILES: InsightProfile[] = [
+    { id: "metaads-client-1", name: "clienteteste1", role: "Meta Ads", platform: "meta_ads" },
     { id: "facebook-client-1", name: "clientedeteste1", role: "Facebook Insight", platform: "facebook" },
     { id: "instagram-client-1", name: "@clienteteste1", role: "Instagram Insight", platform: "instagram" },
 ];
@@ -30,7 +31,12 @@ export default function ProfileSelector({ selectedProfile, onChange, variant = "
     const isFlatRed = variant === "flat-red";
     const isShellBrand = variant === "shell-brand";
     const selectedName = selected.name.replace(/^@/, "");
-    const selectedNetwork = selected.platform === "instagram" ? "instagram" : "facebook";
+    const selectedNetwork =
+        selected.platform === "meta_ads"
+            ? "meta ads"
+            : selected.platform === "instagram"
+                ? "instagram"
+                : "facebook";
 
     return (
         <div className="relative">
@@ -44,7 +50,13 @@ export default function ProfileSelector({ selectedProfile, onChange, variant = "
             >
                 <div className={isFlatRed ? "w-7 h-7 rounded-full border-[3px] border-white/20 bg-white" : isShellBrand ? "w-6.5 h-6.5 rounded-full bg-gradient-to-tr from-pink-500 via-fuchsia-500 to-orange-400 p-[2px]" : "w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px]"}>
                     <div className={isFlatRed ? "hidden" : isShellBrand ? "w-full h-full rounded-full bg-[var(--shell-side-btn)]/90 flex items-center justify-center" : "w-full h-full rounded-full bg-[var(--shell-side-btn)] flex items-center justify-center"}>
-                        <UserCircleIcon className={isShellBrand ? "w-3.5 h-3.5 text-[var(--muted)]" : "w-5 h-5 text-[var(--muted)]"} />
+                        {selected.platform === "meta_ads" ? (
+                            <svg viewBox="0 0 24 24" className={isShellBrand ? "w-3.5 h-3.5 text-[var(--muted)]" : "w-5 h-5 text-[var(--muted)]"} fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 16.5C4.9 10.2 7.3 7 9.2 7c2.2 0 3.8 4.6 5 7 1.2-2.4 2.7-6.9 4.8-6.9 1.2 0 2.3 1.2 2.9 3.6" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        ) : (
+                            <UserCircleIcon className={isShellBrand ? "w-3.5 h-3.5 text-[var(--muted)]" : "w-5 h-5 text-[var(--muted)]"} />
+                        )}
                     </div>
                 </div>
                 <div className={isFlatRed ? "flex items-center leading-none flex-1" : isShellBrand ? "flex flex-col items-start leading-none gap-0 flex-1 min-w-0" : "flex flex-col items-start leading-none gap-0.5"}>

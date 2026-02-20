@@ -113,14 +113,52 @@ class MetaAdsService:
         url = f"{self.BASE_URL}/{target_account}/campaigns"
         params = {
             "fields": "name,status,objective,daily_budget,lifetime_budget,start_time,stop_time,insights{spend,cpc,ctr,cpp,impressions,clicks}",
-            "limit": 50,
-            "effective_status": "['ACTIVE','PAUSED']" # Filter only relevant campaigns
+            "limit": 50
         }
 
         try:
             return self._make_request("GET", url, params=params)
         except Exception as e:
             logger.error(f"Error fetching campaigns for {target_account}: {e}")
+            return {"error": self._normalize_meta_error(e)}
+
+    def get_campaign(self, campaign_id: str):
+        """
+        Fetch metadata for a single campaign.
+        """
+        url = f"{self.BASE_URL}/{campaign_id}"
+        params = {
+            "fields": "id,name,status,effective_status,objective,start_time,stop_time,account_id"
+        }
+
+        try:
+            return self._make_request("GET", url, params=params)
+        except Exception as e:
+            logger.error(f"Error fetching campaign {campaign_id}: {e}")
+            return {"error": self._normalize_meta_error(e)}
+
+    def get_campaign_insights(self, campaign_id: str, time_increment: int = 1):
+        """
+        Fetch campaign insights with optional daily breakdown.
+        """
+        url = f"{self.BASE_URL}/{campaign_id}/insights"
+        params = {
+            "date_preset": "lifetime",
+            "fields": (
+                "campaign_id,campaign_name,date_start,date_stop,"
+                "spend,impressions,reach,frequency,cpm,clicks,cpc,ctr,"
+                "actions,action_values,cost_per_action_type,outbound_clicks"
+            ),
+            "limit": 200
+        }
+
+        if time_increment and time_increment > 0:
+            params["time_increment"] = str(time_increment)
+
+        try:
+            return self._make_request("GET", url, params=params)
+        except Exception as e:
+            logger.error(f"Error fetching campaign insights for {campaign_id}: {e}")
             return {"error": self._normalize_meta_error(e)}
 
     def toggle_campaign_status(self, campaign_id: str, new_status: str):

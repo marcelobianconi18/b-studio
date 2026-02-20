@@ -15,6 +15,7 @@ import InstagramInsightsAnalysis from "@/components/social/InstagramInsightsAnal
 import CompetitorsAnalysis from "@/components/social/CompetitorsAnalysis";
 import ProfileSelector, { type InsightProfile } from "@/components/ProfileSelector";
 import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
+import CampaignAnalysisPanel from "@/components/ads/CampaignAnalysisPanel";
 
 const TOP_MENU_ITEMS = [
     "Institucional",
@@ -30,11 +31,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<"light" | "dark">("light");
     const [selectedPeriod, setSelectedPeriod] = useState<PeriodValue>("30d");
     const [selectedInsightProfile, setSelectedInsightProfile] = useState<InsightProfile>({
-        id: "facebook-client-1",
-        name: "clientedeteste1",
-        role: "Facebook Insight",
-        platform: "facebook",
+        id: "metaads-client-1",
+        name: "clienteteste1",
+        role: "Meta Ads",
+        platform: "meta_ads",
     });
+    const isMetaAdsProfile = selectedInsightProfile.platform === "meta_ads";
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
@@ -44,14 +46,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const getContextLabel = () => {
         if (activeTab === "social") return "Insight";
         if (activeTab === "concorrentes") return "Insight";
-        if (activeTab === "ads_metrics") return "Ads Insight";
+        if (activeTab === "ads_metrics") return "Meta Ads";
         if (activeTab === "ads") return "Ads";
         return "Insight";
     };
 
     const platformLogo = (
-        <div className="flex items-center gap-3">
-            {selectedInsightProfile.platform === "facebook" ? (
+        <div className="hidden md:flex items-center gap-2 md:gap-3">
+            {(activeTab === "ads_metrics" || activeTab === "ads") && isMetaAdsProfile ? (
+                <div className="w-8 h-8 rounded-full bg-[#0a66e8] flex items-center justify-center shadow-md shrink-0">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 16.5C4.9 10.2 7.3 7 9.2 7c2.2 0 3.8 4.6 5 7 1.2-2.4 2.7-6.9 4.8-6.9 1.2 0 2.3 1.2 2.9 3.6" stroke="#fff" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </div>
+            ) : selectedInsightProfile.platform === "facebook" ? (
                 <div className="w-8 h-8 rounded-full bg-[#1877F2] flex items-center justify-center shadow-md shrink-0">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -67,8 +75,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </div>
             )}
             <div className="flex flex-col leading-none">
-                <span className="text-xl font-black tracking-widest text-white uppercase drop-shadow-md">
-                    {selectedInsightProfile.platform === "facebook" ? "Facebook" : "Instagram"} <span className="font-light opacity-80">{getContextLabel()}</span>
+                <span className="hidden md:inline text-xl font-black tracking-widest text-white uppercase drop-shadow-md">
+                    {(activeTab === "ads_metrics" || activeTab === "ads") && isMetaAdsProfile
+                        ? "Meta Ads"
+                        : selectedInsightProfile.platform === "facebook"
+                            ? "Facebook"
+                            : "Instagram"
+                    } <span className="font-light opacity-80">{getContextLabel()}</span>
+                </span>
+                <span className="md:hidden text-sm font-black tracking-wider text-white uppercase">
+                    {(activeTab === "ads_metrics" || activeTab === "ads") && isMetaAdsProfile
+                        ? "META ADS"
+                        : selectedInsightProfile.platform === "facebook"
+                            ? "FB"
+                            : "IG"
+                    } <span className="font-light opacity-80">{getContextLabel()}</span>
                 </span>
             </div>
         </div>
@@ -76,7 +97,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const actionsBar = (
         <div className="flex items-center gap-3">
-            <div className="flex bg-[var(--shell-surface)] backdrop-blur-md rounded-full px-5 h-12 border border-[var(--shell-border)] items-center mr-2 shadow-lg">
+            <div className="hidden lg:flex bg-[var(--shell-surface)] backdrop-blur-md rounded-full px-5 h-12 border border-[var(--shell-border)] items-center mr-2 shadow-lg">
                 <ProfileSelector variant="shell-brand" selectedProfile={selectedInsightProfile} onChange={setSelectedInsightProfile} />
                 <div className="w-[2px] h-5 bg-[var(--shell-border)] mx-4" />
                 <PeriodSelector variant="shell-brand" value={selectedPeriod} onChange={(value) => setSelectedPeriod(value)} />
@@ -113,14 +134,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 onThemeChange={setTheme}
             />
 
-            <div className="flex-1 flex flex-col min-h-0 pl-[116px] pr-6 py-6 w-full">
-                <main className="h-full flex flex-col min-h-0">
+            <div className="flex-1 flex flex-col min-h-0 pl-[72px] md:pl-[116px] pr-3 md:pr-6 py-4 md:py-6 w-full">
+                <main className="h-full flex flex-col min-h-0 overflow-x-hidden">
                     {activeTab === "home" && <Dashboard headerCenter={platformLogo} action={actionsBar} />}
                     {activeTab === "ads_metrics" && (
                         <LiquidShell title="MÉTRICA ADS" subtitle="ANÁLISE DE PERFORMANCE" headerCenter={platformLogo} action={actionsBar}>
-                            <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
-                                Módulo de Métrica Ads em breve.
-                            </div>
+                            <CampaignAnalysisPanel
+                                adsProfileEnabled={isMetaAdsProfile}
+                                selectedProfileName={selectedInsightProfile.name}
+                            />
                         </LiquidShell>
                     )}
                     {activeTab === "ads" && (
@@ -133,11 +155,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     {activeTab === "social" && (
                         <LiquidShell
                             title="MÉTRICA SOCIAL"
-                            subtitle={selectedInsightProfile.platform === "facebook" ? "Facebook Insights & Crescimento" : "Instagram Insights & Crescimento"}
+                            subtitle={
+                                selectedInsightProfile.platform === "facebook"
+                                    ? "Facebook Insights & Crescimento"
+                                    : selectedInsightProfile.platform === "instagram"
+                                        ? "Instagram Insights & Crescimento"
+                                        : "Selecione um perfil Facebook ou Instagram"
+                            }
                             headerCenter={platformLogo}
                             action={actionsBar}
                         >
-                            {selectedInsightProfile.platform === "facebook" ? <FacebookInsightsAnalysis /> : <InstagramInsightsAnalysis />}
+                            {selectedInsightProfile.platform === "facebook" && <FacebookInsightsAnalysis />}
+                            {selectedInsightProfile.platform === "instagram" && <InstagramInsightsAnalysis />}
+                            {selectedInsightProfile.platform === "meta_ads" && (
+                                <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
+                                    Perfil Meta Ads ativo. Para Métrica Social, selecione um perfil Facebook ou Instagram.
+                                </div>
+                            )}
                         </LiquidShell>
                     )}
                     {activeTab === "concorrentes" && (
