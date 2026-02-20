@@ -690,7 +690,7 @@ export default function CompetitorsAnalysis() {
                             <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Resumo da distribuição demográfica da base.</p>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                             {/* CARD 1: TOTAL POR FAIXA ETÁRIA (Donut) */}
                             <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 flex flex-col">
                                 <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Total por Faixa Etária</h4>
@@ -701,7 +701,7 @@ export default function CompetitorsAnalysis() {
                                     </span>
                                 </div>
 
-                                <div className="flex items-center gap-4 flex-1">
+                                <div className="flex flex-col items-center gap-6 flex-1 justify-center">
                                     {/* Donut */}
                                     <div className="relative w-32 h-32 shrink-0">
                                         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
@@ -714,7 +714,7 @@ export default function CompetitorsAnalysis() {
                                                 const offsetVal = selectedAudienceCompetitor.audience?.age.slice(0, i).reduce((acc, curr) => acc + curr.value, 0) || 0;
                                                 const strokeDashoffset = -offsetVal * circumference;
 
-                                                const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#f43f5e'];
+                                                const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#06b6d4', '#ef4444', '#ec4899'];
 
                                                 return (
                                                     <circle
@@ -742,19 +742,36 @@ export default function CompetitorsAnalysis() {
                                     </div>
 
                                     {/* Legend */}
-                                    <div className="space-y-1.5 w-full">
-                                        {selectedAudienceCompetitor.audience?.age.map((a, i) => {
-                                            const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-rose-500'];
-                                            return (
-                                                <div key={a.label} className="flex items-center justify-between text-[10px]">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`w-2 h-2 rounded-full ${colors[i % colors.length]}`}></span>
-                                                        <span className="text-zinc-400 font-medium">{a.label}</span>
+                                    <div className="grid grid-cols-2 gap-x-4 w-full">
+                                        <div className="space-y-1.5">
+                                            {selectedAudienceCompetitor.audience?.age.slice(0, 4).map((a, i) => {
+                                                const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-cyan-500', 'bg-red-500', 'bg-pink-500'];
+                                                return (
+                                                    <div key={a.label} className="flex items-center gap-3 text-[10px]">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${colors[i % colors.length]}`}></span>
+                                                            <span className="text-zinc-400 font-medium">{a.label}</span>
+                                                        </div>
+                                                        <span className="text-white/50 font-bold">{(a.value * 100).toFixed(0)}%</span>
                                                     </div>
-                                                    <span className="text-white font-bold">{(a.value * 100).toFixed(0)}%</span>
-                                                </div>
-                                            );
-                                        })}
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            {selectedAudienceCompetitor.audience?.age.slice(4).map((a, i) => {
+                                                const originalIndex = i + 4;
+                                                const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-cyan-500', 'bg-red-500', 'bg-pink-500'];
+                                                return (
+                                                    <div key={a.label} className="flex items-center gap-3 text-[10px]">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${colors[originalIndex % colors.length]}`}></span>
+                                                            <span className="text-zinc-400 font-medium">{a.label}</span>
+                                                        </div>
+                                                        <span className="text-white/50 font-bold">{(a.value * 100).toFixed(0)}%</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -811,7 +828,7 @@ export default function CompetitorsAnalysis() {
                             </div>
 
                             {/* CARD 3: RESUMO DE GÊNERO */}
-                            <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 flex flex-col lg:col-span-3">
+                            <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 flex flex-col">
                                 <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Resumo de Gênero</h4>
                                 <div className="text-xl font-bold text-white mb-6">
                                     Mulheres
@@ -820,9 +837,9 @@ export default function CompetitorsAnalysis() {
                                     </span>
                                 </div>
 
-                                <div className="flex flex-col md:flex-row items-center gap-10">
+                                <div className="flex flex-col items-center gap-6 flex-1 justify-center">
                                     {/* Big Donut */}
-                                    <div className="relative w-40 h-40">
+                                    <div className="relative w-32 h-32">
                                         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                                             <circle cx="50" cy="50" r="40" fill="transparent" stroke="#27272a" strokeWidth="12" />
                                             {selectedAudienceCompetitor.audience?.gender.map((g, i) => {
@@ -847,27 +864,24 @@ export default function CompetitorsAnalysis() {
                                             })}
                                             <foreignObject x="25" y="25" width="50" height="50">
                                                 <div className="w-full h-full flex items-center justify-center transform rotate-90">
-                                                    <span className="text-2xl font-black text-white">
+                                                    <span className="text-xl font-black text-white">
                                                         {(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Mulheres')?.value! * 100).toFixed(0)}%
                                                     </span>
-                                                    <span className="absolute mt-8 text-[8px] font-bold text-zinc-500 tracking-wider">MULHERES</span>
                                                 </div>
                                             </foreignObject>
                                         </svg>
                                     </div>
 
                                     {/* Progress Bar & Legend */}
-                                    <div className="flex-1 w-full space-y-4">
-                                        <div className="flex justify-between items-end">
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="w-2 h-2 rounded-full bg-pink-500"></span>
-                                                    <span className="text-xs font-bold text-zinc-300">MULHERES</span>
-                                                </div>
+                                    <div className="w-full space-y-3">
+                                        <div className="flex justify-between items-center text-[10px] font-bold">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span>
+                                                <span className="text-zinc-400">MULHERES</span>
                                             </div>
-                                            <span className="text-xl font-black text-white">{(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Mulheres')?.value! * 100).toFixed(0)}%</span>
+                                            <span className="text-white">{(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Mulheres')?.value! * 100).toFixed(0)}%</span>
                                         </div>
-                                        <div className="w-full h-3 bg-zinc-800 rounded-full overflow-hidden flex">
+                                        <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden flex">
                                             {selectedAudienceCompetitor.audience?.gender.map(g => (
                                                 <div
                                                     key={g.label}
@@ -876,14 +890,12 @@ export default function CompetitorsAnalysis() {
                                                 ></div>
                                             ))}
                                         </div>
-                                        <div className="flex justify-between items-end">
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold text-zinc-300">HOMENS</span>
-                                                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                                </div>
+                                        <div className="flex justify-between items-center text-[10px] font-bold">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                                <span className="text-zinc-400">HOMENS</span>
                                             </div>
-                                            <span className="text-xl font-black text-white">{(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Homens')?.value! * 100).toFixed(0)}%</span>
+                                            <span className="text-white">{(selectedAudienceCompetitor.audience?.gender.find(g => g.label === 'Homens')?.value! * 100).toFixed(0)}%</span>
                                         </div>
                                     </div>
                                 </div>

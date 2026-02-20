@@ -140,11 +140,13 @@ export function generateMockCompetitors(): Competitor[] {
             topPosts: topPosts,
             audience: {
                 age: [
-                    { label: "18-24", value: 0.25 + (Math.random() * 0.1) },
-                    { label: "25-34", value: 0.35 + (Math.random() * 0.1) },
-                    { label: "35-44", value: 0.20 + (Math.random() * 0.05) },
-                    { label: "45-54", value: 0.15 + (Math.random() * 0.05) },
-                    { label: "55+", value: 0.05 }
+                    { label: "-18", value: 0.15 },
+                    { label: "18-24", value: 0.30 },
+                    { label: "25-34", value: 0.25 },
+                    { label: "35-44", value: 0.15 },
+                    { label: "45-54", value: 0.08 },
+                    { label: "55-64", value: 0.05 },
+                    { label: "+65", value: 0.02 }
                 ],
                 gender: [
                     { label: "Mulheres", value: 0.60 + (Math.random() * 0.15) },
@@ -311,13 +313,13 @@ function generateInstagramMockPosts(): InsightsData["top_posts"] {
 
 const SHARED_DEMOGRAPHICS: InsightsData["demographics"] = {
     age: [
-        { range: "13-17", male: 5, female: 6 },
+        { range: "-18", male: 5, female: 6 },
         { range: "18-24", male: 15, female: 18 },
         { range: "25-34", male: 22, female: 25 },
         { range: "35-44", male: 18, female: 20 },
         { range: "45-54", male: 12, female: 14 },
         { range: "55-64", male: 8, female: 9 },
-        { range: "65+", male: 4, female: 6 },
+        { range: "+65", male: 4, female: 6 },
     ],
     top_country: "Brasil",
     top_cities: [],
@@ -382,7 +384,7 @@ const SHARED_DEMOGRAPHICS: InsightsData["demographics"] = {
     ],
     cities_by_age: [
         {
-            age_group: "13-17",
+            age_group: "-18",
             cities: [
                 { city: "São Paulo, SP", fans: 1200 },
                 { city: "Rio de Janeiro, RJ", fans: 900 },
@@ -472,7 +474,7 @@ const SHARED_DEMOGRAPHICS: InsightsData["demographics"] = {
             ],
         },
         {
-            age_group: "65+",
+            age_group: "+65",
             cities: [
                 { city: "São Paulo, SP", fans: 400 },
                 { city: "Rio de Janeiro, RJ", fans: 350 },
