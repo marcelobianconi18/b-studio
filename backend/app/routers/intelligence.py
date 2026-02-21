@@ -164,3 +164,45 @@ async def get_fatigue_monitor():
 async def get_viral_monitor():
     """Checks for organic posts with abnormal engagement (Viral Candidates)."""
     return intelligence_service.detect_viral_anomalies()
+
+
+# --- NEW BIA AI AGENT INTEGRATION ---
+
+class AudienceAnalysisRequest(BaseModel):
+    product_description: str
+    platform: str = "instagram"
+    objective: str = "SALES"
+    tag_type: str = "general"
+    limit: int = 5
+    ticket: str = None
+    investment: str = None
+    location: str = None
+
+@router.post("/agent-audience")
+async def generate_agentic_audience(req: AudienceAnalysisRequest):
+    """
+    Triggers the deep BIA Multi-Agent Flow (Planner + Meta MCP + Refiner)
+    to generate optimal Meta Ads targeting strategies.
+    """
+    from app.services.ai_engine.ai_assistant import BiaAIAssistant
+    
+    agent = BiaAIAssistant()
+    
+    result = await agent.generate_tags(
+        product_description=req.product_description,
+        platform=req.platform,
+        objective=req.objective,
+        tag_type=req.tag_type,
+        limit=req.limit,
+        ticket=req.ticket,
+        investment=req.investment,
+        location=req.location,
+        meta_research_required=True, # Forces the Agent MCP Flow
+        suggestion_mode="balanced"
+    )
+    
+    if not result or not result.get("success"):
+        raise HTTPException(status_code=500, detail="Agent failed to resolve targeting via MCP.")
+        
+    return result
+

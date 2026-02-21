@@ -1,0 +1,13 @@
+HTTP/2 401 
+server: nginx/1.26.0 (Ubuntu)
+date: Sat, 21 Feb 2026 03:03:01 GMT
+content-type: application/json;charset=utf-8
+x-frame-options: SAMEORIGIN
+content-security-policy: frame-ancestors 'self'
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+access-control-allow-headers: Content-Type, Authorization, Accept, Cache-Control, X-Requested-With, MCP-Protocol-Version, X-PostHog-Distinct-Id, x-posthog-distinct-id, X-PostHog-Session-Id, x-posthog-session-id, X-PostHog-Window-Id, x-posthog-window-id
+access-control-allow-methods: GET, POST, PUT, DELETE, PATCH, OPTIONS
+access-control-allow-origin: *
+access-control-max-age: 86400
+
+{"error":"invalid_token","error_description":"Missing or invalid access token","details":{"message":"Authentication failed - missing or invalid access token"},"result":"Authentication failed: Missing or invalid access token. Please include a valid Bearer token."}
