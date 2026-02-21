@@ -13,10 +13,153 @@ router = APIRouter(
 PIPEBOARD_API_TOKEN = os.getenv("PIPEBOARD_API_TOKEN", "pk_8d419db95ee54af0a873fe187620e5e3")
 PIPEBOARD_API_BASE = "https://pipeboard.co/api"
 
+# Meta Configuration
+META_ACCESS_TOKEN = os.getenv("FACEBOOK_ACCESS_TOKEN", "")
+
 @router.get("/inbox")
 async def get_inbox():
     """Get the latest classified interactions (comments/DMs)."""
     return await interactions_manager.get_latest_interactions()
+
+@router.get("/instagram-accounts")
+async def get_instagram_accounts():
+    """
+    Get connected Instagram Business Accounts.
+    Uses direct Meta Graph API.
+    """
+    try:
+        if not META_ACCESS_TOKEN:
+            return {"success": False, "error": "No access token configured"}
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                "https://graph.facebook.com/v22.0/me/accounts",
+                params={
+                    "fields": "id,name,instagram_business_account{id,username,name,followers_count,media_count}",
+                    "limit": 100
+                },
+                headers={"Authorization": f"Bearer {META_ACCESS_TOKEN}"}
+            )
+            
+            if response.status_code == 200:
+                pages = response.json().get("data", [])
+                instagram_accounts = []
+                
+                for page in pages:
+                    ig = page.get("instagram_business_account")
+                    if ig:
+                        instagram_accounts.append({
+                            "page_id": page["id"],
+                            "page_name": page["name"],
+                            **ig
+                        })
+                
+                return {
+                    "success": True,
+                    "data": instagram_accounts,
+                    "source": "meta_direct"
+                }
+        
+        return {"success": False, "error": "Failed to fetch Instagram accounts"}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.get("/instagram-posts")
+async def get_instagram_posts(limit: int = 10):
+    """
+    Get Instagram Business Account posts/media.
+    """
+    try:
+        # First get Instagram accounts
+        accounts_result = await get_instagram_accounts()
+        
+        if not accounts_result.get("success"):
+            return accounts_result
+        
+        instagram_accounts = accounts_result.get("data", [])
+        
+        if not instagram_accounts:
+            return {
+                "success": True,
+                "data": [],
+                "message": "No Instagram accounts connected"
+            }
+        
+        # Get posts from first account
+        ig_account_id = instagram_accounts[0].get("id")
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                f"https://graph.facebook.com/v22.0/{ig_account_id}/media",
+                params={
+                    "fields": "id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count",
+                    "limit": limit
+                },
+                headers={"Authorization": f"Bearer {META_ACCESS_TOKEN}"}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "success": True,
+                    "data": data.get("data", []),
+                    "account": instagram_accounts[0],
+                    "source": "meta"
+                }
+        
+        return {"success": False, "error": "Failed to fetch Instagram posts"}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.get("/instagram-insights")
+async def get_instagram_insights():
+    """
+    Get Instagram Business Account insights/metrics.
+    """
+    try:
+        # First get Instagram accounts
+        accounts_result = await get_instagram_accounts()
+        
+        if not accounts_result.get("success"):
+            return accounts_result
+        
+        instagram_accounts = accounts_result.get("data", [])
+        
+        if not instagram_accounts:
+            return {
+                "success": True,
+                "data": [],
+                "message": "No Instagram accounts connected"
+            }
+        
+        # Get insights from first account
+        ig_account_id = instagram_accounts[0].get("id")
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                f"https://graph.facebook.com/v22.0/{ig_account_id}/insights",
+                params={
+                    "metric": "follower_count,impressions,reach,profile_views",
+                    "period": "day"
+                },
+                headers={"Authorization": f"Bearer {META_ACCESS_TOKEN}"}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "success": True,
+                    "data": data.get("data", []),
+                    "account": instagram_accounts[0],
+                    "source": "meta"
+                }
+        
+        return {"success": False, "error": "Failed to fetch Instagram insights"}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 @router.post("/audience-insights")
 async def get_audience_insights(request: Request):
