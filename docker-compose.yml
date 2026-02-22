@@ -3,22 +3,23 @@ version: '3.8'
 services:
   redis:
     image: redis:alpine
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
 
   backend:
     build: ./backend
-    ports:
-      - "8001:8001"
+    expose:
+      - "8001"
     volumes:
       - ./backend:/app
     environment:
       - REDIS_URL=redis://redis:6379/0
       - FACEBOOK_ACCESS_TOKEN=${FACEBOOK_ACCESS_TOKEN}
       - FACEBOOK_PAGE_ID=${FACEBOOK_PAGE_ID}
+      - DATABASE_URL=sqlite:///./b_studio.db
     depends_on:
       - redis
-    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8001
 
   worker:
     build: ./backend
@@ -31,3 +32,15 @@ services:
     depends_on:
       - redis
     command: celery -A app.core.celery_app worker --loglevel=info
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8001
+    depends_on:
+      - backend
+    command: npm run start
