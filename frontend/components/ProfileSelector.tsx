@@ -13,9 +13,20 @@ export type InsightProfile = {
 };
 
 const PROFILES: InsightProfile[] = [
-    { id: "metaads-client-1", name: "clienteteste1", role: "Meta Ads", platform: "meta_ads" },
-    { id: "facebook-client-1", name: "clientedeteste1", role: "Facebook Insight", platform: "facebook" },
-    { id: "instagram-client-1", name: "@clienteteste1", role: "Instagram Insight", platform: "instagram" },
+    // GoodWork Consultoria de RH
+    { id: "110515578092294", name: "GoodWork Consultoria", role: "Facebook & Meta Ads", platform: "facebook" },
+    { id: "ig-110515578092294", name: "@goodworkconsultoria", role: "Instagram Insight", platform: "instagram" },
+    { id: "ads-110515578092294", name: "GoodWork Ads", role: "Meta Ads Manager", platform: "meta_ads" },
+    
+    // Deputado Welter
+    { id: "282653508267780", name: "Elton Carlos Welter", role: "Facebook & Meta Ads", platform: "facebook" },
+    { id: "ig-282653508267780", name: "@deputadowelter", role: "Instagram Insight", platform: "instagram" },
+    { id: "ads-282653508267780", name: "Welter Ads", role: "Meta Ads Manager", platform: "meta_ads" },
+    
+    // Professor Lemos
+    { id: "416436651784721", name: "Professor Lemos", role: "Facebook & Meta Ads", platform: "facebook" },
+    { id: "ig-416436651784721", name: "@professorlemos", role: "Instagram Insight", platform: "instagram" },
+    { id: "ads-416436651784721", name: "Lemos Ads", role: "Meta Ads Manager", platform: "meta_ads" },
 ];
 
 type ProfileSelectorProps = {
