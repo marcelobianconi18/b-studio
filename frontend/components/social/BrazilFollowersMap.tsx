@@ -401,7 +401,13 @@ const BrazilFollowersMap = ({
                 const sourceLabel = document.createElement('div');
                 sourceLabel.className = 'maplibregl-ctrl maplibregl-ctrl-attribution';
                 sourceLabel.innerHTML = '© <a href="https://pipeboard.co" target="_blank">Pipeboard</a> | Meta Ads';
-                map.addControl(sourceLabel, 'bottom-right');
+                
+                // Create a custom control object
+                const customControl = {
+                    onAdd: () => sourceLabel,
+                    onRemove: () => sourceLabel.remove()
+                };
+                map.addControl(customControl, 'bottom-right');
 
             } catch (error) {
                 console.error('Failed to initialize audience map:', error);
