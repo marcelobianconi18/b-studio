@@ -18,8 +18,8 @@ ENV NEXT_TELEMETRY_DISABLED 1
 ENV CI=true
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Build Next.js
-RUN npx next build || npx next build --no-lint
+# Build Next.js and show full error
+RUN set -o pipefail && npx next build 2>&1 | tee /tmp/build.log || (echo "BUILD FAILED:" && cat /tmp/build.log && exit 1)
 
 # Production image, copy all the files and run next
 FROM node:20-alpine AS runner
