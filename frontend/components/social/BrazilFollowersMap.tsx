@@ -492,8 +492,8 @@ const BrazilFollowersMap = ({
         });
 
         const top = sorted[0];
-        const topValue = viewMode === 'impressions' ? top.impressions : top.reach;
-        const total = sorted.reduce((sum, s) => sum + (viewMode === 'impressions' ? s.impressions : s.reach || 0), 0);
+        const topValue = viewMode === 'impressions' ? (top.impressions ?? 0) : (top.reach ?? 0);
+        const total = sorted.reduce((sum, s) => sum + (viewMode === 'impressions' ? (s.impressions ?? 0) : (s.reach ?? 0)), 0);
         const percentage = total ? Math.round((topValue / total) * 100) : 0;
 
         return {
