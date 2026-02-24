@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo, type ComponentType, type MouseEvent as Re
 import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 import dynamic from 'next/dynamic';
 import InstagramReelsMiniAnalysis from "./InstagramReelsMiniAnalysis";
-import { generateFacebookMockData, generateInstagramMockData } from "./mockInsightsData";
 import { apiUrl } from "@/lib/api";
 
 const BrazilFollowersMap = dynamic(() => import('./BrazilFollowersMap'), {
@@ -774,6 +773,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
     });
     const [draggingGeneralCard, setDraggingGeneralCard] = useState<{ zone: GeneralLayoutZone; id: string } | null>(null);
     const [data, setData] = useState<InsightsData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [followersInterval, setFollowersInterval] = useState<FollowersInterval>("daily");
     const [heatmapMetric, setHeatmapMetric] = useState<'interactions' | 'reach'>('interactions');
     const [heatmapMode, setHeatmapMode] = useState<'best' | 'worst'>('best');
@@ -1016,23 +1017,31 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Try fetching from backend (live Meta API data or server-side mock)
+                // Fetch LIVE data from backend (NO MOCK FALLBACK)
                 const platform = isInstagram ? "instagram" : "facebook";
                 const res = await fetch(apiUrl(`/api/social/insights?platform=${platform}&period=${period}`));
-                if (res.ok) {
-                    const json = await res.json();
-                    // Validate minimum structure before using
-                    if (json && json.page_followers && json.top_posts) {
-                        setData(json);
-                        return;
-                    }
+                
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(errorData.detail || `HTTP ${res.status}`);
                 }
+                
+                const json = await res.json();
+                
+                // Validate minimum structure
+                if (!json || !json.page_followers) {
+                    throw new Error("Invalid response structure from API");
+                }
+                
+                setData(json);
+                setLoading(false);
+                setError(null);
             } catch (e) {
-                console.warn("Backend unavailable, using local mock data", e);
+                console.error("Failed to fetch insights data:", e);
+                setError(e instanceof Error ? e.message : "Failed to load data");
+                setLoading(false);
+                // DO NOT fallback to mock data - show error instead
             }
-
-            // Fallback: local mock data (always consistent)
-            setData(isInstagram ? generateInstagramMockData() : generateFacebookMockData());
         };
         fetchData();
     }, [isInstagram, period]);
@@ -1396,7 +1405,69 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
         [isInstagram],
     );
 
-    if (!data) return <div className="p-20 text-center animate-pulse text-[var(--muted)]">Carregando Insights do {isInstagram ? "Instagram" : "Facebook"}...</div>;
+    // Loading state
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center space-y-4">
+                    <div className="w-16 h-16 border-4 border-[var(--foreground)]/20 border-t-[var(--foreground)] rounded-full animate-spin mx-auto" />
+                    <p className="text-[var(--muted)] font-semibold animate-pulse">
+                        Carregando dados do {isInstagram ? "Instagram" : "Facebook"}...
+                    </p>
+                    <p className="text-[10px] text-[var(--muted)] uppercase tracking-widest">
+                        Buscando dados REAIS da API Meta
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state - NO MOCK FALLBACK
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center space-y-4 max-w-md">
+                    <div className="w-16 h-16 mx-auto bg-red-500/10 rounded-full flex items-center justify-center">
+                        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-[var(--foreground)]">Falha ao carregar dados</h3>
+                    <p className="text-sm text-[var(--muted)]">{error}</p>
+                    <div className="space-y-2 text-xs text-[var(--muted)] bg-[var(--shell-side)] rounded-lg p-4 text-left">
+                        <p className="font-semibold text-[var(--foreground)]">Possíveis causas:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Token da API Meta expirado ou inválido</li>
+                            <li>Permissões insuficientes no aplicativo Facebook</li>
+                            <li>Sem página do Facebook conectada</li>
+                            <li>API do Facebook indisponível</li>
+                        </ul>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setLoading(true);
+                            setError(null);
+                            window.location.reload();
+                        }}
+                        className="px-6 py-2 bg-[var(--foreground)] text-[var(--background)] rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                    >
+                        Tentar Novamente
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // No data state
+    if (!data) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center space-y-4">
+                    <p className="text-[var(--muted)] font-semibold">Nenhum dado disponível</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 pb-20">
