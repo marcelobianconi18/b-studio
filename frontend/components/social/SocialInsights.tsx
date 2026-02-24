@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, type ComponentType, type MouseEvent as Re
 import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 import dynamic from 'next/dynamic';
 import InstagramReelsMiniAnalysis from "./InstagramReelsMiniAnalysis";
+import AccountSelector from "./AccountSelector";
 import { apiUrl } from "@/lib/api";
 
 const BrazilFollowersMap = dynamic(() => import('./BrazilFollowersMap'), {
@@ -775,6 +776,12 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
     const [data, setData] = useState<InsightsData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    
+    // Test Mode - Account Selection
+    const [selectedPageId, setSelectedPageId] = useState<string | undefined>(undefined);
+    const [selectedInstagramId, setSelectedInstagramId] = useState<string | undefined>(undefined);
+    const [showAccountSelector, setShowAccountSelector] = useState(false);
+    
     const [followersInterval, setFollowersInterval] = useState<FollowersInterval>("daily");
     const [heatmapMetric, setHeatmapMetric] = useState<'interactions' | 'reach'>('interactions');
     const [heatmapMode, setHeatmapMode] = useState<'best' | 'worst'>('best');
@@ -1019,20 +1026,34 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
             try {
                 // Fetch LIVE data from backend (NO MOCK FALLBACK)
                 const platform = isInstagram ? "instagram" : "facebook";
-                const res = await fetch(apiUrl(`/api/social/insights?platform=${platform}&period=${period}`));
                 
+                // Build URL with selected account IDs (Test Mode)
+                const params = new URLSearchParams({
+                    platform,
+                    period
+                });
+                
+                if (selectedPageId) {
+                    params.set('page_id', selectedPageId);
+                }
+                if (selectedInstagramId) {
+                    params.set('instagram_id', selectedInstagramId);
+                }
+                
+                const res = await fetch(apiUrl(`/api/social/insights?${params.toString()}`));
+
                 if (!res.ok) {
                     const errorData = await res.json().catch(() => ({ detail: 'Unknown error' }));
                     throw new Error(errorData.detail || `HTTP ${res.status}`);
                 }
-                
+
                 const json = await res.json();
-                
+
                 // Validate minimum structure
                 if (!json || !json.page_followers) {
                     throw new Error("Invalid response structure from API");
                 }
-                
+
                 setData(json);
                 setLoading(false);
                 setError(null);
@@ -1044,7 +1065,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
             }
         };
         fetchData();
-    }, [isInstagram, period]);
+    }, [isInstagram, period, selectedPageId, selectedInstagramId]);
 
     const followersBase = data?.page_followers.value ?? 0;
     const followersSeries = useMemo(() => makeFollowersSeries(followersInterval, followersBase), [followersInterval, followersBase]);
@@ -1471,6 +1492,18 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
     return (
         <div className="space-y-6 pb-20">
+            {/* Test Mode: Account Selector */}
+            {showAccountSelector && (
+                <AccountSelector
+                    onAccountSelect={(pageId, instagramId) => {
+                        setSelectedPageId(pageId);
+                        if (instagramId) setSelectedInstagramId(instagramId);
+                    }}
+                    selectedPageId={selectedPageId}
+                    selectedInstagramId={selectedInstagramId}
+                />
+            )}
+
             {/* Tabs Navigation */}
             <div className="flex flex-col md:flex-row md:items-center justify-between xl:justify-start gap-4 mb-8">
                 <div className="flex items-center p-1.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-inner overflow-x-auto hide-scrollbar">
@@ -1493,12 +1526,27 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                         );
                     })}
                 </div>
-                {!hideTopPeriodSelector && (
-                    <div className="flex items-center gap-2 ml-auto lg:ml-4">
-                        <span className="text-[10px] uppercase font-bold text-[var(--muted)] hidden md:inline">Período:</span>
-                        <PeriodSelector value={period} onChange={(value) => setPeriod(value)} />
-                    </div>
-                )}
+                <div className="flex items-center gap-2 ml-auto lg:ml-4">
+                    {/* Test Mode Toggle */}
+                    <button
+                        onClick={() => setShowAccountSelector(!showAccountSelector)}
+                        className={`px-4 py-2 text-xs font-bold rounded-full transition-all border ${
+                            showAccountSelector
+                                ? "bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]"
+                                : "text-[var(--muted)] hover:text-[var(--foreground)] border-[var(--shell-border)]"
+                        }`}
+                        title="Alternar entre diferentes contas (Facebook, Instagram, Ads)"
+                    >
+                        🔧 {showAccountSelector ? 'Ocultar Contas' : 'Modo Testes'}
+                    </button>
+                    
+                    {!hideTopPeriodSelector && (
+                        <>
+                            <span className="text-[10px] uppercase font-bold text-[var(--muted)] hidden md:inline">Período:</span>
+                            <PeriodSelector value={period} onChange={(value) => setPeriod(value)} />
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* TAB CONTENT: GERAL */}
