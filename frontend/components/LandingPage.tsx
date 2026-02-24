@@ -25,12 +25,12 @@ export default function LandingPage() {
                     <Link href="/privacy" className="text-xs text-white/40 hover:text-white/70 transition-colors">
                         Privacidade
                     </Link>
-                    <Link
-                        href="/login"
+                    <a
+                        href="/#/dashboard"
                         className="px-5 py-2 bg-white/10 hover:bg-white/15 border border-white/10 text-sm font-semibold rounded-xl transition-all"
                     >
                         Entrar
-                    </Link>
+                    </a>
                 </div>
             </nav>
 
