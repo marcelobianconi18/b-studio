@@ -8,7 +8,7 @@ requests
 pydantic
 pydantic-settings
 tenacity
-facebook_business
+facebook-sdk
 langchain
 langchain-community
 langchain-ollama
