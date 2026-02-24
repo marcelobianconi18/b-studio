@@ -122,7 +122,7 @@ async def _fetch_facebook_data(client, page_id, token):
     # 2. General Insights
     insights_task = client.get(
         f"https://graph.facebook.com/v22.0/{page_id}/insights"
-        f"?metric=page_impressions,page_engaged_users,page_post_engagements,page_video_views,page_fans"
+        f"?metric=page_impressions,page_engaged_users,page_post_engagements,page_video_views"
         f"&period=day&access_token={token}"
     )
 
@@ -156,10 +156,18 @@ async def _fetch_instagram_data(client, ig_id, token):
     # 2. General Insights - Using only available metrics
     # Available: reach, follower_count, website_clicks, profile_views, online_followers, 
     # accounts_engaged, total_interactions, likes, comments, shares, saves, replies
+    # Note: profile_views and accounts_engaged require metric_type=total_value
     insights_task = client.get(
         f"https://graph.facebook.com/v22.0/{ig_id}/insights"
-        f"?metric=reach,profile_views,accounts_engaged,total_interactions,likes,comments,shares,saves"
+        f"?metric=reach,likes,comments,shares,saves,total_interactions"
         f"&period=day&access_token={token}"
+    )
+    
+    # Additional metrics that require total_value
+    insights_total_task = client.get(
+        f"https://graph.facebook.com/v22.0/{ig_id}/insights"
+        f"?metric=profile_views,accounts_engaged"
+        f"&metric_type=total_value&access_token={token}"
     )
 
     # 3. Demographics
@@ -176,7 +184,7 @@ async def _fetch_instagram_data(client, ig_id, token):
         f"&limit=15&access_token={token}"
     )
 
-    responses = await asyncio.gather(followers_task, insights_task, demo_task, media_task, return_exceptions=True)
+    responses = await asyncio.gather(followers_task, insights_task, insights_total_task, demo_task, media_task, return_exceptions=True)
     return responses
 
 
@@ -518,7 +526,12 @@ async def _fetch_live_data(platform: str, period: str, page_id: str = None, inst
                 logger.error(f"API Error {resp.status_code}: {resp.text}")
                 results.append({'error': f"HTTP {resp.status_code}"})
 
-        followers_data, insights_data, demo_data, posts_data = results
+        # Instagram returns 5 responses (with total_value metrics), Facebook returns 4
+        if platform == 'instagram':
+            followers_data, insights_data, insights_total_data, demo_data, posts_data = results
+        else:
+            followers_data, insights_data, demo_data, posts_data = results
+            insights_total_data = {'data': []}
 
         # Build response with REAL data only
         response_data = {
@@ -566,6 +579,12 @@ async def _fetch_live_data(platform: str, period: str, page_id: str = None, inst
             for m in insights_data['data']:
                 if 'values' in m and m['values']:
                     metrics[m['name']] = m['values'][0].get('value', 0)
+            
+            # Merge total_value metrics (profile_views, accounts_engaged)
+            if 'error' not in insights_total_data and 'data' in insights_total_data:
+                for m in insights_total_data['data']:
+                    if 'values' in m and m['values']:
+                        metrics[m['name']] = m['values'][0].get('value', 0)
 
             if platform == 'facebook':
                 response_data["organic_impressions"] = {
@@ -587,7 +606,7 @@ async def _fetch_live_data(platform: str, period: str, page_id: str = None, inst
                     "value": 0,  # Instagram video views come from posts
                     "change": 0
                 }
-                # Additional Instagram metrics
+                # Additional Instagram metrics from total_value endpoint
                 response_data["profile_views"] = {
                     "value": metrics.get('profile_views', 0),
                     "change": 0
