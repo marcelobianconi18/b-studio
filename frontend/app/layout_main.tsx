@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
     BellAlertIcon,
     EnvelopeIcon,
@@ -18,6 +18,36 @@ import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 import CampaignAnalysisPanel from "@/components/ads/CampaignAnalysisPanel";
 import ProfilePage from "@/components/ProfilePage";
 
+// ─── Route Mapping ───────────────────────────────────────────────────────
+const ROUTE_TO_TAB: Record<string, string> = {
+    "/dashboard": "home",
+    "/social": "social",
+    "/concorrentes": "concorrentes",
+    "/ads-metrics": "ads_metrics",
+    "/ads": "ads",
+    "/inbox": "inbox",
+    "/settings": "settings",
+    "/profile": "profile",
+    "/profile/exclusao": "profile",
+};
+
+const TAB_TO_ROUTE: Record<string, string> = {
+    home: "/dashboard",
+    social: "/social",
+    concorrentes: "/concorrentes",
+    ads_metrics: "/ads-metrics",
+    ads: "/ads",
+    inbox: "/inbox",
+    settings: "/settings",
+    profile: "/profile",
+};
+
+function getTabFromHash(): string {
+    if (typeof window === "undefined") return "home";
+    const hash = window.location.hash.replace("#", "") || "/dashboard";
+    return ROUTE_TO_TAB[hash] || "home";
+}
+
 const TOP_MENU_ITEMS = [
     "Institucional",
     "Produtos",
@@ -27,7 +57,7 @@ const TOP_MENU_ITEMS = [
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-    const [activeTab, setActiveTab] = useState("home");
+    const [activeTab, setActiveTab] = useState(() => getTabFromHash());
     const [collapsed, setCollapsed] = useState(false);
     const [theme, setTheme] = useState<"light" | "dark">("light");
     const [selectedPeriod, setSelectedPeriod] = useState<PeriodValue>("30d");
@@ -38,6 +68,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         platform: "meta_ads",
     });
     const isMetaAdsProfile = selectedInsightProfile.platform === "meta_ads";
+
+    // Navigate and update URL
+    const navigateTo = useCallback((tab: string) => {
+        setActiveTab(tab);
+        const route = TAB_TO_ROUTE[tab] || "/dashboard";
+        window.history.pushState(null, "", `#${route}`);
+    }, []);
+
+    // Sync URL → tab on load & browser back/forward
+    useEffect(() => {
+        const onHashChange = () => setActiveTab(getTabFromHash());
+        window.addEventListener("hashchange", onHashChange);
+        window.addEventListener("popstate", onHashChange);
+        return () => {
+            window.removeEventListener("hashchange", onHashChange);
+            window.removeEventListener("popstate", onHashChange);
+        };
+    }, []);
+
+    // Set initial hash if none
+    useEffect(() => {
+        if (!window.location.hash) {
+            window.history.replaceState(null, "", "#/dashboard");
+        }
+    }, []);
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", theme);
@@ -109,7 +164,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </TopCircleButton>
 
             <button
-                onClick={() => setActiveTab("profile")}
+                onClick={() => navigateTo("profile")}
                 className="w-11 h-11 rounded-full ml-1 overflow-hidden border-[3px] border-[var(--shell-border)] hover:border-[var(--muted)] transition-colors shadow-lg"
                 title="Perfil"
             >
@@ -128,7 +183,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             <Sidebar
                 activeTab={activeTab}
-                onNavigate={setActiveTab}
+                onNavigate={navigateTo}
                 collapsed={collapsed}
                 onToggleCollapse={() => setCollapsed((prev) => !prev)}
                 theme={theme}
