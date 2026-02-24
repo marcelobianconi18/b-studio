@@ -113,7 +113,11 @@ export default function ProfilePage({ initialSection }: { initialSection?: Profi
                     {sections.map((section) => (
                         <button
                             key={section.key}
-                            onClick={() => setActiveSection(section.key)}
+                            onClick={() => {
+                                setActiveSection(section.key);
+                                const hash = section.key === "deletion" ? "#/profile/exclusao-de-dados" : "#/profile";
+                                window.history.pushState(null, "", hash);
+                            }}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeSection === section.key
                                 ? section.key === "deletion"
                                     ? "bg-red-500/15 text-red-400 border border-red-500/20"
