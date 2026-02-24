@@ -1081,8 +1081,8 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
     const videoRetentionSummary = useMemo(() => {
         if (!data) return { retention3s: 0, avgWatchSeconds: 0, rewatchRate: 0 };
 
-        const distributionRatio = data.organic_impressions.value > 0
-            ? data.organic_video_views.value / data.organic_impressions.value
+        const distributionRatio = (data.organic_impressions?.value ?? 0) > 0
+            ? (data.organic_video_views?.value ?? 0) / (data.organic_impressions?.value ?? 1)
             : 0.4;
         const ratio = Math.max(0.25, Math.min(1.4, distributionRatio));
 
@@ -1553,12 +1553,12 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
             {activeTab === "geral" && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                        <KPICard title={isInstagram ? "Seguidores Ativos" : "Seguidores da Página"} value={data.page_followers.value} change={data.page_followers.change} icon={UserGroupIcon} tooltip="Quantidade de perfis que acompanham a conta neste período." />
-                        <KPICard title={isInstagram ? "Interações Qualificadas" : "Reações Totais"} value={data.total_reactions.value} change={data.total_reactions.change} icon={HandThumbUpIcon} tooltip={isInstagram ? "Ações com intenção (salvar, compartilhar, responder, etc.)." : "Reações totais das publicações no período."} />
-                        <KPICard title={isInstagram ? "Views de Reels" : "Visualizações de Vídeo"} value={data.organic_video_views.value} change={data.organic_video_views.change} icon={VideoCameraIcon} tooltip="Volume de visualizações de conteúdo em vídeo." />
-                        <KPICard title="Engajamento" value={data.engagements.value} change={data.engagements.change} icon={ChatBubbleLeftEllipsisIcon} tooltip="Soma das interações geradas nas publicações." />
-                        <KPICard title={isInstagram ? "Conteúdos Publicados" : "Total de Posts"} value={data.number_of_posts.value} change={data.number_of_posts.change} icon={DocumentTextIcon} tooltip="Quantidade de conteúdos publicados no período selecionado." />
-                        <KPICard title={isInstagram ? "Alcance Não Seguidores" : "Impressões"} value={data.organic_impressions.value} change={data.organic_impressions.change} icon={EyeIcon} tooltip={isInstagram ? "Pessoas alcançadas fora da base atual de seguidores." : "Total de visualizações exibidas, incluindo repetições."} />
+                        <KPICard title={isInstagram ? "Seguidores Ativos" : "Seguidores da Página"} value={data.page_followers?.value ?? 0} change={data.page_followers?.change ?? 0} icon={UserGroupIcon} tooltip="Quantidade de perfis que acompanham a conta neste período." />
+                        <KPICard title={isInstagram ? "Interações Qualificadas" : "Reações Totais"} value={data.total_reactions?.value ?? 0} change={data.total_reactions?.change ?? 0} icon={HandThumbUpIcon} tooltip={isInstagram ? "Ações com intenção (salvar, compartilhar, responder, etc.)." : "Reações totais das publicações no período."} />
+                        <KPICard title={isInstagram ? "Views de Reels" : "Visualizações de Vídeo"} value={data.organic_video_views?.value ?? 0} change={data.organic_video_views?.change ?? 0} icon={VideoCameraIcon} tooltip="Volume de visualizações de conteúdo em vídeo." />
+                        <KPICard title="Engajamento" value={data.engagements?.value ?? 0} change={data.engagements?.change ?? 0} icon={ChatBubbleLeftEllipsisIcon} tooltip="Soma das interações geradas nas publicações." />
+                        <KPICard title={isInstagram ? "Conteúdos Publicados" : "Total de Posts"} value={data.number_of_posts?.value ?? 0} change={data.number_of_posts?.change ?? 0} icon={DocumentTextIcon} tooltip="Quantidade de conteúdos publicados no período selecionado." />
+                        <KPICard title={isInstagram ? "Alcance Não Seguidores" : "Impressões"} value={data.organic_impressions?.value ?? 0} change={data.organic_impressions?.change ?? 0} icon={EyeIcon} tooltip={isInstagram ? "Pessoas alcançadas fora da base atual de seguidores." : "Total de visualizações exibidas, incluindo repetições."} />
                     </div>
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                         <div className="xl:col-span-2 grid grid-cols-1 xl:grid-cols-2 gap-6">
