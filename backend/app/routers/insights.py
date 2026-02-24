@@ -58,16 +58,18 @@ async def _fetch_facebook_data(client, page_id, token):
 async def _fetch_instagram_data(client, ig_id, token):
     """Fetch Instagram specific insights and posts in parallel"""
     import asyncio
-    
+
     # 1. IG Followers
     followers_task = client.get(
         f"https://graph.facebook.com/v22.0/{ig_id}?fields=followers_count,username,name&access_token={token}"
     )
 
-    # 2. General Insights
+    # 2. General Insights - Using only available metrics
+    # Available: reach, follower_count, website_clicks, profile_views, online_followers, 
+    # accounts_engaged, total_interactions, likes, comments, shares, saves, replies
     insights_task = client.get(
         f"https://graph.facebook.com/v22.0/{ig_id}/insights"
-        f"?metric=impressions,reach,profile_views,follower_count"
+        f"?metric=reach,profile_views,accounts_engaged,total_interactions,likes,comments,shares,saves"
         f"&period=day&access_token={token}"
     )
 
@@ -474,12 +476,23 @@ async def _fetch_live_data(platform: str, period: str):
                     "change": 0
                 }
             else:
+                # Instagram: use 'reach' instead of 'impressions'
+                # Instagram API doesn't provide 'impressions' metric directly
                 response_data["organic_impressions"] = {
-                    "value": metrics.get('impressions', 0),
+                    "value": metrics.get('reach', 0),
                     "change": 0
                 }
                 response_data["organic_video_views"] = {
                     "value": 0,  # Instagram video views come from posts
+                    "change": 0
+                }
+                # Additional Instagram metrics
+                response_data["profile_views"] = {
+                    "value": metrics.get('profile_views', 0),
+                    "change": 0
+                }
+                response_data["accounts_engaged"] = {
+                    "value": metrics.get('accounts_engaged', 0),
                     "change": 0
                 }
 
