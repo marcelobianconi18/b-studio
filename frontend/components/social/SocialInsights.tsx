@@ -1256,10 +1256,10 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
             return scoreB - scoreA;
         })[0]?.range ?? influencerRange;
 
-        const engagementRate = data.organic_impressions.value > 0
-            ? data.engagements.value / data.organic_impressions.value
+        const engagementRate = (data.organic_impressions?.value ?? 0) > 0
+            ? (data.engagements?.value ?? 0) / (data.organic_impressions?.value ?? 1)
             : 0;
-        const deepSignalRate = (data.actions_split.comments + data.actions_split.shares) / Math.max(1, data.total_reactions.value);
+        const deepSignalRate = ((data.actions_split?.comments ?? 0) + (data.actions_split?.shares ?? 0)) / Math.max(1, data.total_reactions?.value ?? 1);
         const churnRate = followersSummary.totalLost / Math.max(1, followersSummary.totalNew);
 
         const retentionNorm = clamp((videoRetentionSummary.retention3s - 40) / 40, 0, 1);
@@ -2287,7 +2287,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         <div className="bg-[var(--shell-side)] rounded-xl p-6 flex flex-col justify-center text-center border border-[var(--shell-border)]">
                                             <span className="text-[var(--muted)] text-xs font-bold uppercase mb-1">{isInstagram ? "Engajamento Total" : "Total Engagement"}</span>
                                             <div className="flex items-center justify-center gap-2 mb-3">
-                                                <span className="text-5xl font-black text-[var(--foreground)] tracking-tight">{Math.round(data.engagements.value).toLocaleString('pt-BR')}</span>
+                                                <span className="text-5xl font-black text-[var(--foreground)] tracking-tight">{Math.round(data.engagements?.value ?? 0).toLocaleString('pt-BR')}</span>
                                                 <span className={`text-sm font-bold ${data.engagements.change > 0 ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'}`}>
                                                     {data.engagements.change > 0 ? '↑' : '↓'} {Math.abs(data.engagements.change)}%
                                                 </span>
@@ -3295,7 +3295,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                         return (
                             <div className="space-y-4">
-                                <InstagramReelsMiniAnalysis posts={data.top_posts} storiesRows={sequence} totalFollowers={data.page_followers.value} />
+                                <InstagramReelsMiniAnalysis posts={data.top_posts ?? []} storiesRows={sequence} totalFollowers={data.page_followers?.value ?? 0} />
 
                                 <div className="bento-cell liquid-glass shadow-[0_0_35px_rgba(6,182,212,0.14)]">
                                     <div className="px-5 py-3 border-b border-[var(--shell-border)]/20 bg-[var(--shell-side)]">
@@ -3464,7 +3464,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
                                             <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Total de Seguidores</h3>
                                             <div>
-                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">{formatNumber(data.page_followers.value)}</div>
+                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">{formatNumber(data.page_followers?.value ?? 0)}</div>
                                                 <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wide">Base ativa da conta</div>
                                             </div>
                                         </div>
@@ -3572,7 +3572,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                         <div className="liquid-glass p-5 min-h-[120px] flex flex-col justify-between hover:border-[var(--foreground)]/20 transition-all group">
                                             <h3 className="text-[var(--muted)] text-[10px] font-bold uppercase tracking-widest mb-4">Total de Seguidores</h3>
                                             <div>
-                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">{formatNumber(data.page_followers.value)}</div>
+                                                <div className="text-4xl xl:text-5xl font-black text-[var(--foreground)] tracking-tighter leading-none mb-3">{formatNumber(data.page_followers?.value ?? 0)}</div>
                                                 <div className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wide">Base ativa da conta</div>
                                             </div>
                                         </div>
@@ -3822,7 +3822,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                 influencerRange={isInstagram ? instagramAudienceModel?.influencerRange : undefined}
                                                 decisorRange={isInstagram ? instagramAudienceModel?.decisorRange : undefined}
                                                 valueMode={demoValueMode}
-                                                totalBase={data.page_followers.value}
+                                                totalBase={data.page_followers?.value ?? 0}
                                             />
                                         </div>
 
