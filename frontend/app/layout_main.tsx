@@ -17,6 +17,7 @@ import ProfileSelector, { type InsightProfile } from "@/components/ProfileSelect
 import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 import CampaignAnalysisPanel from "@/components/ads/CampaignAnalysisPanel";
 import ProfilePage from "@/components/ProfilePage";
+import LandingPage from "@/components/LandingPage";
 
 // ─── Route Mapping ───────────────────────────────────────────────────────
 const ROUTE_TO_TAB: Record<string, string> = {
@@ -33,6 +34,7 @@ const ROUTE_TO_TAB: Record<string, string> = {
 };
 
 const TAB_TO_ROUTE: Record<string, string> = {
+    landing: "/",
     home: "/dashboard",
     social: "/social",
     concorrentes: "/concorrentes",
@@ -45,9 +47,10 @@ const TAB_TO_ROUTE: Record<string, string> = {
 };
 
 function getTabFromHash(): string {
-    if (typeof window === "undefined") return "home";
-    const hash = window.location.hash.replace("#", "") || "/dashboard";
-    return ROUTE_TO_TAB[hash] || "home";
+    if (typeof window === "undefined") return "landing";
+    const hash = window.location.hash.replace("#", "");
+    if (!hash || hash === "/") return "landing";
+    return ROUTE_TO_TAB[hash] || "landing";
 }
 
 const TOP_MENU_ITEMS = [
@@ -87,13 +90,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             window.removeEventListener("hashchange", onHashChange);
             window.removeEventListener("popstate", onHashChange);
         };
-    }, []);
-
-    // Set initial hash if none
-    useEffect(() => {
-        if (!window.location.hash) {
-            window.history.replaceState(null, "", "#/dashboard");
-        }
     }, []);
 
     useEffect(() => {
@@ -174,6 +170,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </button>
         </div>
     );
+
+    // ─── Landing Page (full screen, no shell) ───
+    if (activeTab === "landing") {
+        return <LandingPage />;
+    }
 
     return (
         <div className="h-screen w-full flex flex-col relative overflow-hidden" style={{ color: "var(--foreground)" }}>
