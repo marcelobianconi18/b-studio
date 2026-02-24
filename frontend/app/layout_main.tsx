@@ -16,6 +16,7 @@ import CompetitorsAnalysis from "@/components/social/CompetitorsAnalysis";
 import ProfileSelector, { type InsightProfile } from "@/components/ProfileSelector";
 import PeriodSelector, { type PeriodValue } from "@/components/PeriodSelector";
 import CampaignAnalysisPanel from "@/components/ads/CampaignAnalysisPanel";
+import ProfilePage from "@/components/ProfilePage";
 
 const TOP_MENU_ITEMS = [
     "Institucional",
@@ -186,9 +187,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     )}
                     {activeTab === "profile" && (
                         <LiquidShell title="PERFIL" subtitle="GERENCIAMENTO DE CONTA" headerCenter={platformLogo} action={actionsBar}>
-                            <div className="flex-1 flex items-center justify-center p-20 text-center" style={{ color: "var(--muted)" }}>
-                                Módulo de Perfil em breve.
-                            </div>
+                            <ProfilePage />
                         </LiquidShell>
                     )}
                     {!(["home", "ads", "ads_metrics", "social", "concorrentes", "inbox", "settings", "profile"] as string[]).includes(activeTab) && children}

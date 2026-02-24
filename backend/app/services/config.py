@@ -60,9 +60,26 @@ class ConfigService:
         finally:
             db.close()
 
-        # Fallback to Env
+        # Fallback to Env – try the mapped key first, then common aliases
         env_key = ENV_BY_KEY.get(key_name, key_name)
-        return os.getenv(env_key, default)
+        value = os.getenv(env_key)
+        if value:
+            return value
+
+        # Try META_* aliases (the .env may use META_APP_ID instead of FACEBOOK_APP_ID)
+        meta_aliases = {
+            "FACEBOOK_APP_ID": "META_APP_ID",
+            "FACEBOOK_APP_SECRET": "META_APP_SECRET",
+            "FACEBOOK_ACCESS_TOKEN": "META_ACCESS_TOKEN",
+            "FACEBOOK_AD_ACCOUNT_ID": "META_AD_ACCOUNT_ID",
+        }
+        alias = meta_aliases.get(env_key)
+        if alias:
+            value = os.getenv(alias)
+            if value:
+                return value
+
+        return default
 
     def set_settings(self, data: dict):
         """

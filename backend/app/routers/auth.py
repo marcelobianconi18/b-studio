@@ -149,7 +149,7 @@ def facebook_login():
         )
 
     redirect_uri = _facebook_redirect_uri(config_service)
-    scope = "ads_management,ads_read,business_management,read_insights,pages_show_list,pages_read_engagement,pages_manage_metadata,public_profile"
+    scope = "ads_management,ads_read,business_management,instagram_basic,instagram_manage_comments,instagram_content_publish,pages_show_list,pages_read_engagement,pages_manage_metadata,pages_manage_ads,public_profile"
 
     query = urlencode({
         "client_id": app_id,
