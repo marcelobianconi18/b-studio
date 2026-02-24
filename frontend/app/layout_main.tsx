@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import {
     BellAlertIcon,
     EnvelopeIcon,
@@ -62,6 +63,14 @@ const TOP_MENU_ITEMS = [
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+
+    // Standalone pages bypass the dashboard shell entirely
+    const standaloneRoutes = ["/privacy", "/login"];
+    if (standaloneRoutes.includes(pathname)) {
+        return <>{children}</>;
+    }
+
     const [activeTab, setActiveTab] = useState(() => getTabFromHash());
     const [collapsed, setCollapsed] = useState(false);
     const [theme, setTheme] = useState<"light" | "dark">("light");
