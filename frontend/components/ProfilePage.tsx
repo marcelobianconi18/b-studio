@@ -375,7 +375,7 @@ export default function ProfilePage({ initialSection }: { initialSection?: Profi
                                     <p className="text-sm text-[var(--muted)] mt-1 leading-relaxed">
                                         As ações abaixo são <strong>irreversíveis</strong>. Leia atentamente os termos antes de prosseguir.
                                         Para mais informações, consulte nossa{" "}
-                                        <a href="https://bianconimkt.com/politica-de-privacidade" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 transition-colors">
+                                        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 transition-colors">
                                             Política de Privacidade
                                         </a>.
                                     </p>
@@ -420,7 +420,7 @@ export default function ProfilePage({ initialSection }: { initialSection?: Profi
                                         <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${acceptTerms ? "bg-red-500 border-red-500" : "border-[var(--shell-border)] group-hover:border-red-400"}`}>
                                             {acceptTerms && <CheckCircleIcon className="w-3.5 h-3.5 text-white" />}
                                         </div>
-                                        <span className="text-sm text-[var(--muted)]">Li e concordo com o <strong className="text-[var(--foreground)]">Termo de Exclusão de Dados</strong> acima e com a <a href="https://bianconimkt.com/politica-de-privacidade" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline" onClick={(e) => e.stopPropagation()}>Política de Privacidade</a>.</span>
+                                        <span className="text-sm text-[var(--muted)]">Li e concordo com o <strong className="text-[var(--foreground)]">Termo de Exclusão de Dados</strong> acima e com a <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline" onClick={(e) => e.stopPropagation()}>Política de Privacidade</a>.</span>
                                     </label>
                                     <label className="flex items-start gap-3 cursor-pointer group" onClick={() => setAcceptDataLoss(!acceptDataLoss)}>
                                         <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${acceptDataLoss ? "bg-red-500 border-red-500" : "border-[var(--shell-border)] group-hover:border-red-400"}`}>
