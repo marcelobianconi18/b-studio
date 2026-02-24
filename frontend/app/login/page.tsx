@@ -121,7 +121,7 @@ export default function LoginPage() {
                 }
             },
             {
-                scope: "public_profile,email,ads_management,ads_read,pages_manage_posts,pages_read_engagement,business_management",
+                scope: "public_profile,email,ads_management,ads_read,business_management,pages_show_list,pages_read_engagement,pages_manage_posts,instagram_basic,instagram_manage_insights,read_insights",
                 auth_type: "rerequest",
                 return_scopes: true,
             }
