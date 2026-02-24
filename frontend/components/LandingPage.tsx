@@ -22,9 +22,9 @@ export default function LandingPage() {
                     </span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <Link href="/privacy" className="text-xs text-white/40 hover:text-white/70 transition-colors">
+                    <a href="/privacy" className="text-xs text-white/40 hover:text-white/70 transition-colors">
                         Privacidade
-                    </Link>
+                    </a>
                     <a
                         href="/#/dashboard"
                         className="px-5 py-2 bg-white/10 hover:bg-white/15 border border-white/10 text-sm font-semibold rounded-xl transition-all"
