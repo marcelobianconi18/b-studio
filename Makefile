@@ -1,5 +1,5 @@
 
-# Makefile for B-Studio
+# Makefile for bia
 
 PYTHON := python3
 VENV := backend/venv

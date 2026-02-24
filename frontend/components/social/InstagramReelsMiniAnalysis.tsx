@@ -79,7 +79,7 @@ const hash = (value: string) => value.split("").reduce((acc, char) => acc + char
 
 const buildAudioLabel = (seed: number, type: "trending" | "original") => {
     const trending = ["Trending: Space Wave", "Trending: Focus Cut", "Trending: Neon Pulse"];
-    const original = ["Original: B-Studio Voice", "Original: Bastidor 2026", "Original: Insight Talk"];
+    const original = ["Original: bia Voice", "Original: Bastidor 2026", "Original: Insight Talk"];
     const list = type === "trending" ? trending : original;
     return list[seed % list.length];
 };

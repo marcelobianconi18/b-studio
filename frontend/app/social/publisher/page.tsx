@@ -32,7 +32,7 @@ export default function SmartPublisher() {
         }
 
         const payload: Record<string, string> = {
-            message: trimmedCaption || "Post agendado via B-Studio",
+            message: trimmedCaption || "Post agendado via bia",
         };
         if (scheduledDate) {
             payload.scheduled_time = new Date(scheduledDate).toISOString();

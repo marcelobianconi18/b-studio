@@ -48,7 +48,7 @@ export default function CompetitorsAnalysis() {
                 link_clicks: 120,
                 reactions: 1350,
                 type: "photo",
-                author: { name: "Você (B-Studio)", avatar: "https://placehold.co/100x100/3b82f6/white?text=YOU" },
+                author: { name: "Você (bia)", avatar: "https://placehold.co/100x100/3b82f6/white?text=YOU" },
                 isClient: true
             },
             {
@@ -65,7 +65,7 @@ export default function CompetitorsAnalysis() {
                 link_clicks: 45,
                 reactions: 920,
                 type: "carousel",
-                author: { name: "Você (B-Studio)", avatar: "https://placehold.co/100x100/3b82f6/white?text=YOU" },
+                author: { name: "Você (bia)", avatar: "https://placehold.co/100x100/3b82f6/white?text=YOU" },
                 isClient: true
             },
             {
@@ -82,7 +82,7 @@ export default function CompetitorsAnalysis() {
                 link_clicks: 890,
                 reactions: 2300,
                 type: "video",
-                author: { name: "Você (B-Studio)", avatar: "https://placehold.co/100x100/3b82f6/white?text=YOU" },
+                author: { name: "Você (bia)", avatar: "https://placehold.co/100x100/3b82f6/white?text=YOU" },
                 isClient: true
             }
         ];
@@ -427,7 +427,7 @@ export default function CompetitorsAnalysis() {
                                         : 'bg-[var(--shell-side)] text-[var(--muted)] border-[var(--shell-border)] hover:bg-[var(--shell-side)]'
                                         }`}
                                 >
-                                    Você (B-Studio)
+                                    Você (bia)
                                 </button>
 
                                 <div className="flex items-center p-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-inner overflow-x-auto hide-scrollbar w-fit mb-4">

@@ -18,7 +18,7 @@ RESET = "\033[0m"
 
 def print_header():
     print(f"\n{BLUE}{'='*60}{RESET}")
-    print(f"{BLUE}📘 B-Studio - Configuração Meta Ads{RESET}")
+    print(f"{BLUE}📘 bia - Configuração Meta Ads{RESET}")
     print(f"{BLUE}{'='*60}{RESET}\n")
 
 def print_option(number, title, description):

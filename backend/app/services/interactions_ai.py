@@ -33,7 +33,7 @@ class InteractionsAI:
 
         # Define Prompt Template
         self.prompt = ChatPromptTemplate.from_messages([
-            ("system", "Você é o assistente de triagem de mídia social do B-Studio. Analise o comentário recebido com precisão. Responda APENAS em JSON."),
+            ("system", "Você é o assistente de triagem de mídia social do bia. Analise o comentário recebido com precisão. Responda APENAS em JSON."),
             ("user", "Comentário: {comment_text}\nContexto do Post: {post_context}\n\n{format_instructions}")
         ])
 

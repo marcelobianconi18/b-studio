@@ -55,7 +55,7 @@ class MetaAdsService:
 
             if status_code in (400, 401, 403):
                 detail = meta_message or "Token expirado, inválido, ou sem permissões suficientes."
-                return f"Falha ao autenticar com Meta Ads. {detail} Reconecte sua conta no B-Studio."
+                return f"Falha ao autenticar com Meta Ads. {detail} Reconecte sua conta no bia."
 
             if meta_message:
                 return f"Erro da API Meta Ads: {meta_message}"

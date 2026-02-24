@@ -139,7 +139,7 @@ export default function LoginPage() {
             const data = await res.json();
             if (data.status === "success") {
                 setStatus("success");
-                setMessage("Conexão estabelecida! O B-Studio agora tem acesso vitalício (60 dias).");
+                setMessage("Conexão estabelecida! O bia agora tem acesso vitalício (60 dias).");
                 const params = new URLSearchParams(window.location.search);
                 const isOnboardingFlow = params.get("auth_flow") === "meta_onboarding";
                 const destination = isOnboardingFlow ? "/?auth_success=true" : "/";
@@ -185,7 +185,7 @@ export default function LoginPage() {
 
                     <div className="space-y-2">
                         <h1 className="text-3xl font-bold tracking-tight text-white bg-clip-text">
-                            B-Studio Command
+                            bia Command
                         </h1>
                         <p className="text-zinc-400 text-sm">
                             Conecte sua conta Meta para começar a automação.

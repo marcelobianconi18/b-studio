@@ -88,7 +88,7 @@ async def facebook_auth(request: FacebookLoginRequest):
     if _is_placeholder(app_id) or _is_placeholder(app_secret):
         raise HTTPException(
             status_code=400,
-            detail="Meta App ID/App Secret inválidos ou não configurados. Atualize com credenciais reais no B-Studio."
+            detail="Meta App ID/App Secret inválidos ou não configurados. Atualize com credenciais reais no bia."
         )
 
     # Exchange short-lived -> long-lived token
@@ -145,7 +145,7 @@ def facebook_login():
     if _is_placeholder(app_id) or _is_placeholder(app_secret):
         raise HTTPException(
             status_code=400,
-            detail="Meta App ID/App Secret inválidos ou não configurados. Atualize com credenciais reais no B-Studio."
+            detail="Meta App ID/App Secret inválidos ou não configurados. Atualize com credenciais reais no bia."
         )
 
     redirect_uri = _facebook_redirect_uri(config_service)

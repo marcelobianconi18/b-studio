@@ -1,7 +1,7 @@
 
-# B-Studio Automation Backend
+# bia Automation Backend
 
-This backend service handles the automation logic for B-Studio, specifically scheduling and publishing posts to Meta (Facebook).
+This backend service handles the automation logic for bia, specifically scheduling and publishing posts to Meta (Facebook).
 
 ## Prerequisites
 

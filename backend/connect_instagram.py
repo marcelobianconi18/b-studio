@@ -27,7 +27,7 @@ CURRENT_TOKEN = os.getenv("FACEBOOK_ACCESS_TOKEN", "")
 
 def print_header():
     print(f"\n{BLUE}{'='*70}{RESET}")
-    print(f"{BLUE}📸 B-Studio - Conexão Instagram{RESET}")
+    print(f"{BLUE}📸 bia - Conexão Instagram{RESET}")
     print(f"{BLUE}{'='*70}{RESET}\n")
 
 def print_step(number, title):

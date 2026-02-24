@@ -41,7 +41,7 @@ class GrowthAnalysisResult(BaseModel):
 
 class StrategistAgent:
     """
-    The brain of B-Studio. Analyzes data and decides on actions or recommendations.
+    The brain of bia. Analyzes data and decides on actions or recommendations.
     Powered by LangChain and Qwen2.5 (Local).
     """
     def __init__(self):
@@ -97,7 +97,7 @@ class StrategistAgent:
         parser = JsonOutputParser(pydantic_object=StrategicReport)
 
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "Você é o Strategist Agent do B-Studio. Analise as campanhas de Meta Ads. Responda APENAS em JSON."),
+            ("system", "Você é o Strategist Agent do bia. Analise as campanhas de Meta Ads. Responda APENAS em JSON."),
             ("user", """
             REGRAS:
             - Se o CTR for menor que 0.5% e o Spend > 50, considere RUIM -> PAUSAR.
@@ -215,7 +215,7 @@ class StrategistAgent:
         parser = JsonOutputParser(pydantic_object=HistoricalAuditResult)
         
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "Você é o Chief Strategy Officer do B-Studio. Analise o histórico. Responda em JSON."),
+            ("system", "Você é o Chief Strategy Officer do bia. Analise o histórico. Responda em JSON."),
             ("user", """
             HISTÓRICO (Últimos {days} dias):
             {history}
@@ -284,7 +284,7 @@ class StrategistAgent:
         parser = JsonOutputParser(pydantic_object=GrowthAnalysisResult)
         
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "Você é o Estrategista de Crescimento do B-Studio. Analise Orgânico vs Pago. Responda em JSON."),
+            ("system", "Você é o Estrategista de Crescimento do bia. Analise Orgânico vs Pago. Responda em JSON."),
             ("user", """
             DADOS:
             {data}
