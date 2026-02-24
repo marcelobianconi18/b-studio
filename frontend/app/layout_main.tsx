@@ -47,11 +47,9 @@ const TAB_TO_ROUTE: Record<string, string> = {
     profile_deletion: "/profile/exclusao-de-dados",
 };
 
-function getTabFromHash(): string {
-    if (typeof window === "undefined") return "landing";
-    const hash = window.location.hash.replace("#", "");
-    if (!hash || hash === "/") return "landing";
-    return ROUTE_TO_TAB[hash] || "landing";
+function getTabFromPath(pathname: string): string {
+    if (!pathname || pathname === "/") return "landing";
+    return ROUTE_TO_TAB[pathname] || "landing";
 }
 
 const TOP_MENU_ITEMS = [
@@ -71,7 +69,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         return <>{children}</>;
     }
 
-    const [activeTab, setActiveTab] = useState(() => getTabFromHash());
+    const [activeTab, setActiveTab] = useState(() => getTabFromPath(pathname));
     const [collapsed, setCollapsed] = useState(false);
     const [theme, setTheme] = useState<"light" | "dark">("light");
     const [selectedPeriod, setSelectedPeriod] = useState<PeriodValue>("30d");
@@ -87,18 +85,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const navigateTo = useCallback((tab: string) => {
         setActiveTab(tab);
         const route = TAB_TO_ROUTE[tab] || "/dashboard";
-        window.history.pushState(null, "", `#${route}`);
+        window.history.pushState(null, "", route);
     }, []);
 
-    // Sync URL → tab on load & browser back/forward
+    // Sync browser back/forward
     useEffect(() => {
-        const onHashChange = () => setActiveTab(getTabFromHash());
-        window.addEventListener("hashchange", onHashChange);
-        window.addEventListener("popstate", onHashChange);
-        return () => {
-            window.removeEventListener("hashchange", onHashChange);
-            window.removeEventListener("popstate", onHashChange);
+        const onPopState = () => {
+            const path = window.location.pathname;
+            setActiveTab(getTabFromPath(path));
         };
+        window.addEventListener("popstate", onPopState);
+        return () => window.removeEventListener("popstate", onPopState);
     }, []);
 
     useEffect(() => {

@@ -26,7 +26,7 @@ export default function LandingPage() {
                         Privacidade
                     </a>
                     <a
-                        href="/#/dashboard"
+                        href="/dashboard"
                         className="px-5 py-2 bg-white/10 hover:bg-white/15 border border-white/10 text-sm font-semibold rounded-xl transition-all"
                     >
                         Entrar
@@ -56,7 +56,7 @@ export default function LandingPage() {
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                     <a
-                        href="/#/dashboard"
+                        href="/dashboard"
                         className="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-blue-500/20"
                     >
                         Acessar Dashboard

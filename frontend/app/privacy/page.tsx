@@ -221,7 +221,7 @@ export default function PrivacyPage() {
                                 <ul className="list-disc list-inside space-y-3 ml-2 text-white/70">
                                     <li><strong>Acesso e Portabilidade:</strong> Exportar relatórios e dados (JSON/CSV) diretamente na plataforma.</li>
                                     <li><strong>Revogação:</strong> Remover chaves de API e desconectar integrações a qualquer momento.</li>
-                                    <li><strong>Exclusão:</strong> Solicitar exclusão total da conta e dados em <a href="/#/profile/exclusao-de-dados" className="text-indigo-400 hover:text-indigo-300 underline transition-colors">Perfil → Exclusão de Dados</a>.</li>
+                                    <li><strong>Exclusão:</strong> Solicitar exclusão total da conta e dados em <a href="/profile/exclusao-de-dados" className="text-indigo-400 hover:text-indigo-300 underline transition-colors">Perfil → Exclusão de Dados</a>.</li>
                                 </ul>
                             </section>
 
