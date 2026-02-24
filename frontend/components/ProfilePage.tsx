@@ -29,8 +29,11 @@ type SocialLink = {
 // ─── Profile Page ────────────────────────────────────────────────────────
 export default function ProfilePage() {
     const [activeSection, setActiveSection] = useState<ProfileTab>("general");
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteStep, setDeleteStep] = useState<0 | 1 | 2 | 3>(0);
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
+    const [acceptTerms, setAcceptTerms] = useState(false);
+    const [acceptDataLoss, setAcceptDataLoss] = useState(false);
+    const [acceptIrreversible, setAcceptIrreversible] = useState(false);
     const [saved, setSaved] = useState(false);
 
     // Form state
@@ -58,11 +61,21 @@ export default function ProfilePage() {
     };
 
     const handleDeleteAccount = () => {
-        if (deleteConfirmText === "EXCLUIR MINHA CONTA") {
-            alert("Solicitação de exclusão enviada. Seus dados serão removidos em até 30 dias.");
-            setShowDeleteConfirm(false);
+        if (deleteConfirmText === "EXCLUIR MINHA CONTA" && acceptTerms && acceptDataLoss && acceptIrreversible) {
+            setDeleteStep(3);
             setDeleteConfirmText("");
+            setAcceptTerms(false);
+            setAcceptDataLoss(false);
+            setAcceptIrreversible(false);
         }
+    };
+
+    const resetDeletion = () => {
+        setDeleteStep(0);
+        setDeleteConfirmText("");
+        setAcceptTerms(false);
+        setAcceptDataLoss(false);
+        setAcceptIrreversible(false);
     };
 
     const sections: { key: ProfileTab; label: string; icon: React.ReactNode }[] = [
@@ -102,10 +115,10 @@ export default function ProfilePage() {
                             key={section.key}
                             onClick={() => setActiveSection(section.key)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeSection === section.key
-                                    ? section.key === "deletion"
-                                        ? "bg-red-500/15 text-red-400 border border-red-500/20"
-                                        : "bg-white/10 text-[var(--foreground)] border border-white/10"
-                                    : "text-[var(--muted)] hover:bg-white/5 hover:text-[var(--foreground)] border border-transparent"
+                                ? section.key === "deletion"
+                                    ? "bg-red-500/15 text-red-400 border border-red-500/20"
+                                    : "bg-white/10 text-[var(--foreground)] border border-white/10"
+                                : "text-[var(--muted)] hover:bg-white/5 hover:text-[var(--foreground)] border border-transparent"
                                 }`}
                         >
                             {section.icon}
@@ -356,110 +369,117 @@ export default function ProfilePage() {
                                 <div>
                                     <h3 className="text-lg font-bold text-red-400">Zona de Perigo</h3>
                                     <p className="text-sm text-[var(--muted)] mt-1 leading-relaxed">
-                                        As ações abaixo são <strong>irreversíveis</strong>. Após a exclusão, todos os seus dados,
-                                        configurações, histórico de campanhas e tokens de acesso serão permanentemente removidos.
+                                        As ações abaixo são <strong>irreversíveis</strong>. Leia atentamente os termos antes de prosseguir.
+                                        Para mais informações, consulte nossa{" "}
+                                        <a href="https://bianconimkt.com/politica-de-privacidade" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300 transition-colors">
+                                            Política de Privacidade
+                                        </a>.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <SectionCard title="Exclusão de Dados do Usuário" subtitle="Solicite a remoção dos seus dados pessoais">
-                            <div className="space-y-4">
-                                <DeletionOption
-                                    title="Exportar Meus Dados"
-                                    description="Baixe uma cópia de todas as suas informações antes de excluir."
-                                    buttonLabel="Exportar Dados"
-                                    buttonColor="bg-blue-600 hover:bg-blue-500 shadow-blue-500/20"
-                                    onClick={() => alert("Exportação de dados iniciada. Você receberá um email com o link para download.")}
-                                />
-                                <DeletionOption
-                                    title="Desconectar Todas as Contas"
-                                    description="Remove todos os tokens de acesso e desconecta Meta, Google e outras integrações."
-                                    buttonLabel="Desconectar Tudo"
-                                    buttonColor="bg-amber-600 hover:bg-amber-500 shadow-amber-500/20"
-                                    onClick={() => alert("Todas as contas foram desconectadas.")}
-                                />
-                                <DeletionOption
-                                    title="Excluir Histórico de Campanhas"
-                                    description="Remove todos os relatórios, auditorias e histórico de performance de campanhas."
-                                    buttonLabel="Excluir Histórico"
-                                    buttonColor="bg-orange-600 hover:bg-orange-500 shadow-orange-500/20"
-                                    onClick={() => alert("Histórico de campanhas excluído.")}
-                                />
-                            </div>
-                        </SectionCard>
-
-                        <SectionCard title="Excluir Conta Permanentemente" subtitle="Esta ação é irreversível">
-                            <div className="bg-red-500/5 border border-red-500/15 rounded-xl p-5 space-y-4">
-                                <p className="text-sm text-[var(--muted)] leading-relaxed">
-                                    Ao excluir sua conta, <strong className="text-red-400">todos os dados serão removidos permanentemente</strong>, incluindo:
-                                </p>
-                                <ul className="text-sm text-[var(--muted)] space-y-2 ml-4">
-                                    <li className="flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                                        Informações pessoais e de perfil
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                                        Tokens de acesso e integrações (Meta, Google, etc.)
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                                        Histórico de campanhas e relatórios de IA
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                                        Configurações do sistema e preferências
-                                    </li>
-                                    <li className="flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                                        Dados de concorrentes e análises SWOT
-                                    </li>
-                                </ul>
-
-                                {!showDeleteConfirm ? (
-                                    <button
-                                        onClick={() => setShowDeleteConfirm(true)}
-                                        className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center gap-2 mt-4"
-                                    >
+                        {/* ── Step 0: Options ── */}
+                        {deleteStep === 0 && (
+                            <SectionCard title="Exclusão de Dados do Usuário" subtitle="Solicite a remoção dos seus dados pessoais">
+                                <div className="space-y-4">
+                                    <DeletionOption title="Exportar Meus Dados" description="Baixe uma cópia de todas as suas informações antes de excluir." buttonLabel="Exportar Dados" buttonColor="bg-blue-600 hover:bg-blue-500 shadow-blue-500/20" onClick={() => alert("Exportação de dados iniciada. Você receberá um email com o link para download.")} />
+                                    <DeletionOption title="Desconectar Todas as Contas" description="Remove todos os tokens de acesso e desconecta Meta, Google e outras integrações." buttonLabel="Desconectar Tudo" buttonColor="bg-amber-600 hover:bg-amber-500 shadow-amber-500/20" onClick={() => alert("Todas as contas foram desconectadas.")} />
+                                    <DeletionOption title="Excluir Histórico de Campanhas" description="Remove todos os relatórios, auditorias e histórico de performance." buttonLabel="Excluir Histórico" buttonColor="bg-orange-600 hover:bg-orange-500 shadow-orange-500/20" onClick={() => alert("Histórico de campanhas excluído.")} />
+                                </div>
+                                <div className="mt-6 pt-5 border-t border-[var(--shell-border)]">
+                                    <button onClick={() => setDeleteStep(1)} className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center gap-2">
                                         <TrashIcon className="w-4 h-4" />
-                                        Solicitar Exclusão de Conta
+                                        Excluir Minha Conta Permanentemente
                                     </button>
-                                ) : (
-                                    <div className="mt-4 space-y-3 animate-in fade-in duration-200">
-                                        <p className="text-sm text-red-400 font-semibold">
-                                            Digite <span className="font-mono bg-red-500/10 px-2 py-0.5 rounded">EXCLUIR MINHA CONTA</span> para confirmar:
-                                        </p>
-                                        <input
-                                            type="text"
-                                            value={deleteConfirmText}
-                                            onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                            className="w-full md:w-96 bg-[var(--shell-side)] border border-red-500/30 rounded-xl px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-red-500/40 transition-all placeholder:text-[var(--muted)]"
-                                            placeholder="EXCLUIR MINHA CONTA"
-                                        />
-                                        <div className="flex gap-3">
-                                            <button
-                                                onClick={handleDeleteAccount}
-                                                disabled={deleteConfirmText !== "EXCLUIR MINHA CONTA"}
-                                                className="px-6 py-3 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
-                                            >
-                                                <TrashIcon className="w-4 h-4" />
-                                                Confirmar Exclusão
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setShowDeleteConfirm(false);
-                                                    setDeleteConfirmText("");
-                                                }}
-                                                className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-[var(--shell-border)] text-[var(--foreground)] text-sm font-semibold rounded-xl transition-all"
-                                            >
-                                                Cancelar
-                                            </button>
+                                </div>
+                            </SectionCard>
+                        )}
+
+                        {/* ── Step 1: Legal Document + Consent ── */}
+                        {deleteStep === 1 && (
+                            <SectionCard title="Termo de Exclusão de Dados" subtitle="Leia e aceite os termos para prosseguir">
+                                <div className="bg-[var(--shell-side)] border border-[var(--shell-border)] rounded-xl p-5 max-h-64 overflow-y-auto text-sm text-[var(--muted)] leading-relaxed space-y-3 mb-6">
+                                    <h4 className="text-[var(--foreground)] font-bold text-base">TERMO DE CONSENTIMENTO PARA EXCLUSÃO DE DADOS</h4>
+                                    <p className="text-xs opacity-60">Última atualização: 23 de fevereiro de 2026</p>
+                                    <p>Ao solicitar a exclusão da sua conta na plataforma <strong className="text-[var(--foreground)]">bia - Bianconi Intelligence for Ads</strong>, você declara estar ciente e de acordo com os seguintes termos:</p>
+                                    <p><strong className="text-[var(--foreground)]">1. Dados que serão excluídos:</strong> Todas as informações pessoais (nome, e-mail, telefone), tokens de acesso a plataformas de terceiros (Meta, Google, TikTok), histórico de campanhas publicitárias, relatórios de IA, dados de concorrentes, análises SWOT, configurações do sistema e preferências do usuário.</p>
+                                    <p><strong className="text-[var(--foreground)]">2. Prazo de exclusão:</strong> Os dados serão removidos de nossos servidores em até 30 (trinta) dias corridos após a confirmação da solicitação.</p>
+                                    <p><strong className="text-[var(--foreground)]">3. Irreversibilidade:</strong> Após o período de 30 dias, a exclusão será permanente e irrecuperável. Não será possível restaurar nenhum dado, conta, configuração ou histórico.</p>
+                                    <p><strong className="text-[var(--foreground)]">4. Dados retidos por obrigação legal:</strong> Conforme a LGPD (Lei nº 13.709/2018), alguns dados poderão ser retidos pelo prazo necessário para cumprimento de obrigações legais, regulatórias ou para exercício regular de direitos em processos judiciais.</p>
+                                    <p><strong className="text-[var(--foreground)]">5. Cancelamento:</strong> Você pode cancelar esta solicitação a qualquer momento dentro do período de 30 dias entrando em contato com <a href="mailto:suporte@bianconimkt.com" className="text-blue-400 underline">suporte@bianconimkt.com</a>.</p>
+                                    <p><strong className="text-[var(--foreground)]">6. Contas de terceiros:</strong> A exclusão da conta no bia não afeta suas contas em plataformas de terceiros (Facebook, Instagram, Google). Para excluir dados nessas plataformas, acesse as configurações de cada uma individualmente.</p>
+                                </div>
+
+                                <div className="space-y-3 mb-6">
+                                    <label className="flex items-start gap-3 cursor-pointer group" onClick={() => setAcceptTerms(!acceptTerms)}>
+                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${acceptTerms ? "bg-red-500 border-red-500" : "border-[var(--shell-border)] group-hover:border-red-400"}`}>
+                                            {acceptTerms && <CheckCircleIcon className="w-3.5 h-3.5 text-white" />}
                                         </div>
+                                        <span className="text-sm text-[var(--muted)]">Li e concordo com o <strong className="text-[var(--foreground)]">Termo de Exclusão de Dados</strong> acima e com a <a href="https://bianconimkt.com/politica-de-privacidade" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline" onClick={(e) => e.stopPropagation()}>Política de Privacidade</a>.</span>
+                                    </label>
+                                    <label className="flex items-start gap-3 cursor-pointer group" onClick={() => setAcceptDataLoss(!acceptDataLoss)}>
+                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${acceptDataLoss ? "bg-red-500 border-red-500" : "border-[var(--shell-border)] group-hover:border-red-400"}`}>
+                                            {acceptDataLoss && <CheckCircleIcon className="w-3.5 h-3.5 text-white" />}
+                                        </div>
+                                        <span className="text-sm text-[var(--muted)]">Entendo que <strong className="text-red-400">todos os meus dados serão permanentemente excluídos</strong>, incluindo campanhas, relatórios e tokens.</span>
+                                    </label>
+                                    <label className="flex items-start gap-3 cursor-pointer group" onClick={() => setAcceptIrreversible(!acceptIrreversible)}>
+                                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${acceptIrreversible ? "bg-red-500 border-red-500" : "border-[var(--shell-border)] group-hover:border-red-400"}`}>
+                                            {acceptIrreversible && <CheckCircleIcon className="w-3.5 h-3.5 text-white" />}
+                                        </div>
+                                        <span className="text-sm text-[var(--muted)]">Confirmo que esta ação é <strong className="text-red-400">irreversível</strong> e que não poderei recuperar minha conta após o período de 30 dias.</span>
+                                    </label>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button onClick={() => setDeleteStep(2)} disabled={!acceptTerms || !acceptDataLoss || !acceptIrreversible} className="px-6 py-3 bg-red-600 hover:bg-red-500 disabled:bg-red-600/20 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-red-500/20">
+                                        Prosseguir com a Exclusão
+                                    </button>
+                                    <button onClick={resetDeletion} className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-[var(--shell-border)] text-[var(--foreground)] text-sm font-semibold rounded-xl transition-all">
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </SectionCard>
+                        )}
+
+                        {/* ── Step 2: Type Confirmation ── */}
+                        {deleteStep === 2 && (
+                            <SectionCard title="Confirmação Final" subtitle="Última etapa antes da exclusão">
+                                <div className="bg-red-500/5 border border-red-500/15 rounded-xl p-5 space-y-4">
+                                    <p className="text-sm text-[var(--muted)]">Para confirmar a exclusão permanente da sua conta, digite <span className="font-mono bg-red-500/10 text-red-400 px-2 py-0.5 rounded font-bold">EXCLUIR MINHA CONTA</span> no campo abaixo:</p>
+                                    <input type="text" value={deleteConfirmText} onChange={(e) => setDeleteConfirmText(e.target.value)} className="w-full md:w-96 bg-[var(--shell-side)] border border-red-500/30 rounded-xl px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-red-500/40 transition-all placeholder:text-[var(--muted)]" placeholder="EXCLUIR MINHA CONTA" />
+                                    <div className="flex gap-3">
+                                        <button onClick={handleDeleteAccount} disabled={deleteConfirmText !== "EXCLUIR MINHA CONTA"} className="px-6 py-3 bg-red-600 hover:bg-red-500 disabled:bg-red-600/20 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-red-500/20 flex items-center gap-2">
+                                            <TrashIcon className="w-4 h-4" />
+                                            Confirmar Exclusão Permanente
+                                        </button>
+                                        <button onClick={resetDeletion} className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-[var(--shell-border)] text-[var(--foreground)] text-sm font-semibold rounded-xl transition-all">
+                                            Cancelar
+                                        </button>
                                     </div>
-                                )}
-                            </div>
-                        </SectionCard>
+                                </div>
+                            </SectionCard>
+                        )}
+
+                        {/* ── Step 3: Success ── */}
+                        {deleteStep === 3 && (
+                            <SectionCard title="Solicitação Enviada" subtitle="Sua solicitação foi registrada com sucesso">
+                                <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-6 text-center space-y-4">
+                                    <CheckCircleIcon className="w-16 h-16 text-green-400 mx-auto" />
+                                    <h4 className="text-xl font-bold text-[var(--foreground)]">Exclusão solicitada com sucesso</h4>
+                                    <p className="text-sm text-[var(--muted)] max-w-lg mx-auto leading-relaxed">
+                                        Seus dados serão removidos permanentemente em até <strong className="text-[var(--foreground)]">30 dias</strong>.
+                                        Para cancelar, entre em contato com{" "}
+                                        <a href="mailto:suporte@bianconimkt.com" className="text-blue-400 underline hover:text-blue-300">suporte@bianconimkt.com</a> antes do prazo.
+                                    </p>
+                                    <p className="text-xs text-[var(--muted)] opacity-60">Protocolo: DEL-{Date.now().toString(36).toUpperCase()}</p>
+                                    <button onClick={resetDeletion} className="mt-2 px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-[var(--shell-border)] text-[var(--foreground)] text-xs font-semibold rounded-xl transition-all">
+                                        Voltar ao Perfil
+                                    </button>
+                                </div>
+                            </SectionCard>
+                        )}
                     </div>
                 )}
             </div>
