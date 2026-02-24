@@ -21,6 +21,95 @@ dotenv_path = base_dir / ".env"
 load_dotenv(dotenv_path=dotenv_path, override=True)
 
 
+@router.get("/accounts")
+async def get_available_accounts():
+    """
+    Get all available Facebook Pages, Instagram accounts, and Ad Accounts.
+    
+    This is useful for:
+    - Test mode: Switch between different accounts
+    - Multi-user: Let users select which account to view
+    
+    Returns:
+    {
+        "facebook_pages": [{"id": "...", "name": "...", "has_instagram": true, ...}],
+        "instagram_accounts": [{"id": "...", "username": "...", "page_id": "...", ...}],
+        "ad_accounts": [{"id": "...", "name": "...", ...}],
+        "total": {...}
+    }
+    """
+    import httpx
+    
+    access_token = os.getenv("FACEBOOK_ACCESS_TOKEN")
+    
+    if not access_token:
+        raise HTTPException(status_code=503, detail="Facebook Access Token not configured")
+    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        # 1. Get Facebook Pages
+        url = f"https://graph.facebook.com/v22.0/me/accounts?fields=id,name,username,followers_count,instagram_business_account&access_token={access_token}"
+        resp = await client.get(url)
+        pages_data = resp.json()
+        
+        pages = []
+        if 'error' not in pages_data:
+            for page in pages_data.get('data', []):
+                page_info = {
+                    'id': page['id'],
+                    'name': page.get('name', 'Unknown'),
+                    'username': page.get('username', 'N/A'),
+                    'followers': page.get('followers_count', 0),
+                    'has_instagram': 'instagram_business_account' in page,
+                    'instagram_id': page['instagram_business_account']['id'] if 'instagram_business_account' in page else None
+                }
+                pages.append(page_info)
+        
+        # 2. Get Ad Accounts
+        url = f"https://graph.facebook.com/v22.0/me/adaccounts?fields=id,name,account_status&access_token={access_token}"
+        resp = await client.get(url)
+        ads_data = resp.json()
+        
+        ad_accounts = []
+        if 'error' not in ads_data:
+            for ad_account in ads_data.get('data', []):
+                ad_accounts.append({
+                    'id': ad_account['id'],
+                    'name': ad_account.get('name', 'Unknown'),
+                    'status': ad_account.get('account_status', 'Unknown')
+                })
+        
+        # 3. Get Instagram Details
+        instagrams = []
+        for page in pages:
+            if page['has_instagram'] and page['instagram_id']:
+                ig_id = page['instagram_id']
+                
+                ig_url = f"https://graph.facebook.com/v22.0/{ig_id}?fields=username,name,followers_count&access_token={access_token}"
+                ig_resp = await client.get(ig_url)
+                ig_data = ig_resp.json()
+                
+                if 'error' not in ig_data:
+                    instagrams.append({
+                        'id': ig_id,
+                        'username': ig_data.get('username', 'N/A'),
+                        'name': ig_data.get('name', 'N/A'),
+                        'followers': ig_data.get('followers_count', 0),
+                        'page_id': page['id'],
+                        'page_name': page['name']
+                    })
+        
+        return {
+            'facebook_pages': pages,
+            'instagram_accounts': instagrams,
+            'ad_accounts': ad_accounts,
+            'total': {
+                'facebook_pages': len(pages),
+                'instagram_accounts': len(instagrams),
+                'ad_accounts': len(ad_accounts)
+            }
+        }
+
+
 async def _fetch_facebook_data(client, page_id, token):
     """Fetch Facebook specific insights and posts in parallel"""
     import asyncio
@@ -322,10 +411,16 @@ def _parse_instagram_posts(media_data):
     return top_posts
 
 
-async def _fetch_live_data(platform: str, period: str):
+async def _fetch_live_data(platform: str, period: str, page_id: str = None, instagram_id: str = None):
     """
     Fetch REAL data from Meta Graph API.
     NO MOCKS. NO FALLBACKS.
+    
+    Args:
+        platform: "facebook" or "instagram"
+        period: Time period for insights
+        page_id: Facebook Page ID (optional, uses env if not provided)
+        instagram_id: Instagram Business Account ID (optional, auto-detected from page_id)
     """
     import httpx
 
@@ -336,11 +431,12 @@ async def _fetch_live_data(platform: str, period: str):
         logger.error("FACEBOOK_ACCESS_TOKEN not configured in .env")
         raise HTTPException(status_code=503, detail="Facebook Access Token not configured")
 
-    # Get page ID from environment (Professor Lemos: 416436651784721)
-    page_id = os.getenv("FACEBOOK_PAGE_ID")
-    
-    # Log what we're using
-    logger.info(f"FACEBOOK_PAGE_ID from env: {page_id}")
+    # Use provided page_id or fallback to env
+    if not page_id:
+        page_id = os.getenv("FACEBOOK_PAGE_ID")
+        logger.info(f"Using FACEBOOK_PAGE_ID from env: {page_id}")
+    else:
+        logger.info(f"Using provided page_id: {page_id}")
 
     if not page_id:
         # Fetch available pages
@@ -378,29 +474,34 @@ async def _fetch_live_data(platform: str, period: str):
     async with httpx.AsyncClient(timeout=30.0) as client:
         # Fetch data based on platform
         if platform == 'instagram':
-            # Get Instagram Business Account ID
-            logger.info(f"Fetching Instagram Business Account for page {page_id}")
-            ig_url = f"https://graph.facebook.com/v22.0/{page_id}?fields=instagram_business_account&access_token={access_token}"
-            ig_resp = await client.get(ig_url)
-            ig_data = ig_resp.json()
+            # Use provided instagram_id or fetch from page
+            if instagram_id:
+                ig_id = instagram_id
+                logger.info(f"Using provided instagram_id: {ig_id}")
+            else:
+                # Get Instagram Business Account ID from page
+                logger.info(f"Fetching Instagram Business Account for page {page_id}")
+                ig_url = f"https://graph.facebook.com/v22.0/{page_id}?fields=instagram_business_account&access_token={access_token}"
+                ig_resp = await client.get(ig_url)
+                ig_data = ig_resp.json()
 
-            if 'error' in ig_data:
-                error_msg = ig_data['error'].get('message', 'Unknown error')
-                logger.error(f"Failed to get Instagram account: {error_msg}")
-                logger.error(f"Full error response: {ig_data['error']}")
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Failed to get Instagram account: {error_msg}. Verify that page {page_id} has an Instagram Business account connected."
-                )
+                if 'error' in ig_data:
+                    error_msg = ig_data['error'].get('message', 'Unknown error')
+                    logger.error(f"Failed to get Instagram account: {error_msg}")
+                    logger.error(f"Full error response: {ig_data['error']}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to get Instagram account: {error_msg}. Verify that page {page_id} has an Instagram Business account connected."
+                    )
 
-            ig_account = ig_data.get('instagram_business_account')
-            if not ig_account:
-                logger.error(f"No Instagram Business account connected to page {page_id}")
-                raise HTTPException(status_code=404, detail=f"No Instagram Business account connected to page {page_id}")
+                ig_account = ig_data.get('instagram_business_account')
+                if not ig_account:
+                    logger.error(f"No Instagram Business account connected to page {page_id}")
+                    raise HTTPException(status_code=404, detail=f"No Instagram Business account connected to page {page_id}")
 
-            ig_id = ig_account['id']
-            logger.info(f"Instagram Business Account ID: {ig_id}")
-            
+                ig_id = ig_account['id']
+                logger.info(f"Instagram Business Account ID: {ig_id}")
+
             responses = await _fetch_instagram_data(client, ig_id, access_token)
         else:
             responses = await _fetch_facebook_data(client, page_id, access_token)
@@ -537,11 +638,21 @@ from datetime import datetime
 async def get_insights(
     platform: str = Query("facebook", description="facebook or instagram"),
     period: str = Query("30d", description="Period filter: 7d, 14d, 30d, 90d"),
+    page_id: str = Query(None, description="Facebook Page ID (optional, uses env FACEBOOK_PAGE_ID if not provided)"),
+    instagram_id: str = Query(None, description="Instagram Business Account ID (optional, auto-detected from page_id)"),
 ):
     """
     Returns REAL insights data from Meta Graph API.
     
     NO MOCK DATA. NO SIMULATIONS. NO FALLBACKS.
+    
+    Query Parameters:
+    - platform: "facebook" or "instagram"
+    - period: "7d", "14d", "30d", "90d"
+    - page_id: (Optional) Facebook Page ID to fetch insights for
+    - instagram_id: (Optional) Instagram Business Account ID
+    
+    If page_id is not provided, uses FACEBOOK_PAGE_ID from .env
     
     If the API fails, returns an error (not fake data).
     """
@@ -549,9 +660,16 @@ async def get_insights(
     if platform not in ("facebook", "instagram"):
         platform = "facebook"
 
+    # Use provided page_id or fallback to env
+    if page_id:
+        logger.info(f"Using provided page_id: {page_id}")
+    else:
+        page_id = os.getenv("FACEBOOK_PAGE_ID")
+        logger.info(f"Using FACEBOOK_PAGE_ID from env: {page_id}")
+
     # Fetch LIVE data only - NO FALLBACK
     try:
-        live_data = await _fetch_live_data(platform, period)
+        live_data = await _fetch_live_data(platform, period, page_id, instagram_id)
         return live_data
     except HTTPException:
         raise
