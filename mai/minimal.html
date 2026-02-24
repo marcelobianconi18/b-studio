@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MAI - Teste Rápido</title>
+  <style>
+    body { margin: 40px; font-family: sans-serif; }
+    .sidebar { 
+      width: 280px; 
+      background: #6366f1; 
+      color: white; 
+      padding: 20px; 
+      margin: 20px 0;
+    }
+    .item { padding: 10px; cursor: pointer; }
+    .item:hover { background: rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+  <h1>✅ MAI Interface Funcionando</h1>
+  
+  <div class="sidebar">
+    <h3>Menu Lateral Esquerdo</h3>
+    <div class="item">💬 Chat</div>
+    <div class="item">📁 Files</div>
+    <div class="item">⌨️ Terminal</div>
+    <div class="item">⚙️ Settings</div>
+    <div class="item">📚 Docs</div>
+  </div>
+
+  <p>Se você está vendo este texto, a interface está funcionando!</p>
+  <p>Clique nos itens do menu para simular interação.</p>
+
+  <script>
+    document.querySelectorAll('.item').forEach(item => {
+      item.addEventListener('click', () => {
+        item.style.backgroundColor = 'rgba(255,255,255,0.3)';
+        setTimeout(() => {
+          item.style.backgroundColor = '';
+        }, 300);
+      });
+    });
+  </script>
+</body>
+</html>

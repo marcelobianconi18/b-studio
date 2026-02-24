@@ -5,6 +5,8 @@ sqlalchemy
 psycopg2-binary
 python-dotenv
 requests
+pydantic
+pydantic-settings
 tenacity
 facebook_business
 langchain
