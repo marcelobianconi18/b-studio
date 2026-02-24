@@ -326,56 +326,76 @@ async def _fetch_live_data(platform: str, period: str):
     NO MOCKS. NO FALLBACKS.
     """
     import httpx
-    
+
     # Get token from environment
     access_token = os.getenv("FACEBOOK_ACCESS_TOKEN")
-    
+
     if not access_token:
         logger.error("FACEBOOK_ACCESS_TOKEN not configured in .env")
         raise HTTPException(status_code=503, detail="Facebook Access Token not configured")
 
-    # Get page ID from environment or fetch from API
+    # Get page ID from environment (Professor Lemos: 416436651784721)
     page_id = os.getenv("FACEBOOK_PAGE_ID")
     
+    # Log what we're using
+    logger.info(f"FACEBOOK_PAGE_ID from env: {page_id}")
+
     if not page_id:
         # Fetch available pages
         async with httpx.AsyncClient() as client:
             url = f"https://graph.facebook.com/v22.0/me/accounts?access_token={access_token}"
             resp = await client.get(url)
             data = resp.json()
-            
+
             if 'error' in data:
+                logger.error(f"Graph API Error fetching pages: {data['error'].get('message', 'Unknown error')}")
                 raise HTTPException(status_code=500, detail=f"Graph API Error: {data['error'].get('message', 'Unknown error')}")
-            
+
             accounts = data.get('data', [])
             if not accounts:
+                logger.error("No Facebook pages found")
                 raise HTTPException(status_code=404, detail="No Facebook pages found")
-            
+
+            # Log all available pages
+            logger.info(f"Available pages: {[(acc.get('name', 'Unknown'), acc['id']) for acc in accounts]}")
+
             page_id = accounts[0]['id']
             if len(accounts) > 1:
                 # Try to find Professor Lemos page
                 for acc in accounts:
-                    if '416436651784721' in acc['id'] or 'lemos' in acc.get('name', '').lower():
-                        page_id = acc['id']
+                    acc_name = acc.get('name', '').lower()
+                    acc_id = acc['id']
+                    logger.info(f"Checking page: {acc_name} ({acc_id})")
+                    if '416436651784721' in acc_id or 'lemos' in acc_name or 'professor' in acc_name:
+                        page_id = acc_id
+                        logger.info(f"Found Professor Lemos page: {page_id}")
                         break
 
-    logger.info(f"Fetching {platform} data for page ID: {page_id}")
+    logger.info(f"Using page ID: {page_id}")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         # Fetch data based on platform
         if platform == 'instagram':
             # Get Instagram Business Account ID
+            logger.info(f"Fetching Instagram Business Account for page {page_id}")
             ig_url = f"https://graph.facebook.com/v22.0/{page_id}?fields=instagram_business_account&access_token={access_token}"
             ig_resp = await client.get(ig_url)
             ig_data = ig_resp.json()
-            
+
             if 'error' in ig_data:
-                raise HTTPException(status_code=500, detail=f"Failed to get Instagram account: {ig_data['error'].get('message', 'Unknown error')}")
-            
+                error_msg = ig_data['error'].get('message', 'Unknown error')
+                logger.error(f"Failed to get Instagram account: {error_msg}")
+                logger.error(f"Full error response: {ig_data['error']}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to get Instagram account: {error_msg}. Verify that page {page_id} has an Instagram Business account connected."
+                )
+
             ig_account = ig_data.get('instagram_business_account')
             if not ig_account:
-                raise HTTPException(status_code=404, detail="No Instagram Business account connected")
-            
+                logger.error(f"No Instagram Business account connected to page {page_id}")
+                raise HTTPException(status_code=404, detail=f"No Instagram Business account connected to page {page_id}")
+
             ig_id = ig_account['id']
             logger.info(f"Instagram Business Account ID: {ig_id}")
             
