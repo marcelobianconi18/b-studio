@@ -24,7 +24,7 @@ export interface InstagramAccount {
 export interface AdAccount {
     id: string;
     name: string;
-    status: string;
+    status: number | string;
 }
 
 export interface AvailableAccounts {
@@ -249,7 +249,7 @@ export default function AccountSelector({
                                 <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
                                     ad.status === 1 || ad.status === '1' || ad.status === 'Active' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
                                 }`}>
-                                    {ad.status === 1 || ad.status === '1' || ad.status === 'Active' ? 'Ativo' : 'Inativo'}
+                                    {(ad.status === 1 || ad.status === '1' || ad.status === 'Active') ? 'Ativo' : 'Inativo'}
                                 </span>
                             </div>
                         ))}
