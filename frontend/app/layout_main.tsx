@@ -28,7 +28,8 @@ const ROUTE_TO_TAB: Record<string, string> = {
     "/inbox": "inbox",
     "/settings": "settings",
     "/profile": "profile",
-    "/profile/exclusao": "profile",
+    "/profile/exclusao": "profile_deletion",
+    "/profile/exclusao-de-dados": "profile_deletion",
 };
 
 const TAB_TO_ROUTE: Record<string, string> = {
@@ -40,6 +41,7 @@ const TAB_TO_ROUTE: Record<string, string> = {
     inbox: "/inbox",
     settings: "/settings",
     profile: "/profile",
+    profile_deletion: "/profile/exclusao-de-dados",
 };
 
 function getTabFromHash(): string {
@@ -245,7 +247,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <ProfilePage />
                         </LiquidShell>
                     )}
-                    {!(["home", "ads", "ads_metrics", "social", "concorrentes", "inbox", "settings", "profile"] as string[]).includes(activeTab) && children}
+                    {activeTab === "profile_deletion" && (
+                        <LiquidShell title="PERFIL" subtitle="EXCLUSÃO DE DADOS" headerCenter={platformLogo} action={actionsBar}>
+                            <ProfilePage initialSection="deletion" />
+                        </LiquidShell>
+                    )}
+                    {!(["home", "ads", "ads_metrics", "social", "concorrentes", "inbox", "settings", "profile", "profile_deletion"] as string[]).includes(activeTab) && children}
                 </main>
             </div>
         </div>

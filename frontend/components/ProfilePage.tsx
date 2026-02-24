@@ -27,8 +27,8 @@ type SocialLink = {
 };
 
 // ─── Profile Page ────────────────────────────────────────────────────────
-export default function ProfilePage() {
-    const [activeSection, setActiveSection] = useState<ProfileTab>("general");
+export default function ProfilePage({ initialSection }: { initialSection?: ProfileTab }) {
+    const [activeSection, setActiveSection] = useState<ProfileTab>(initialSection || "general");
     const [deleteStep, setDeleteStep] = useState<0 | 1 | 2 | 3>(0);
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const [acceptTerms, setAcceptTerms] = useState(false);
