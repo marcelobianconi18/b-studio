@@ -9,10 +9,10 @@ import InstagramInsightsAnalysis from "@/components/social/InstagramInsightsAnal
 
 export default function SocialMetricsPage() {
     const [selectedProfile, setSelectedProfile] = useState<InsightProfile>({
-        id: "metaads-client-1",
-        name: "clienteteste1",
-        role: "Meta Ads",
-        platform: "meta_ads",
+        id: "416436651784721",
+        name: "Professor Lemos",
+        role: "Facebook & Meta Ads",
+        platform: "facebook",
     });
     const [period, setPeriod] = useState<PeriodValue>("30d");
     const [platform, setPlatform] = useState<"facebook" | "instagram">("facebook");
@@ -24,14 +24,13 @@ export default function SocialMetricsPage() {
             headerCenter={
                 <div className="flex items-center gap-3">
                     <ProfileSelector
-                        value={selectedProfile}
+                        selectedProfile={selectedProfile}
                         onChange={setSelectedProfile}
-                        size="compact"
+                        variant="default"
                     />
                     <PeriodSelector
                         value={period}
                         onChange={setPeriod}
-                        size="compact"
                     />
                 </div>
             }
@@ -62,15 +61,9 @@ export default function SocialMetricsPage() {
 
             {/* Platform Content */}
             {platform === "facebook" ? (
-                <FacebookInsightsAnalysis
-                    profile={selectedProfile}
-                    period={period}
-                />
+                <FacebookInsightsAnalysis />
             ) : (
-                <InstagramInsightsAnalysis
-                    profile={selectedProfile}
-                    period={period}
-                />
+                <InstagramInsightsAnalysis />
             )}
         </LiquidShell>
     );
