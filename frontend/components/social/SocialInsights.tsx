@@ -137,6 +137,65 @@ export const formatNumber = (num: number) => {
     return num.toString();
 };
 
+const toFiniteNumber = (value: unknown, fallback = 0) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const normalizeMetric = (raw: unknown): { value: number; change: number } => {
+    const metric = raw && typeof raw === "object"
+        ? (raw as { value?: unknown; change?: unknown })
+        : undefined;
+    return {
+        value: toFiniteNumber(metric?.value),
+        change: toFiniteNumber(metric?.change),
+    };
+};
+
+const normalizeActionsSplit = (raw: unknown): InsightsData["actions_split"] => {
+    const split = raw && typeof raw === "object"
+        ? (raw as { reactions?: unknown; comments?: unknown; shares?: unknown })
+        : undefined;
+    return {
+        reactions: toFiniteNumber(split?.reactions),
+        comments: toFiniteNumber(split?.comments),
+        shares: toFiniteNumber(split?.shares),
+    };
+};
+
+const normalizeInsightsPayload = (raw: unknown): InsightsData => {
+    const payload = raw && typeof raw === "object"
+        ? (raw as Partial<InsightsData> & Record<string, unknown>)
+        : {};
+
+    const reactionsByType = payload.reactions_by_type && typeof payload.reactions_by_type === "object"
+        ? (payload.reactions_by_type as Record<string, number>)
+        : undefined;
+
+    const actionsSplitChanges = payload.actions_split_changes && typeof payload.actions_split_changes === "object"
+        ? {
+            reactions: toFiniteNumber((payload.actions_split_changes as { reactions?: unknown }).reactions),
+            comments: toFiniteNumber((payload.actions_split_changes as { comments?: unknown }).comments),
+            shares: toFiniteNumber((payload.actions_split_changes as { shares?: unknown }).shares),
+        }
+        : undefined;
+
+    return {
+        page_followers: normalizeMetric(payload.page_followers),
+        total_reactions: normalizeMetric(payload.total_reactions),
+        organic_video_views: normalizeMetric(payload.organic_video_views),
+        engagements: normalizeMetric(payload.engagements),
+        number_of_posts: normalizeMetric(payload.number_of_posts),
+        organic_impressions: normalizeMetric(payload.organic_impressions),
+        actions_split: normalizeActionsSplit(payload.actions_split),
+        top_posts: Array.isArray(payload.top_posts) ? (payload.top_posts as InsightsData["top_posts"]) : [],
+        demographics: payload.demographics,
+        reactions_by_type: reactionsByType,
+        actions_split_changes: actionsSplitChanges,
+        competitors: Array.isArray(payload.competitors) ? (payload.competitors as Competitor[]) : [],
+    };
+};
+
 const getQualitySignalsTotal = (post: InsightsData["top_posts"][number]) => {
     return (post.reaction_breakdown?.like || 0)
         + (post.reaction_breakdown?.love || 0)
@@ -1049,12 +1108,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
 
                 const json = await res.json();
 
-                // Validate minimum structure
-                if (!json || !json.page_followers) {
-                    throw new Error("Invalid response structure from API");
-                }
-
-                setData(json);
+                setData(normalizeInsightsPayload(json));
                 setLoading(false);
                 setError(null);
             } catch (e) {
@@ -1067,7 +1121,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
         fetchData();
     }, [isInstagram, period, selectedPageId, selectedInstagramId]);
 
-    const followersBase = data?.page_followers.value ?? 0;
+    const followersBase = data?.page_followers?.value ?? 0;
     const followersSeries = useMemo(() => makeFollowersSeries(followersInterval, followersBase), [followersInterval, followersBase]);
     const followersSummary = useMemo(() => {
         const totalNew = followersSeries.reduce((acc, point) => acc + point.gained, 0);
@@ -1095,11 +1149,15 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
     const conversionFunnel = useMemo(() => {
         if (!data) return { reach: 0, retention: 0, conversion: 0 };
 
-        const fallbackReach = data.top_posts.reduce((acc, post) => acc + (post.reach || 0), 0);
-        const reach = Math.max(1, data.organic_impressions.value || fallbackReach);
-        const retentionSignals = data.actions_split.reactions + data.actions_split.comments + data.actions_split.shares;
+        const posts = data.top_posts ?? [];
+        const fallbackReach = posts.reduce((acc, post) => acc + (post.reach || 0), 0);
+        const reach = Math.max(1, (data.organic_impressions?.value ?? 0) || fallbackReach);
+        const retentionSignals =
+            (data.actions_split?.reactions ?? 0)
+            + (data.actions_split?.comments ?? 0)
+            + (data.actions_split?.shares ?? 0);
         const retention = Math.max(1, Math.min(reach, Math.round(retentionSignals * 8)));
-        const conversion = Math.max(1, data.top_posts.reduce((acc, post) => acc + (post.link_clicks || 0), 0));
+        const conversion = Math.max(1, posts.reduce((acc, post) => acc + (post.link_clicks || 0), 0));
 
         return {
             reach,
@@ -1146,7 +1204,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
         if (!data) return [] as Array<{ issue: string; recommendation: string; priority: "ALTA" | "MÉDIA" | "BAIXA"; tone: string }>;
 
         const items: Array<{ issue: string; recommendation: string; priority: "ALTA" | "MÉDIA" | "BAIXA"; tone: string }> = [];
-        const qualityRate = (data.total_reactions.value / Math.max(1, conversionFunnel.reach)) * 100;
+        const qualityRate = ((data.total_reactions?.value ?? 0) / Math.max(1, conversionFunnel.reach)) * 100;
         const leakRatio = conversionFunnel.retention / Math.max(1, conversionFunnel.conversion);
 
         if (isInstagram && videoRetentionSummary.retention3s < 62) {
@@ -3709,7 +3767,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                         {topAge?.range ?? "—"} anos
                                                     </div>
                                                     <div className="text-[10px] text-[var(--muted)] mt-1">
-                                                        são a maioria, representando <strong className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(topAgePercentage * data.page_followers.value / 100)) : `${topAgePercentage}%`}</strong> da leitura atual.
+                                                        são a maioria, representando <strong className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(topAgePercentage * followersBase / 100)) : `${topAgePercentage}%`}</strong> da leitura atual.
                                                     </div>
                                                 </div>
                                             </div>
@@ -3744,7 +3802,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     </svg>
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                                         <span className="text-2xl font-black text-[var(--foreground)] tracking-tighter leading-none">
-                                                            {demoValueMode === "abs" ? formatNumber(Math.round(topAgePercentage * data.page_followers.value / 100)) : `${topAgePercentage}%`}
+                                                            {demoValueMode === "abs" ? formatNumber(Math.round(topAgePercentage * followersBase / 100)) : `${topAgePercentage}%`}
                                                         </span>
                                                         <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--muted)] mt-1">
                                                             {topAge?.range ?? "—"}
@@ -3773,7 +3831,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                         <div className="font-medium truncate text-[var(--muted)]">{item.range}</div>
                                                                     </div>
                                                                     <span className="font-mono font-black text-[var(--foreground)]/50">
-                                                                        {demoValueMode === "abs" ? formatNumber(Math.round(item.total * data.page_followers.value / 100)) : `${Math.round(item.total)}%`}
+                                                                        {demoValueMode === "abs" ? formatNumber(Math.round(item.total * followersBase / 100)) : `${Math.round(item.total)}%`}
                                                                     </span>
                                                                 </div>
                                                             );
@@ -3799,7 +3857,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                                         <div className="font-medium truncate text-[var(--muted)]">{item.range}</div>
                                                                     </div>
                                                                     <span className="font-mono font-black text-[var(--foreground)]/50">
-                                                                        {demoValueMode === "abs" ? formatNumber(Math.round(item.total * data.page_followers.value / 100)) : `${Math.round(item.total)}%`}
+                                                                        {demoValueMode === "abs" ? formatNumber(Math.round(item.total * followersBase / 100)) : `${Math.round(item.total)}%`}
                                                                     </span>
                                                                 </div>
                                                             );
@@ -3835,7 +3893,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     {totalFemale > totalMale ? "Mulheres" : "Homens"}
                                                 </div>
                                                 <div className="text-[10px] text-[var(--muted)] mt-1 text-center lg:text-left">
-                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(Math.max(totalFemale, totalMale) * data.page_followers.value / 100)) : `${Math.max(totalFemale, totalMale)}%`}</strong> da leitura atual.
+                                                    são a maioria, representando <strong className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(Math.max(totalFemale, totalMale) * followersBase / 100)) : `${Math.max(totalFemale, totalMale)}%`}</strong> da leitura atual.
                                                 </div>
                                             </div>
 
@@ -3870,7 +3928,7 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                     </svg>
                                                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                                         <span className={`font-black text-[var(--foreground)] tracking-tighter leading-none ${demoValueMode === "abs" ? "text-xl" : "text-2xl"}`}>
-                                                            {demoValueMode === "abs" ? formatNumber(Math.round(Math.max(totalFemale, totalMale) * data.page_followers.value / 100)) : `${Math.max(totalFemale, totalMale)}%`}
+                                                            {demoValueMode === "abs" ? formatNumber(Math.round(Math.max(totalFemale, totalMale) * followersBase / 100)) : `${Math.max(totalFemale, totalMale)}%`}
                                                         </span>
                                                         <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--muted)] mt-1">
                                                             {totalFemale > totalMale ? "Mulheres" : "Homens"}
@@ -3884,14 +3942,14 @@ export default function SocialInsights({ hideTopPeriodSelector = false, platform
                                                             <div className="w-1.5 h-1.5 rounded-full bg-[var(--shell-border)]" />
                                                             <span className="text-[var(--muted)] uppercase tracking-wide">Mulheres</span>
                                                         </div>
-                                                        <span className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(totalFemale * data.page_followers.value / 100)) : `${totalFemale}%`}</span>
+                                                        <span className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(totalFemale * followersBase / 100)) : `${totalFemale}%`}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-[10px] font-bold">
                                                         <div className="flex items-center gap-1.5">
                                                             <div className="w-1.5 h-1.5 rounded-full bg-[var(--shell-border)]" />
                                                             <span className="text-[var(--muted)] uppercase tracking-wide">Homens</span>
                                                         </div>
-                                                        <span className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(totalMale * data.page_followers.value / 100)) : `${totalMale}%`}</span>
+                                                        <span className="text-[var(--foreground)]">{demoValueMode === "abs" ? formatNumber(Math.round(totalMale * followersBase / 100)) : `${totalMale}%`}</span>
                                                     </div>
                                                 </div>
 
