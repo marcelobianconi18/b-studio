@@ -6,6 +6,10 @@ import os
 from app.routers import posts, ads, auth, intelligence, social, system, dashboard, insights
 from app.core.database import engine, Base
 
+# Import OAuth and Dashboard routers
+from oauth_manager import router as oauth_router
+from dashboard_api import router as dashboard_router
+
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
@@ -35,6 +39,12 @@ app.include_router(social.router, prefix="/api/social", tags=["social"])
 app.include_router(insights.router, prefix="/api/social", tags=["social-insights"])
 app.include_router(system.router, prefix="/api/system", tags=["system"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+
+# OAuth Routes
+app.include_router(oauth_router, prefix="/api/auth", tags=["oauth"])
+
+# Dashboard Routes
+app.include_router(dashboard_router, prefix="/api/dashboard", tags=["dashboard-api"])
 
 @app.get("/")
 def read_root():
