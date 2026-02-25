@@ -27,6 +27,7 @@ interface DashboardData {
 
 export default function Dashboard() {
     const router = useRouter();
+    const oauthLoginUrl = apiUrl("/api/auth/facebook/login");
     const [loading, setLoading] = useState(true);
     const [authorized, setAuthorized] = useState(false);
     const [dashboard, setDashboard] = useState<DashboardData | null>(null);
@@ -43,32 +44,32 @@ export default function Dashboard() {
             
             if (!storedClientId) {
                 // Redirecionar para login/OAuth
-                window.location.href = '/auth/facebook';
+                window.location.href = oauthLoginUrl;
                 return;
             }
 
             setClientId(storedClientId);
 
             // Verificar status da autenticação
-            const res = await fetch(apiUrl(`/auth/status?client_id=${storedClientId}`));
+            const res = await fetch(apiUrl(`/api/auth/status?client_id=${storedClientId}`));
             const data = await res.json();
 
             if (data.authorized) {
                 setAuthorized(true);
                 loadDashboard(storedClientId);
             } else {
-                window.location.href = '/auth/facebook';
+                window.location.href = oauthLoginUrl;
             }
         } catch (error) {
             console.error("Auth error:", error);
-            window.location.href = '/auth/facebook';
+            window.location.href = oauthLoginUrl;
         }
     };
 
     const loadDashboard = async (clientId: string) => {
         try {
             setLoading(true);
-            const res = await fetch(apiUrl(`/dashboard?client_id=${clientId}`));
+            const res = await fetch(apiUrl(`/api/dashboard?client_id=${clientId}`));
             const data = await res.json();
             setDashboard(data);
         } catch (error) {
@@ -79,7 +80,7 @@ export default function Dashboard() {
     };
 
     const handleConnectFacebook = () => {
-        window.location.href = '/auth/facebook';
+        window.location.href = oauthLoginUrl;
     };
 
     const handleCreateCampaign = () => {

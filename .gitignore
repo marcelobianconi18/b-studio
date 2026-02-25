@@ -1,11 +1,30 @@
-backend/venv/
-*.log
-*.pid
+## Environments
 .env
 .env.*
 !.env.example
-.DS_Store
+
+## Python
+backend/venv/
+**/__pycache__/
+*.py[cod]
+
+## Runtime artifacts
+*.log
+*.pid
+*.db
+*.sqlite
+*.sqlite3
+backend/portfolio_backup_*.json
+backend/reports/*.json
+backend/reports/*.txt
+backend/available_accounts.json
+
+## Node / Frontend
 node_modules/
 .next/
 dist/
 build/
+
+## OS
+.DS_Store
+**/.DS_Store

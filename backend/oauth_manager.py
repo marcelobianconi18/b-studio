@@ -27,7 +27,7 @@ load_dotenv()
 # Configurações do App
 APP_ID = os.getenv("META_APP_ID", "883116774139196")
 APP_SECRET = os.getenv("META_APP_SECRET", "")
-REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:8001/auth/facebook/callback")
+REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:8001/api/oauth/facebook/callback")
 
 # Permissões solicitadas
 OAUTH_SCOPE = [
@@ -215,7 +215,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 router = APIRouter()
 
 
-@router.get("/auth/facebook")
+@router.get("/oauth/facebook")
 async def facebook_auth():
     """
     Inicia fluxo OAuth com Facebook.
@@ -228,7 +228,7 @@ async def facebook_auth():
     return RedirectResponse(url=auth_url)
 
 
-@router.get("/auth/facebook/callback")
+@router.get("/oauth/facebook/callback")
 async def facebook_callback(
     code: Optional[str] = Query(None),
     error: Optional[str] = Query(None),
@@ -382,9 +382,9 @@ async def get_ad_accounts(client_id: str = Query(...)):
 
 """
 # 1. Iniciar OAuth (usuário clica em "Conectar com Facebook")
-GET /auth/facebook
+GET /oauth/facebook
 
-# 2. Facebook redireciona de volta para /auth/facebook/callback?code=XXX
+# 2. Facebook redireciona de volta para /oauth/facebook/callback?code=XXX
 
 # 3. Verificar status de autenticação
 GET /auth/status?client_id=123456
@@ -422,7 +422,7 @@ FRONTEND_EXAMPLE = """
     <script>
         function connectFacebook() {
             // Redireciona para OAuth
-            window.location.href = '/auth/facebook';
+            window.location.href = '/oauth/facebook';
         }
         
         // Verificar status após redirect
@@ -432,7 +432,7 @@ FRONTEND_EXAMPLE = """
             
             if (code) {
                 // OAuth completo, verificar status
-                const response = await fetch('/auth/status?client_id=me');
+                const response = await fetch('/api/auth/status?client_id=me');
                 const data = await response.json();
                 
                 if (data.authorized) {

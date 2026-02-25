@@ -41,10 +41,10 @@ app.include_router(system.router, prefix="/api/system", tags=["system"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 
 # OAuth Routes
-app.include_router(oauth_router, prefix="/api/auth", tags=["oauth"])
+app.include_router(oauth_router, prefix="/api", tags=["oauth"])
 
 # Dashboard Routes
-app.include_router(dashboard_router, prefix="/api/dashboard", tags=["dashboard-api"])
+app.include_router(dashboard_router, prefix="/api", tags=["dashboard-api"])
 
 @app.get("/")
 def read_root():
