@@ -11,6 +11,7 @@ import {
     MoonIcon,
     SunIcon
 } from "@heroicons/react/24/outline";
+import { useRouter } from "next/navigation";
 
 interface SidebarProps {
     activeTab: string;
@@ -26,7 +27,7 @@ const NAV_ITEMS = [
     { id: "social", label: "Métrica Social", icon: ChartBarSquareIcon },
     { id: "concorrentes", label: "Concorrentes", icon: UserGroupIcon },
     { id: "ads_metrics", label: "Métrica Ads", icon: PresentationChartLineIcon },
-    { id: "ads", label: "Tráfego Pago", icon: MegaphoneIcon },
+    { id: "traffic", label: "Tráfego Pago", icon: MegaphoneIcon, link: "/dashboard" },
     { id: "inbox", label: "Mesa de Vendas", icon: InboxArrowDownIcon },
 ];
 
@@ -38,6 +39,18 @@ export default function Sidebar({
     theme,
     onThemeChange
 }: SidebarProps) {
+    const router = useRouter();
+
+    const handleNavClick = (item: typeof NAV_ITEMS[0]) => {
+        if (item.link) {
+            // Se tiver link, navega diretamente
+            router.push(item.link);
+        } else {
+            // Senão, usa o onNavigate normal
+            onNavigate(item.id);
+        }
+    };
+
     return (
         <aside className="fixed left-2 md:left-6 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center py-4 md:py-6 gap-4 md:gap-5 w-[56px] md:w-[68px] rounded-[30px] md:rounded-[40px] bg-[var(--shell-surface)] border border-[var(--shell-border)] shadow-[0_16px_40px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.1)]">
             {/* Nav Icons */}
@@ -49,7 +62,7 @@ export default function Sidebar({
                     return (
                         <button
                             key={item.id}
-                            onClick={() => onNavigate(item.id)}
+                            onClick={() => handleNavClick(item)}
                             className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group
                                 ${isActive
                                     ? "bg-white/40 text-black/60 shadow-sm drop-shadow-sm"
